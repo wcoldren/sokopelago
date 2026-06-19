@@ -54,6 +54,31 @@ function savePrefs(prefs: ConnectPrefs): void {
   }
 }
 
+/**
+ * Resolve the websocket URL from a user-entered host.
+ *
+ * An explicit `ws://`/`wss://` scheme is honored as-is. For a bare host we
+ * default local/self-hosted servers (which serve plain `ws`) to `ws://` —
+ * browsers don't reliably fall back from a failed `wss` TLS handshake to `ws`,
+ * so leaving it bare (which makes archipelago.js try `wss` first) fails against
+ * a local MultiServer. Remote hosts are left bare so the library tries `wss`
+ * then `ws`.
+ */
+export function resolveServerUrl(host: string): string {
+  const trimmed = host.trim();
+  if (/^wss?:\/\//i.test(trimmed)) return trimmed;
+  const hostname = trimmed.replace(/^\[/, "").split(/[:\]]/)[0].toLowerCase();
+  const isLocal =
+    hostname === "localhost" ||
+    hostname === "0.0.0.0" ||
+    hostname === "::1" ||
+    hostname.startsWith("127.") ||
+    hostname.startsWith("192.168.") ||
+    hostname.startsWith("10.") ||
+    hostname.endsWith(".local");
+  return isLocal ? `ws://${trimmed}` : trimmed;
+}
+
 export class Session {
   private readonly client = new Client();
   private readonly cb: SessionCallbacks;
@@ -84,7 +109,7 @@ export class Session {
 
     // login's generic requires a JSONRecord index signature; our SlotData is a
     // closed shape, so take the raw record and narrow it.
-    const raw = await this.client.login(host, slot, "Sokopelago", {
+    const raw = await this.client.login(resolveServerUrl(host), slot, "Sokopelago", {
       items: itemsHandlingFlags.all, // 7 — must receive our own world keys
       slotData: true,
       password: password || "",

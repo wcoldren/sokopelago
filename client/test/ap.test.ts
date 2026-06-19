@@ -15,6 +15,24 @@ import {
   worldOfLevel,
   type SlotData,
 } from "../src/ap/slotData";
+import { resolveServerUrl } from "../src/ap/session";
+
+describe("ap/session — resolveServerUrl", () => {
+  it("honors an explicit scheme", () => {
+    expect(resolveServerUrl("wss://archipelago.gg:38281")).toBe("wss://archipelago.gg:38281");
+    expect(resolveServerUrl("ws://localhost:38281")).toBe("ws://localhost:38281");
+  });
+
+  it("defaults local/self-hosted hosts to ws://", () => {
+    expect(resolveServerUrl("localhost:38281")).toBe("ws://localhost:38281");
+    expect(resolveServerUrl("127.0.0.1:38281")).toBe("ws://127.0.0.1:38281");
+    expect(resolveServerUrl("192.168.1.5:38281")).toBe("ws://192.168.1.5:38281");
+  });
+
+  it("leaves remote hosts bare (library tries wss then ws)", () => {
+    expect(resolveServerUrl("archipelago.gg:38281")).toBe("archipelago.gg:38281");
+  });
+});
 
 describe("ap/ids — network id arithmetic", () => {
   it("round-trips location id <-> level number", () => {

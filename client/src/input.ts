@@ -25,6 +25,19 @@ const KEY_TO_DIR: Record<string, Dir> = {
 /** Attach keyboard handlers to the window. Returns a detach function. */
 export function attachInput(handlers: InputHandlers): () => void {
   const onKeyDown = (e: KeyboardEvent) => {
+    // Don't hijack typing: while a form field (connect panel, etc.) is focused,
+    // let WASD/arrows/R reach the input instead of driving the board.
+    const target = e.target as HTMLElement | null;
+    if (
+      target &&
+      (target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable)
+    ) {
+      return;
+    }
+
     // Held-key auto-repeat fires keydown repeatedly; we let it through so the
     // player keeps moving.
     const dir = KEY_TO_DIR[e.key];
