@@ -15,3 +15,6 @@ __pycache__/
 *.swp
 .idea/
 .vscode/
+
+# Local Claude Code session state
+.claude/
