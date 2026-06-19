@@ -12,15 +12,15 @@ The generator never solves Sokoban: it only reads the bundled level manifest
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any
 
 from BaseClasses import Region
 from worlds.AutoWorld import WebWorld, World
 
 from .corpus import LEVEL_COUNT
-from .Items import FILLER_NAME, SokopelagoItem, item_table, item_name_to_id, world_key_name
-from .Locations import SokopelagoLocation, location_name_to_id, location_table, solve_location_name
+from .Items import FILLER_NAME, SokopelagoItem, item_name_to_id, item_table, world_key_name
 from .layout import boss_world_index, chunk_levels, clamp, solve_count_keys_needed
+from .Locations import SokopelagoLocation, location_name_to_id, location_table, solve_location_name
 from .Options import SokopelagoOptions
 
 
@@ -42,7 +42,7 @@ class SokopelagoWorld(World):
     location_name_to_id = location_name_to_id
 
     # Set in generate_early.
-    worlds: List[List[int]]
+    worlds: list[list[int]]
     region_count: int
     level_count: int
     levels_per_region: int
@@ -66,9 +66,7 @@ class SokopelagoWorld(World):
             region = Region(f"World {i}", self.player, self.multiworld)
             for n in level_ns:
                 loc_name = solve_location_name(n)
-                region.locations.append(
-                    SokopelagoLocation(self.player, loc_name, location_table[loc_name], region)
-                )
+                region.locations.append(SokopelagoLocation(self.player, loc_name, location_table[loc_name], region))
             self.multiworld.regions.append(region)
 
             if i == 1:
@@ -82,9 +80,7 @@ class SokopelagoWorld(World):
                 )
 
     def create_items(self) -> None:
-        itempool: List[SokopelagoItem] = [
-            self.create_item(world_key_name(n)) for n in range(2, self.region_count + 1)
-        ]
+        itempool: list[SokopelagoItem] = [self.create_item(world_key_name(n)) for n in range(2, self.region_count + 1)]
         filler_needed = self.level_count - len(itempool)
         itempool += [self.create_filler() for _ in range(filler_needed)]
         self.multiworld.itempool += itempool
@@ -100,9 +96,7 @@ class SokopelagoWorld(World):
             if k == 0:
                 self.multiworld.completion_condition[player] = lambda state: True
             else:
-                self.multiworld.completion_condition[player] = (
-                    lambda state: state.has_from_list(all_keys, player, k)
-                )
+                self.multiworld.completion_condition[player] = lambda state: state.has_from_list(all_keys, player, k)
         elif goal == "boss_level":
             bw = boss_world_index(self.worlds, self.boss_level)
             if bw == 1:
@@ -124,7 +118,7 @@ class SokopelagoWorld(World):
     def get_filler_item_name(self) -> str:
         return FILLER_NAME
 
-    def fill_slot_data(self) -> Dict[str, Any]:
+    def fill_slot_data(self) -> dict[str, Any]:
         return {
             "corpus": "microban",
             "level_count": self.level_count,

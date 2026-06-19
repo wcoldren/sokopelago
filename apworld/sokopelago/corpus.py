@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Dict, List, TypedDict
+from typing import TypedDict
 
 
 class LevelEntry(TypedDict):
@@ -19,6 +19,6 @@ class LevelEntry(TypedDict):
 
 _MANIFEST = Path(__file__).parent / "data" / "microban.json"
 
-LEVELS: List[LevelEntry] = json.loads(_MANIFEST.read_text(encoding="utf-8"))
+LEVELS: list[LevelEntry] = json.loads(_MANIFEST.read_text(encoding="utf-8"))
 LEVEL_COUNT: int = len(LEVELS)
-NAME_BY_N: Dict[int, str] = {entry["n"]: entry["name"] for entry in LEVELS}
+NAME_BY_N: dict[int, str] = {entry["n"]: entry["name"] for entry in LEVELS}

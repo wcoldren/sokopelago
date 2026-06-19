@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  python-lint:
+    name: python · ruff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install ruff
+      - run: ruff check .
+      - run: ruff format --check .
+
+  python-fast:
+    name: python · helpers (no AP)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -r requirements-test.txt
+      - run: pytest tests/ --cov --cov-report=term
+
+  python-world:
+    name: python · AP world tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Clone Archipelago @0.6.7
+        run: git clone --depth 1 --branch 0.6.7 https://github.com/ArchipelagoMW/Archipelago _ap
+      - name: Install Archipelago deps
+        run: cd _ap && python ModuleUpdate.py --yes --force
+      - name: Install test tooling
+        run: pip install -r requirements-test.txt
+      - name: Symlink world into the AP clone
+        run: ln -s "$GITHUB_WORKSPACE/apworld/sokopelago" _ap/worlds/sokopelago
+      - name: World tests (WorldTestBase — generation, fill, beatability)
+        run: cd _ap && python -m pytest worlds/sokopelago/test/ -n auto --cov=worlds.sokopelago --cov-report=term
+      - name: mypy --strict (advisory)
+        continue-on-error: true
+        run: cd _ap && mypy --strict --follow-imports=silent --ignore-missing-imports worlds/sokopelago
+
+  client-lint:
+    name: client · eslint/prettier/tsc
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+
+  client-test:
+    name: client · vitest + coverage
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 22]
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci
+      - run: npm run coverage

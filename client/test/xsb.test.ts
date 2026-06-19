@@ -3,10 +3,7 @@ import { describe, expect, it } from "vitest";
 import { parseXsb } from "../src/xsb";
 import { Tile } from "../src/types";
 
-const corpus = readFileSync(
-  new URL("../../levels/microban.xsb", import.meta.url),
-  "utf8",
-);
+const corpus = readFileSync(new URL("../../levels/microban.xsb", import.meta.url), "utf8");
 
 describe("parseXsb — Microban corpus", () => {
   const levels = parseXsb(corpus);
@@ -62,17 +59,9 @@ describe("parseXsb — format handling", () => {
   });
 
   it("ignores header comment lines and bare ; titles", () => {
-    const xsb = [
-      "; a wordy header comment",
-      "",
-      "; 7",
-      "",
-      "###",
-      "#@#",
-      "#.#",
-      "#$#",
-      "###",
-    ].join("\n");
+    const xsb = ["; a wordy header comment", "", "; 7", "", "###", "#@#", "#.#", "#$#", "###"].join(
+      "\n",
+    );
     const levels = parseXsb(xsb);
     expect(levels).toHaveLength(1);
     expect(levels[0].name).toBe("7");

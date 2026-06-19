@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sokopelago</title>
     <style>
-      :root { color-scheme: dark; }
+      :root {
+        color-scheme: dark;
+      }
       body {
         margin: 0;
         font-family: system-ui, sans-serif;
@@ -17,14 +19,34 @@
         gap: 1rem;
         padding: 1.5rem;
       }
-      header { text-align: center; }
-      h1 { margin: 0 0 0.25rem; font-size: 1.4rem; }
-      .toolbar { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; justify-content: center; }
-      .panel {
-        display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; justify-content: center;
-        background: #20202a; border: 1px solid #33333f; border-radius: 8px; padding: 0.6rem 0.8rem;
+      header {
+        text-align: center;
       }
-      select, button, input {
+      h1 {
+        margin: 0 0 0.25rem;
+        font-size: 1.4rem;
+      }
+      .toolbar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .panel {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
+        background: #20202a;
+        border: 1px solid #33333f;
+        border-radius: 8px;
+        padding: 0.6rem 0.8rem;
+      }
+      select,
+      button,
+      input {
         font: inherit;
         background: #2a2a33;
         color: inherit;
@@ -32,18 +54,51 @@
         border-radius: 6px;
         padding: 0.35rem 0.6rem;
       }
-      input { width: 12rem; }
-      input.slot { width: 8rem; }
-      input.pass { width: 7rem; }
-      button { cursor: pointer; }
-      button:disabled { opacity: 0.5; cursor: default; }
-      #board { background: #111; border-radius: 8px; image-rendering: pixelated; }
-      #status { min-height: 1.4rem; font-weight: 600; }
-      #status.win { color: #6ee787; }
-      #conn-status { font-size: 0.85rem; opacity: 0.85; min-height: 1.2rem; }
-      #conn-status.ok { color: #6ee787; opacity: 1; }
-      #conn-status.err { color: #ff8f8f; opacity: 1; }
-      .hint { opacity: 0.6; font-size: 0.85rem; }
+      input {
+        width: 12rem;
+      }
+      input.slot {
+        width: 8rem;
+      }
+      input.pass {
+        width: 7rem;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      #board {
+        background: #111;
+        border-radius: 8px;
+        image-rendering: pixelated;
+      }
+      #status {
+        min-height: 1.4rem;
+        font-weight: 600;
+      }
+      #status.win {
+        color: #6ee787;
+      }
+      #conn-status {
+        font-size: 0.85rem;
+        opacity: 0.85;
+        min-height: 1.2rem;
+      }
+      #conn-status.ok {
+        color: #6ee787;
+        opacity: 1;
+      }
+      #conn-status.err {
+        color: #ff8f8f;
+        opacity: 1;
+      }
+      .hint {
+        opacity: 0.6;
+        font-size: 0.85rem;
+      }
     </style>
   </head>
   <body>
@@ -61,7 +116,10 @@
     <div id="conn-status">Not connected — free play (all levels).</div>
 
     <div class="toolbar">
-      <label>Level: <select id="level-select"></select></label>
+      <label
+        >Level:
+        <select id="level-select"></select
+      ></label>
       <button id="restart-btn" title="Restart (R)">Restart</button>
     </div>
 

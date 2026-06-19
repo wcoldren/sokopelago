@@ -65,12 +65,7 @@ export function parseXsb(text: string): Level[] {
   return levels;
 }
 
-function buildLevel(
-  rows: string[],
-  index: number,
-  num: number | null,
-  sub: string | null,
-): Level {
+function buildLevel(rows: string[], index: number, num: number | null, sub: string | null): Level {
   const height = rows.length;
   const width = Math.max(...rows.map((r) => r.length));
 

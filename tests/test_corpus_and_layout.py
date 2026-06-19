@@ -1,8 +1,8 @@
 import json
 from pathlib import Path
 
-import build_corpus  # noqa: E402  (path injected by conftest)
-import layout  # noqa: E402
+import build_corpus
+import layout
 
 ROOT = Path(__file__).resolve().parents[1]
 

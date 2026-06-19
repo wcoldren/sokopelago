@@ -1,0 +1,25 @@
+# Optional local hooks mirroring CI. Opt in with:
+#   pip install pre-commit && pre-commit install
+# Python uses ruff (pre-commit manages its own copy via additional_dependencies);
+# the client uses the repo's own Prettier via npm.
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: ruff check --fix
+        language: python
+        additional_dependencies: ["ruff>=0.9.0"]
+        types: [python]
+      - id: ruff-format
+        name: ruff format
+        entry: ruff format
+        language: python
+        additional_dependencies: ["ruff>=0.9.0"]
+        types: [python]
+      - id: prettier-client
+        name: prettier (client)
+        entry: bash -c 'cd client && npm run format'
+        language: system
+        files: ^client/
+        pass_filenames: false

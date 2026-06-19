@@ -8,8 +8,6 @@ how many levels a given seed actually uses. A seed attaches only the selected su
 
 from __future__ import annotations
 
-import typing
-
 from BaseClasses import Location
 
 from .corpus import LEVELS
@@ -25,8 +23,6 @@ def solve_location_name(n: int) -> str:
     return f"Solve Microban {n}"
 
 
-location_table: typing.Dict[str, int] = {
-    solve_location_name(entry["n"]): LOC_ID_BASE + entry["n"] for entry in LEVELS
-}
+location_table: dict[str, int] = {solve_location_name(entry["n"]): LOC_ID_BASE + entry["n"] for entry in LEVELS}
 
-location_name_to_id: typing.Dict[str, int] = dict(location_table)
+location_name_to_id: dict[str, int] = dict(location_table)

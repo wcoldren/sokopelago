@@ -1,0 +1,18 @@
+# Tool configuration only — Sokopelago's apworld is not a pip-installable package
+# (it's a source tree symlinked into Archipelago's worlds/). No [project] table.
+
+[tool.pytest.ini_options]
+# Match Archipelago's collection pattern so WorldTestBase subclasses (Test*) and the
+# pure-helper tests are both picked up.
+python_files = ["test_*.py", "Test*.py"]
+python_classes = ["Test"]
+python_functions = ["test"]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["apworld/sokopelago", "tools"]
+omit = ["*/test/*", "tests/*"]
+
+[tool.coverage.report]
+show_missing = true
