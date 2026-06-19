@@ -12,6 +12,7 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "@types/node": "^22.19.21",
     "typescript": "^5.7.2",
     "vite": "^6.0.7",
     "vite-plugin-static-copy": "^2.2.0",
