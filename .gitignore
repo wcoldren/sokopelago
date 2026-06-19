@@ -1,0 +1,17 @@
+# Node / client build
+node_modules/
+client/dist/
+client/.vite/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
