@@ -17,6 +17,7 @@ import {
   worldForKeyItem,
 } from "../src/ap/ids";
 import {
+  difficultyForLevel,
   isGoalMet,
   levelsInWorld,
   parForLevel,
@@ -182,6 +183,21 @@ describe("ap/slotData — parForLevel", () => {
     expect(parForLevel(sampleSlot({ par: { "8": 0 } }), 8)).toBeNull(); // non-positive
     expect(parForLevel(sampleSlot({ par: { "7": 10 } }), 9)).toBeNull(); // not in map
     expect(parForLevel(sampleSlot(), 7)).toBeNull(); // no par map at all
+  });
+});
+
+describe("ap/slotData — difficultyForLevel", () => {
+  it("returns the normalized difficulty when present", () => {
+    expect(difficultyForLevel(sampleSlot({ difficulty: { "7": 0.42 } }), 7)).toBe(0.42);
+  });
+
+  it("treats 0 as a valid (easiest) difficulty, not missing", () => {
+    expect(difficultyForLevel(sampleSlot({ difficulty: { "7": 0 } }), 7)).toBe(0);
+  });
+
+  it("returns null when the level is absent or no difficulty map shipped", () => {
+    expect(difficultyForLevel(sampleSlot({ difficulty: { "7": 0.42 } }), 9)).toBeNull();
+    expect(difficultyForLevel(sampleSlot(), 7)).toBeNull();
   });
 });
 

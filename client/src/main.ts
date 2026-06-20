@@ -9,16 +9,14 @@ import { parseXsb } from "./xsb";
 import { Game } from "./board";
 import { Renderer } from "./render";
 import { attachInput } from "./input";
-import type { Dir, Level } from "./types";
+import { effectiveDir, type Dir, type Level } from "./types";
 import { Session, loadPrefs, type SessionCallbacks } from "./ap/session";
-import { parForLevel, type SlotData } from "./ap/slotData";
+import { parForLevel, difficultyForLevel, type SlotData } from "./ap/slotData";
 import type { TrapVariant } from "./ap/ids";
-import { parseSolution } from "./solution";
+import { parseSolution, replaySolutionPrefix } from "./solution";
 
 const CORPUS_URL = "/levels/microban.xsb";
 const MANIFEST_URL = "/data/microban.json";
-
-const OPPOSITE: Record<Dir, Dir> = { up: "down", down: "up", left: "right", right: "left" };
 
 const $ = <T extends HTMLElement>(id: string): T => {
   const el = document.getElementById(id);
@@ -60,6 +58,21 @@ const levelNumber = (lvl: Level): number => lvl.index + 1;
 /** Push-par for a level when the connected seed has Par Checks on, else null. */
 const parTarget = (n: number): number | null => (slot?.par_checks ? parForLevel(slot, n) : null);
 
+/** Difficulty tier for a level ("easy"/"medium"/"hard"), or null if no data (offline). */
+function difficultyTier(n: number): "easy" | "medium" | "hard" | null {
+  const d = slot ? difficultyForLevel(slot, n) : null;
+  if (d === null) return null;
+  return d >= 0.66 ? "hard" : d >= 0.33 ? "medium" : "easy";
+}
+
+/** Compact 3-pip difficulty badge (e.g. "◆◆◇"), or "" when no data is available. */
+function difficultyBadge(n: number): string {
+  const tier = difficultyTier(n);
+  if (tier === null) return "";
+  const filled = tier === "hard" ? 3 : tier === "medium" ? 2 : 1;
+  return "◆".repeat(filled) + "◇".repeat(3 - filled);
+}
+
 function setStatus(text: string, win = false): void {
   statusEl.textContent = text;
   statusEl.classList.toggle("win", win);
@@ -80,9 +93,10 @@ function shownLevels(): Level[] {
 }
 
 function optionLabel(lvl: Level): string {
-  const base = `${levelNumber(lvl)}. ${lvl.name}`;
-  if (!slot || !session) return base;
   const n = levelNumber(lvl);
+  const badge = difficultyBadge(n);
+  const base = `${n}. ${lvl.name}${badge ? `  ${badge}` : ""}`;
+  if (!slot || !session) return base;
   if (session.isLevelSolved(n)) return `${session.isLevelPar(n) ? "★" : "✓"} ${base}`;
   if (!session.isLevelUnlocked(n)) {
     return `🔒 ${base} — World ${session.worldForLevel(n)} (locked)`;
@@ -138,7 +152,9 @@ function loadLevel(i: number): void {
   renderer.draw(game);
   const par = parTarget(levelNumber(target));
   const parSuffix = par !== null ? ` — par ${par} pushes` : "";
-  setStatus(`Level ${game.level.name} — ${game.boxes.length} boxes${parSuffix}`);
+  const tier = difficultyTier(levelNumber(target));
+  const diffSuffix = tier ? ` — ${tier}` : "";
+  setStatus(`Level ${game.level.name} — ${game.boxes.length} boxes${parSuffix}${diffSuffix}`);
   updateValveButtons();
 }
 
@@ -190,8 +206,7 @@ function onSolved(): void {
 
 function move(dir: Dir): void {
   if (!game || locked) return;
-  if (reversedControls) dir = OPPOSITE[dir];
-  if (!game.move(dir)) return;
+  if (!game.move(effectiveDir(dir, reversedControls))) return;
   renderer.draw(game);
   if (game.isWin()) onSolved();
   else refreshStatus();
@@ -239,8 +254,7 @@ function useHint(): void {
     return;
   }
   hintIndex += 1;
-  game.restart(); // realign the board to the solution line, then replay the prefix
-  for (let i = 0; i < hintIndex; i++) game.move(moves[i]);
+  replaySolutionPrefix(game, moves, hintIndex); // realign to the solution line, replay the prefix
   renderer.draw(game);
   setStatus(`Hint: replayed ${hintIndex}/${moves.length} solution moves.`);
   updateValveButtons();

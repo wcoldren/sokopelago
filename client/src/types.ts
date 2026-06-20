@@ -41,3 +41,14 @@ export const DELTA: Record<Dir, Vec> = {
   left: { x: -1, y: 0 },
   right: { x: 1, y: 0 },
 };
+
+/** The reverse of each direction. */
+export const OPPOSITE: Record<Dir, Dir> = {
+  up: "down",
+  down: "up",
+  left: "right",
+  right: "left",
+};
+
+/** The direction actually applied, accounting for a Reversed-Controls trap. */
+export const effectiveDir = (dir: Dir, reversed: boolean): Dir => (reversed ? OPPOSITE[dir] : dir);

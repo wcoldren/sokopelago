@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseXsb } from "../src/xsb";
 import { Game } from "../src/board";
+import { effectiveDir } from "../src/types";
 
 const load = (xsb: string): Game => new Game(parseXsb(xsb)[0]);
 
@@ -109,6 +110,20 @@ describe("Game — undo", () => {
     g.move("right");
     g.restart();
     expect(g.canUndo()).toBe(false);
+  });
+});
+
+describe("effectiveDir — reversed-controls trap", () => {
+  it("passes the direction through when controls are not reversed", () => {
+    expect(effectiveDir("up", false)).toBe("up");
+    expect(effectiveDir("right", false)).toBe("right");
+  });
+
+  it("inverts every direction when controls are reversed", () => {
+    expect(effectiveDir("up", true)).toBe("down");
+    expect(effectiveDir("down", true)).toBe("up");
+    expect(effectiveDir("left", true)).toBe("right");
+    expect(effectiveDir("right", true)).toBe("left");
   });
 });
 

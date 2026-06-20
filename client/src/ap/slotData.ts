@@ -51,6 +51,12 @@ export function parForLevel(slot: SlotData, n: number): number | null {
   return typeof par === "number" && par > 0 ? par : null;
 }
 
+/** Normalized 0..1 difficulty for a level, or `null` if none was shipped. */
+export function difficultyForLevel(slot: SlotData, n: number): number | null {
+  const d = slot.difficulty?.[String(n)];
+  return typeof d === "number" && d >= 0 ? d : null;
+}
+
 /** How many of this seed's levels are in `solved`. */
 export function solvedInSeed(slot: SlotData, solved: ReadonlySet<number>): number {
   let count = 0;

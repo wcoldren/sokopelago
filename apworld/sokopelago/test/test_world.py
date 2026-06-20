@@ -3,6 +3,7 @@
 inherited WorldTestBase reachability/fill/beatability checks under its option set.
 """
 
+from ..layout import chunk_levels
 from .bases import SokopelagoTestBase
 
 
@@ -32,10 +33,22 @@ class TestSolveCountAllLevels(SokopelagoTestBase):
 
 
 class TestDifficultyOrderingOn(SokopelagoTestBase):
-    # Difficulty-balanced world assignment must still generate a beatable seed.
+    # Difficulty-balanced world assignment must still generate a beatable seed, and the
+    # option must actually take effect: the layout differs from the native chunk order
+    # while preserving the same world sizes (so key counting / goal logic are unchanged).
     options = {"goal": "beat_final_region", "level_count": 30, "levels_per_region": 10, "difficulty_ordering": 1}
+
+    def test_layout_is_reordered_but_same_shape(self) -> None:
+        native = chunk_levels(self.world.level_count, self.world.levels_per_region)
+        assert self.world.worlds != native, "difficulty_ordering on should rebalance the layout"
+        assert [len(w) for w in self.world.worlds] == [len(w) for w in native]
+        assert sorted(n for w in self.world.worlds for n in w) == list(range(1, 31))
 
 
 class TestDifficultyOrderingOff(SokopelagoTestBase):
-    # Native corpus order (the chunk_levels path).
+    # Native corpus order (the chunk_levels path) must be used verbatim when off.
     options = {"goal": "beat_final_region", "level_count": 30, "levels_per_region": 10, "difficulty_ordering": 0}
+
+    def test_layout_is_native_chunk_order(self) -> None:
+        native = chunk_levels(self.world.level_count, self.world.levels_per_region)
+        assert self.world.worlds == native
