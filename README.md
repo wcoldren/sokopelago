@@ -35,11 +35,31 @@ npm run dev      # open the printed localhost URL and play
 npm test         # parser + game-model unit tests (Vitest)
 ```
 
-## Level corpus
+## Play (multiworld)
 
-`levels/microban.xsb` is **Microban** by David W. Skinner (155 puzzles). Skinner's sets
-"may be freely distributed provided they remain properly credited" — see
-[`levels/ATTRIBUTION.md`](levels/ATTRIBUTION.md).
+The web client is served on **GitHub Pages** and the world ships as an **.apworld** on
+**Releases**. To play a seed:
+
+1. **Install the world:** download `sokopelago.apworld` from the
+   [latest release](../../releases/latest), then in the Archipelago launcher click
+   **Install APWorld** (or drag the file onto it).
+2. **Generate a seed** locally with a YAML (`corpus: microban` or `pullban`;
+   `expert_logic: true` enables the Pull tier). Custom worlds must be generated locally —
+   archipelago.gg can't generate them.
+3. **Host it:** upload the generated output to
+   [archipelago.gg → Host Game](https://archipelago.gg). (You need a `wss` room, which
+   archipelago.gg provides — the hosted HTTPS client can't reach a plain `ws://` local
+   server. To play against a *local* `MultiServer`, run the client locally with
+   `npm run dev` instead.)
+4. **Connect:** open the Pages URL, enter the room's `host:port` and your slot name.
+
+## Level corpora
+
+- `levels/microban.xsb` — **Microban** by David W. Skinner (155 puzzles). Skinner's sets
+  "may be freely distributed provided they remain properly credited" — see
+  [`levels/ATTRIBUTION.md`](levels/ATTRIBUTION.md).
+- `levels/pullban.xsb` — an original expert corpus (Pull-required levels) for the Phase 5
+  ability tier. See [`CREDITS.md`](CREDITS.md).
 
 ## Archipelago integration (Phase 1+)
 
