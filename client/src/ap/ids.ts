@@ -18,6 +18,13 @@ export const LOC_BASE = 9_760_000;
  * solve band's `+ n` offset. Fixed by apworld/sokopelago/Locations.py (PAR_LOC_ID_BASE).
  */
 export const PAR_LOC_BASE = 9_770_000;
+/**
+ * Base id for `Solve Microban n efficiently` locations: id = EFF_LOC_BASE + n
+ * (n = 1..MAX_LEVELS). Present only when the seed enabled Efficiency Checks; the
+ * "gettable" tier below the exact-par one. Fixed by apworld/sokopelago/Locations.py
+ * (EFF_LOC_ID_BASE).
+ */
+export const EFF_LOC_BASE = 9_780_000;
 
 // Escape-valve / trap item ids — fixed by apworld/sokopelago/Items.py, in a band
 // clear of the key range (KEY_BASE + 2..155) and the location range (LOC_BASE+).
@@ -84,6 +91,21 @@ export function locationIdForParLevel(n: number): number {
  */
 export function levelForParLocationId(id: number): number | null {
   const n = id - PAR_LOC_BASE;
+  return n >= 1 && n <= MAX_LEVELS ? n : null;
+}
+
+/** Location id the client checks when Microban level `n` is solved within the
+ * efficiency margin (the gettable tier). */
+export function locationIdForEfficientLevel(n: number): number {
+  return EFF_LOC_BASE + n;
+}
+
+/**
+ * Microban level number for an efficiency-location id, or `null` if the id is not a
+ * Sokopelago efficiency-location.
+ */
+export function levelForEfficientLocationId(id: number): number | null {
+  const n = id - EFF_LOC_BASE;
   return n >= 1 && n <= MAX_LEVELS ? n : null;
 }
 
