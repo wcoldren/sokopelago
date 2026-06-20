@@ -12,6 +12,12 @@ export const KEY_BASE = 9_750_000;
 export const FILLER_ID = 9_750_001;
 /** Base id for `Solve Microban n` locations: id = LOC_BASE + n (n = 1..MAX_LEVELS). */
 export const LOC_BASE = 9_760_000;
+/**
+ * Base id for `Solve Microban n in <= par pushes` locations: id = PAR_LOC_BASE + n
+ * (n = 1..MAX_LEVELS). Present only when the seed enabled Par Checks; mirrors the
+ * solve band's `+ n` offset. Fixed by apworld/sokopelago/Locations.py (PAR_LOC_ID_BASE).
+ */
+export const PAR_LOC_BASE = 9_770_000;
 
 // Escape-valve / trap item ids — fixed by apworld/sokopelago/Items.py, in a band
 // clear of the key range (KEY_BASE + 2..155) and the location range (LOC_BASE+).
@@ -55,6 +61,20 @@ export function locationIdForLevel(n: number): number {
  */
 export function levelForLocationId(id: number): number | null {
   const n = id - LOC_BASE;
+  return n >= 1 && n <= MAX_LEVELS ? n : null;
+}
+
+/** Location id the client checks when Microban level `n` is solved within par. */
+export function locationIdForParLevel(n: number): number {
+  return PAR_LOC_BASE + n;
+}
+
+/**
+ * Microban level number for a par-location id, or `null` if the id is not a
+ * Sokopelago par-location.
+ */
+export function levelForParLocationId(id: number): number | null {
+  const n = id - PAR_LOC_BASE;
   return n >= 1 && n <= MAX_LEVELS ? n : null;
 }
 

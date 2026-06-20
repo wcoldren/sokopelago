@@ -11,7 +11,7 @@ import { Renderer } from "./render";
 import { attachInput } from "./input";
 import type { Dir, Level } from "./types";
 import { Session, loadPrefs, type SessionCallbacks } from "./ap/session";
-import type { SlotData } from "./ap/slotData";
+import { parForLevel, type SlotData } from "./ap/slotData";
 import type { TrapVariant } from "./ap/ids";
 import { parseSolution } from "./solution";
 
@@ -57,6 +57,9 @@ const msg = (e: unknown): string => (e instanceof Error ? e.message : String(e))
 /** Microban level number (1-based) for a parsed level (index is 0-based). */
 const levelNumber = (lvl: Level): number => lvl.index + 1;
 
+/** Push-par for a level when the connected seed has Par Checks on, else null. */
+const parTarget = (n: number): number | null => (slot?.par_checks ? parForLevel(slot, n) : null);
+
 function setStatus(text: string, win = false): void {
   statusEl.textContent = text;
   statusEl.classList.toggle("win", win);
@@ -80,7 +83,7 @@ function optionLabel(lvl: Level): string {
   const base = `${levelNumber(lvl)}. ${lvl.name}`;
   if (!slot || !session) return base;
   const n = levelNumber(lvl);
-  if (session.isLevelSolved(n)) return `✓ ${base}`;
+  if (session.isLevelSolved(n)) return `${session.isLevelPar(n) ? "★" : "✓"} ${base}`;
   if (!session.isLevelUnlocked(n)) {
     return `🔒 ${base} — World ${session.worldForLevel(n)} (locked)`;
   }
@@ -133,13 +136,17 @@ function loadLevel(i: number): void {
   hintIndex = 0;
   reversedControls = false; // a trap's curse lasts only for the level it hit
   renderer.draw(game);
-  setStatus(`Level ${game.level.name} — ${game.boxes.length} boxes`);
+  const par = parTarget(levelNumber(target));
+  const parSuffix = par !== null ? ` — par ${par} pushes` : "";
+  setStatus(`Level ${game.level.name} — ${game.boxes.length} boxes${parSuffix}`);
   updateValveButtons();
 }
 
 function refreshStatus(): void {
   if (!game) return;
-  setStatus(`Level ${game.level.name} — moves ${game.moves}, pushes ${game.pushes}`);
+  const par = parTarget(levelNumber(game.level));
+  const parSuffix = par !== null ? ` / par ${par}` : "";
+  setStatus(`Level ${game.level.name} — moves ${game.moves}, pushes ${game.pushes}${parSuffix}`);
   updateValveButtons();
 }
 
@@ -151,13 +158,20 @@ function onSolved(): void {
 
   if (slot && session) {
     const n = levelNumber(lvl);
-    session.reportSolved(n);
+    session.reportSolved(n, game.pushes);
     rebuildSelector(); // mark the just-solved option
+    const par = parTarget(n);
+    let parNote = "";
+    if (par !== null) {
+      parNote = session.isLevelPar(n)
+        ? ` ✓ under par (${par})!`
+        : ` (par ${par} — par check missed)`;
+    }
     const next = nextPlayable(n);
     setStatus(
       next
-        ? `Solved ${solved}! (${game.moves} moves, ${game.pushes} pushes) → next…`
-        : `Solved ${solved}! No more playable levels right now — open a world or check your goal.`,
+        ? `Solved ${solved}! (${game.moves} moves, ${game.pushes} pushes)${parNote} → next…`
+        : `Solved ${solved}! (${game.pushes} pushes)${parNote} No more playable levels right now — open a world or check your goal.`,
       true,
     );
     if (next) window.setTimeout(() => loadLevel(next.index), 1100);

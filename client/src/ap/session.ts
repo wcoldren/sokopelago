@@ -10,11 +10,13 @@ import { Client, itemsHandlingFlags } from "archipelago.js";
 import {
   escapeValveForItem,
   levelForLocationId,
+  levelForParLocationId,
   locationIdForLevel,
+  locationIdForParLevel,
   worldForKeyItem,
   type TrapVariant,
 } from "./ids";
-import { isGoalMet, worldOfLevel, type SlotData } from "./slotData";
+import { isGoalMet, parForLevel, worldOfLevel, type SlotData } from "./slotData";
 
 /** UI hooks the play loop subscribes to. */
 export interface SessionCallbacks {
@@ -102,6 +104,8 @@ export class Session {
   /** World 1 is always free; keyed worlds are added as their keys arrive. */
   readonly unlockedWorlds = new Set<number>([1]);
   readonly solvedLevels = new Set<number>();
+  /** Levels solved within par (the par-location check was sent). For the UI / restore. */
+  readonly parLevels = new Set<number>();
 
   private worldOf = new Map<number, number>();
   private goaled = false;
@@ -175,15 +179,32 @@ export class Session {
     return this.solvedLevels.has(n);
   }
 
+  /** Whether level `n` was solved within par (its par check was sent). */
+  isLevelPar(n: number): boolean {
+    return this.parLevels.has(n);
+  }
+
   worldForLevel(n: number): number | undefined {
     return this.worldOf.get(n);
   }
 
-  /** Report a solved level: send the location check and re-check the goal. */
-  reportSolved(n: number): void {
+  /**
+   * Report a solved level: send its location check and re-check the goal. When the
+   * seed has Par Checks and `pushCount` is within the level's push-par, also send the
+   * parallel par-location check. `pushCount` is omitted for a Skip Token (skipping
+   * clears the level but never counts as a par clear).
+   */
+  reportSolved(n: number, pushCount?: number): void {
     if (!this.client.authenticated) return;
     this.client.check(locationIdForLevel(n));
     this.solvedLevels.add(n); // optimistic; the server echo is idempotent
+    if (this.slot?.par_checks && pushCount !== undefined && !this.parLevels.has(n)) {
+      const par = parForLevel(this.slot, n);
+      if (par !== null && pushCount <= par) {
+        this.client.check(locationIdForParLevel(n));
+        this.parLevels.add(n);
+      }
+    }
     this.maybeGoal();
   }
 
@@ -283,6 +304,14 @@ export class Session {
       const n = levelForLocationId(id);
       if (n !== null && !this.solvedLevels.has(n)) {
         this.solvedLevels.add(n);
+        changed = true;
+      }
+      // A par-location check implies the level was solved within par; mark both so the
+      // par badge and solved state survive a reconnect.
+      const pn = levelForParLocationId(id);
+      if (pn !== null) {
+        if (!this.solvedLevels.has(pn)) this.solvedLevels.add(pn);
+        if (!this.parLevels.has(pn)) this.parLevels.add(pn);
         changed = true;
       }
     }

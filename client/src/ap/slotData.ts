@@ -23,6 +23,8 @@ export interface SlotData {
   par?: Record<string, number>;
   /** Normalized 0..1 difficulty per seed level (Microban number as a string key). */
   difficulty?: Record<string, number>;
+  /** When true, the seed has par-location checks; solving within par sends a second check. */
+  par_checks?: boolean;
   seed_name: string;
   player_name: string;
   player_id: number;
@@ -41,6 +43,12 @@ export function worldOfLevel(slot: SlotData): Map<number, number> {
 /** Microban level numbers in a given world (empty if the world is unknown). */
 export function levelsInWorld(slot: SlotData, world: number): number[] {
   return slot.region_map[String(world)] ?? [];
+}
+
+/** Push-par for a level, or `null` if unknown (no par data shipped for it). */
+export function parForLevel(slot: SlotData, n: number): number | null {
+  const par = slot.par?.[String(n)];
+  return typeof par === "number" && par > 0 ? par : null;
 }
 
 /** How many of this seed's levels are in `solved`. */
