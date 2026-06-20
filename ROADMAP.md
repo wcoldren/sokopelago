@@ -86,10 +86,14 @@ Treat these as required for v1, not polish.
 - Add a second location per level: `Solve <level> in ≤ par pushes`.
 - Requires the offline solver to compute par. Roughly doubles check count; turns mastery into multiworld events instead of dead time.
 
-### Phase 5 — Expert ability-logic tier
+### Phase 5 — Expert ability-logic tier ✅ (shipped 2026-06-20, `0.4.0`)
 - Offline solver tags per-level minimal mechanic requirements.
 - Ability items (Pull, Push-Two, …) as hard gates under an opt-in logic-difficulty option.
 - Client implements the corresponding mechanics.
+- **As shipped:** the **Pull** ability only, against an original **pullban** corpus whose
+  harder levels are provably unsolvable by pushing (Microban is 100% push-solvable, so it
+  can't gate anything). Opt-in via the `expert_logic` option; the solver proves each gate.
+  Push-Two / diagonal / teleport remain future passes.
 
 ### Phase 6 — Polish
 - Tracker support (PopTracker).

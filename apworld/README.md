@@ -2,7 +2,7 @@
 
 The Archipelago world for Sokopelago. The package `sokopelago/` implements the full
 world — items, locations, regions, rules, options, and slot_data — modelled on
-`worlds/checksfinder` in the Archipelago tree. Current version `0.3.0` (Phases 0–4; see
+`worlds/checksfinder` in the Archipelago tree. Current version `0.4.0` (Phases 0–5; see
 the repo-root [CHANGELOG.md](../CHANGELOG.md) and [VERSIONING.md](../VERSIONING.md)).
 
 ## Integration model (independent repo + symlink, never a fork)

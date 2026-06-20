@@ -24,11 +24,12 @@ project version.
 ## Current status: beta (`0.x`)
 
 We are pre-1.0. Per SemVer, the `0.x` line carries no stability promise — the public API,
-`slot_data` schema, and ID layout may still move. Current version: **`0.3.0`**.
+`slot_data` schema, and ID layout may still move. Current version: **`0.4.0`**.
 
 The minor digit bumps on each world/datapackage-affecting change, **not** per roadmap
 phase number. History to date: `0.1.0` (Phase 1, world core) → `0.2.0` (Phase 3 valves)
-→ `0.3.0` (Phase 4 par checks). Phase 2 was a client-only integration milestone and rode
+→ `0.3.0` (Phase 4 par checks) → `0.4.0` (Phase 5 expert Pull tier — new option, Pull
+item, and the pullban corpus). Phase 2 was a client-only integration milestone and rode
 along with no world bump.
 
 ### While `< 1.0.0`

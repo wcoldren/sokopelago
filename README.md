@@ -17,13 +17,14 @@ levels/      Canonical level corpus (XSB), shared by the client now and the apwo
 ROADMAP.md   Source of truth for scope + phasing
 ```
 
-## Current status: Phase 4 done (`0.3.0`)
+## Current status: Phase 5 done (`0.4.0`)
 
-Phases 0–4 are shipped and CI-green: local Sokoban play, the apworld core (region-key
+Phases 0–5 are shipped and CI-green: local Sokoban play, the apworld core (region-key
 logic, solve-checks, goals), the live AP protocol client, Phase 3 escape valves
-(skip/undo/hint tokens + traps), and Phase 4 per-level par checks. Remaining roadmap
-work: **Phase 5** (expert ability-logic tier) and **Phase 6** (polish — PopTracker,
-multiple corpora, settings UX).
+(skip/undo/hint tokens + traps), Phase 4 per-level par checks, and the Phase 5 expert
+ability-logic tier — a **Pull** ability (opt-in Expert Logic) that hard-gates the
+pull-required levels of the original **Pullban** corpus. Remaining roadmap work:
+**Phase 6** (polish — PopTracker, more abilities/corpora, hosting/UX).
 
 ## Client quickstart
 

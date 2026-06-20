@@ -6,6 +6,19 @@ All notable changes to Sokopelago are documented here. The format follows
 apworld `world_version`, with the client kept in lockstep. Versions correspond to
 world/datapackage-affecting changes, not roadmap phase numbers.
 
+## [0.4.0] — Phase 5: expert ability-logic tier (Pull)
+
+### Added
+- **Pull ability** end-to-end: the offline solver gained a pull-aware mode that proves
+  which levels are unsolvable by pushing alone, the client implements the pull mechanic
+  (Shift+direction, or a Pull-mode toggle), and a **Pull** progression item hard-gates
+  those levels under a new **Expert Logic** option (default off).
+- **Pullban** — an original expert corpus (`levels/pullban.xsb`): a mix of push-solvable
+  hosts and pull-required levels, selectable via the `corpus` option (`pullban`).
+- Multi-corpus support: per-corpus manifests (`data/<corpus>.json`) with bundled boards;
+  the client loads the seed's corpus on connect; build tools take `--corpus`.
+- slot_data gains `corpus`, `expert_logic`, and `requires_pull`.
+
 ## [0.3.0] — Phase 4: check density
 
 ### Added
@@ -42,4 +55,5 @@ world/datapackage-affecting changes, not roadmap phase numbers.
 - Repo skeleton (`apworld/`, `client/`), XSB parser, board rendering, base Sokoban
   (move/push/win), and the Microban corpus — playable locally with no AP connection.
 
+[0.4.0]: https://github.com/wcoldren/sokopelago/releases/tag/v0.4.0
 [0.3.0]: https://github.com/wcoldren/sokopelago/releases/tag/v0.3.0
