@@ -112,7 +112,8 @@ Pull mechanic** and **being hard**. A pull-required level isn't inherently harde
 than a tricky push-only one — it just needs a different verb. Rename the option/tier to name
 the mechanic, not a difficulty claim — e.g. `pull_logic` / "ability logic" / "pull tier".
 This is a **breaking** option/slot_data rename (existing yamls reference `expert_logic`), so
-batch it with the Pull/par build rather than doing it piecemeal. Touch points: option key in
+batch it with the Pull/par build rather than doing it piecemeal. **Confirmed (2026-06-20):
+fold this rename into the next Pull/par round.** Touch points: option key in
 `Options.py`, `expert_logic` in `fill_slot_data`, `slotData.ts`, and `session.ts`/`main.ts`
 (`expert_logic` reads, the `pullInSeed`/`canPull` logic).
 

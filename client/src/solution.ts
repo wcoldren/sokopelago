@@ -146,7 +146,7 @@ export function animateSolutionPrefix(
   count: number,
   opts: { onStep: () => void; onDone?: () => void; stepMs?: number },
 ): AnimationHandle {
-  const stepMs = opts.stepMs ?? 450;
+  const stepMs = opts.stepMs ?? 350;
   const applied = Math.max(0, Math.min(count, moves.length));
   game.restart();
   opts.onStep(); // draw the reset board before the first move
