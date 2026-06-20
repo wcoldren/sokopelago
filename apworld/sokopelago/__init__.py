@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from BaseClasses import Region
+from BaseClasses import LocationProgressType, Region
 from worlds.AutoWorld import WebWorld, World
 
 from .corpus import DIFFICULTY_BY_N, LEVEL_COUNT, PAR_BY_N
@@ -35,7 +35,14 @@ from .layout import (
     escape_valve_counts,
     solve_count_keys_needed,
 )
-from .Locations import SokopelagoLocation, location_name_to_id, location_table, solve_location_name
+from .Locations import (
+    SokopelagoLocation,
+    location_name_to_id,
+    location_table,
+    par_location_name,
+    par_location_table,
+    solve_location_name,
+)
 from .Options import SokopelagoOptions
 
 
@@ -81,11 +88,20 @@ class SokopelagoWorld(World):
         menu = Region("Menu", self.player, self.multiworld)
         self.multiworld.regions.append(menu)
 
+        par_checks = bool(self.options.par_checks.value)
         for i, level_ns in enumerate(self.worlds, start=1):
             region = Region(f"World {i}", self.player, self.multiworld)
             for n in level_ns:
                 loc_name = solve_location_name(n)
                 region.locations.append(SokopelagoLocation(self.player, loc_name, location_table[loc_name], region))
+                if par_checks:
+                    # The par location shares the region's key gate, but is EXCLUDED so
+                    # only filler lands there — a hard par requirement (which escape
+                    # valves can't bypass) can never strand a progression item.
+                    par_name = par_location_name(n)
+                    par_loc = SokopelagoLocation(self.player, par_name, par_location_table[par_name], region)
+                    par_loc.progress_type = LocationProgressType.EXCLUDED
+                    region.locations.append(par_loc)
             self.multiworld.regions.append(region)
 
             if i == 1:
@@ -100,15 +116,20 @@ class SokopelagoWorld(World):
 
     def create_items(self) -> None:
         keys: list[SokopelagoItem] = [self.create_item(world_key_name(n)) for n in range(2, self.region_count + 1)]
-        budget = self.level_count - len(keys)  # non-key items the pool can hold (one location per level)
+        # One item per location. Par Checks adds a second (EXCLUDED) location per level,
+        # so the pool must grow to match; the extra slots are plain filler.
+        total_locations = self.level_count * (2 if self.options.par_checks.value else 1)
+        budget = total_locations - len(keys)  # non-key items the pool can hold
         extras = self._escape_valve_items(budget)
         filler = [self.create_filler() for _ in range(budget - len(extras))]
         self.multiworld.itempool += keys + extras + filler
 
     def _escape_valve_items(self, budget: int) -> list[SokopelagoItem]:
         """Escape-valve + trap items, carved out of the filler budget (never on top),
-        so the pool size stays exactly ``level_count``. Counts are clamped to fit."""
-        trap_count = (budget * self.options.trap_percentage.value) // 100
+        so the pool size stays exactly the location count. Counts are clamped to fit."""
+        # Trap density tracks the level count (not the enlarged budget) so enabling Par
+        # Checks doesn't silently double the number of traps.
+        trap_count = min(budget, (self.level_count * self.options.trap_percentage.value) // 100)
         requested = {
             "skip": self.options.skip_tokens.value,
             "hint": self.options.hint_tokens.value,
@@ -168,6 +189,9 @@ class SokopelagoWorld(World):
             "goal_solve_count": self.goal_solve_count,
             "goal_boss_level": self.boss_level,
             "final_world": self.region_count,
+            # When on, the client sends the parallel par-location check for any level
+            # solved within its push-par (Phase 4 check density).
+            "par_checks": bool(self.options.par_checks.value),
             # Per-level par + normalized difficulty for the client's UI / hints. Full
             # solution strings are NOT shipped here (bloat) — the client reads those
             # from the bundled manifest it serves.

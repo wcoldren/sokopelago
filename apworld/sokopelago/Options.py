@@ -120,6 +120,16 @@ class DifficultyOrdering(Toggle):
     default = 1
 
 
+class ParChecks(Toggle):
+    """Add a second location per level: "Solve Microban n in <= par pushes". Solving a
+    level within its precomputed push-par sends this extra check, roughly doubling the
+    seed's check count. These locations only ever hold filler (never progression), so a
+    hard par requirement can't soft-lock the seed. Off by default."""
+
+    display_name = "Par Checks"
+    default = 0
+
+
 @dataclass
 class SokopelagoOptions(PerGameCommonOptions):
     corpus: Corpus
@@ -133,3 +143,4 @@ class SokopelagoOptions(PerGameCommonOptions):
     hint_tokens: HintTokens
     trap_percentage: TrapPercentage
     difficulty_ordering: DifficultyOrdering
+    par_checks: ParChecks
