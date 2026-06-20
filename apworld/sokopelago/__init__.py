@@ -17,9 +17,24 @@ from typing import Any
 from BaseClasses import Region
 from worlds.AutoWorld import WebWorld, World
 
-from .corpus import LEVEL_COUNT
-from .Items import FILLER_NAME, SokopelagoItem, item_name_to_id, item_table, world_key_name
-from .layout import boss_world_index, chunk_levels, clamp, solve_count_keys_needed
+from .corpus import DIFFICULTY_BY_N, LEVEL_COUNT, PAR_BY_N
+from .Items import (
+    FILLER_NAME,
+    TRAP_ITEM_NAMES,
+    VALVE_ITEM_NAMES,
+    SokopelagoItem,
+    item_name_to_id,
+    item_table,
+    world_key_name,
+)
+from .layout import (
+    assign_levels_by_difficulty,
+    boss_world_index,
+    chunk_levels,
+    clamp,
+    escape_valve_counts,
+    solve_count_keys_needed,
+)
 from .Locations import SokopelagoLocation, location_name_to_id, location_table, solve_location_name
 from .Options import SokopelagoOptions
 
@@ -52,7 +67,11 @@ class SokopelagoWorld(World):
     def generate_early(self) -> None:
         self.level_count = clamp(self.options.level_count.value, 5, LEVEL_COUNT)
         self.levels_per_region = clamp(self.options.levels_per_region.value, 1, self.level_count)
-        self.worlds = chunk_levels(self.level_count, self.levels_per_region)
+        levels = list(range(1, self.level_count + 1))
+        if self.options.difficulty_ordering.value and DIFFICULTY_BY_N:
+            self.worlds = assign_levels_by_difficulty(levels, DIFFICULTY_BY_N, self.levels_per_region)
+        else:
+            self.worlds = chunk_levels(self.level_count, self.levels_per_region)
         self.region_count = len(self.worlds)
         self.goal_solve_count = clamp(self.options.goal_solve_count.value, 1, self.level_count)
         raw_boss = self.options.goal_boss_level.value
@@ -80,10 +99,29 @@ class SokopelagoWorld(World):
                 )
 
     def create_items(self) -> None:
-        itempool: list[SokopelagoItem] = [self.create_item(world_key_name(n)) for n in range(2, self.region_count + 1)]
-        filler_needed = self.level_count - len(itempool)
-        itempool += [self.create_filler() for _ in range(filler_needed)]
-        self.multiworld.itempool += itempool
+        keys: list[SokopelagoItem] = [self.create_item(world_key_name(n)) for n in range(2, self.region_count + 1)]
+        budget = self.level_count - len(keys)  # non-key items the pool can hold (one location per level)
+        extras = self._escape_valve_items(budget)
+        filler = [self.create_filler() for _ in range(budget - len(extras))]
+        self.multiworld.itempool += keys + extras + filler
+
+    def _escape_valve_items(self, budget: int) -> list[SokopelagoItem]:
+        """Escape-valve + trap items, carved out of the filler budget (never on top),
+        so the pool size stays exactly ``level_count``. Counts are clamped to fit."""
+        trap_count = (budget * self.options.trap_percentage.value) // 100
+        requested = {
+            "skip": self.options.skip_tokens.value,
+            "hint": self.options.hint_tokens.value,
+            "undo": self.options.undo_charges.value,
+            "trap": trap_count,
+        }
+        counts = escape_valve_counts(budget, requested)
+        items: list[SokopelagoItem] = []
+        for key in ("skip", "hint", "undo"):
+            items += [self.create_item(VALVE_ITEM_NAMES[key]) for _ in range(counts[key])]
+        for i in range(counts["trap"]):  # spread the trap budget across the variants
+            items.append(self.create_item(TRAP_ITEM_NAMES[i % len(TRAP_ITEM_NAMES)]))
+        return items
 
     def set_rules(self) -> None:
         player = self.player
@@ -119,16 +157,22 @@ class SokopelagoWorld(World):
         return FILLER_NAME
 
     def fill_slot_data(self) -> dict[str, Any]:
+        seed_levels = [n for world in self.worlds for n in world]
         return {
             "corpus": "microban",
             "level_count": self.level_count,
             "levels_per_region": self.levels_per_region,
-            "levels": [n for world in self.worlds for n in world],
+            "levels": seed_levels,
             "region_map": {str(i): world for i, world in enumerate(self.worlds, start=1)},
             "goal": self.options.goal.current_key,
             "goal_solve_count": self.goal_solve_count,
             "goal_boss_level": self.boss_level,
             "final_world": self.region_count,
+            # Per-level par + normalized difficulty for the client's UI / hints. Full
+            # solution strings are NOT shipped here (bloat) — the client reads those
+            # from the bundled manifest it serves.
+            "par": {str(n): PAR_BY_N[n] for n in seed_levels if n in PAR_BY_N},
+            "difficulty": {str(n): DIFFICULTY_BY_N[n] for n in seed_levels if n in DIFFICULTY_BY_N},
             "seed_name": self.multiworld.seed_name,
             "player_name": self.player_name,
             "player_id": self.player,

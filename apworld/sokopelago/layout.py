@@ -45,3 +45,50 @@ def boss_world_index(worlds: list[list[int]], boss_level: int) -> int:
         if boss_level in world:
             return i
     return len(worlds)
+
+
+# Escape-valve items are carved out of the filler budget (never added on top), so the
+# item pool stays exactly ``level_count``. When the budget can't hold every requested
+# valve, drop them in this priority order — a skip token is the load-bearing one.
+ESCAPE_VALVE_PRIORITY = ("skip", "hint", "undo", "trap")
+
+
+def escape_valve_counts(budget: int, requested: dict[str, int]) -> dict[str, int]:
+    """Clamp requested escape-valve counts so their sum fits ``budget``.
+
+    Fills greedily in ``ESCAPE_VALVE_PRIORITY`` order, so when room is tight the skip
+    token survives first and traps are sacrificed first. Returns a dict with every
+    priority key present (0 when nothing fits)."""
+    remaining = max(0, budget)
+    counts = dict.fromkeys(ESCAPE_VALVE_PRIORITY, 0)
+    for key in ESCAPE_VALVE_PRIORITY:
+        want = max(0, requested.get(key, 0))
+        take = min(want, remaining)
+        counts[key] = take
+        remaining -= take
+    return counts
+
+
+def assign_levels_by_difficulty(
+    levels: list[int],
+    difficulty: dict[int, float],
+    levels_per_region: int,
+) -> list[list[int]]:
+    """Distribute levels into worlds balanced by measured difficulty.
+
+    Produces the same world count and per-world sizes as ``chunk_levels`` (so key
+    counting and goal logic are unchanged), but deals difficulty-sorted levels
+    round-robin across worlds so no single key-gated world is a brutal cluster, then
+    orders each world easiest-first. Levels missing a difficulty score sort as 0."""
+    sizes = [len(world) for world in chunk_levels(len(levels), levels_per_region)]
+    worlds: list[list[int]] = [[] for _ in sizes]
+    ordered = sorted(levels, key=lambda n: (difficulty.get(n, 0.0), n))
+    wi = 0
+    for lvl in ordered:
+        while len(worlds[wi]) >= sizes[wi]:
+            wi = (wi + 1) % len(sizes)
+        worlds[wi].append(lvl)
+        wi = (wi + 1) % len(sizes)
+    for world in worlds:
+        world.sort(key=lambda n: (difficulty.get(n, 0.0), n))
+    return worlds

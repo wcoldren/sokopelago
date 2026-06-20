@@ -1,10 +1,10 @@
-"""Player options for Sokopelago (Phase 1)."""
+"""Player options for Sokopelago."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-from Options import Choice, PerGameCommonOptions, Range
+from Options import Choice, PerGameCommonOptions, Range, Toggle
 
 from .corpus import LEVEL_COUNT
 
@@ -69,6 +69,57 @@ class GoalBossLevel(Range):
     default = 0
 
 
+class SkipTokens(Range):
+    """How many Skip Tokens to shuffle into the pool. Consume one to mark a level you
+    can't solve as cleared (it sends its check) so a skill wall can't permanently
+    stall your slot. Escape-valve items are carved out of the filler budget, so very
+    high counts are clamped to the room available."""
+
+    display_name = "Skip Tokens"
+    range_start = 0
+    range_end = 50
+    default = 3
+
+
+class UndoCharges(Range):
+    """How many Undo Charges to shuffle into the pool. Each grants one move-undo in the
+    client."""
+
+    display_name = "Undo Charges"
+    range_start = 0
+    range_end = 50
+    default = 5
+
+
+class HintTokens(Range):
+    """How many Hint Tokens to shuffle into the pool. Consume one to reveal the next
+    move of a level's solution."""
+
+    display_name = "Hint Tokens"
+    range_start = 0
+    range_end = 50
+    default = 3
+
+
+class TrapPercentage(Range):
+    """Percent of the filler budget to replace with (presentation-only) trap items.
+    0 disables traps."""
+
+    display_name = "Trap Percentage"
+    range_start = 0
+    range_end = 100
+    default = 0
+
+
+class DifficultyOrdering(Toggle):
+    """Balance measured difficulty across worlds (and order each world easiest-first)
+    so the non-linear key order can't drop you onto a brutal world first. When off,
+    worlds follow the corpus's native order."""
+
+    display_name = "Difficulty Ordering"
+    default = 1
+
+
 @dataclass
 class SokopelagoOptions(PerGameCommonOptions):
     corpus: Corpus
@@ -77,3 +128,8 @@ class SokopelagoOptions(PerGameCommonOptions):
     goal: Goal
     goal_solve_count: GoalSolveCount
     goal_boss_level: GoalBossLevel
+    skip_tokens: SkipTokens
+    undo_charges: UndoCharges
+    hint_tokens: HintTokens
+    trap_percentage: TrapPercentage
+    difficulty_ordering: DifficultyOrdering
