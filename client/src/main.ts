@@ -40,6 +40,7 @@ const hintBtn = $<HTMLButtonElement>("hint-btn");
 const skipBtn = $<HTMLButtonElement>("skip-btn");
 const pullBtn = $<HTMLButtonElement>("pull-btn");
 const statusEl = $<HTMLDivElement>("status");
+const noticeEl = $<HTMLDivElement>("notice");
 const hostInput = $<HTMLInputElement>("ap-host");
 const slotInput = $<HTMLInputElement>("ap-slot");
 const passInput = $<HTMLInputElement>("ap-pass");
@@ -87,6 +88,22 @@ function difficultyBadge(n: number): string {
 function setStatus(text: string, win = false): void {
   statusEl.textContent = text;
   statusEl.classList.toggle("win", win);
+}
+
+let noticeTimer: number | undefined;
+
+/**
+ * Show a lingering event notice (unlock, item received, solve, warning) on its own line,
+ * so a subsequent move or auto-advance — which rewrite `#status` — don't wipe it. Stays
+ * for `ms`, then fades. The live per-move state stays on `#status`.
+ */
+function notice(text: string, opts: { win?: boolean; ms?: number } = {}): void {
+  const { win = false, ms = 5000 } = opts;
+  noticeEl.textContent = text;
+  noticeEl.classList.toggle("win", win);
+  noticeEl.classList.remove("fading");
+  if (noticeTimer !== undefined) window.clearTimeout(noticeTimer);
+  noticeTimer = window.setTimeout(() => noticeEl.classList.add("fading"), ms);
 }
 
 function setConnStatus(text: string, kind?: "ok" | "err"): void {
@@ -151,9 +168,9 @@ function loadLevel(i: number): void {
   if (slot && session && !session.isLevelPlayable(levelNumber(target))) {
     const n = levelNumber(target);
     if (!session.isLevelUnlocked(n)) {
-      setStatus(`Level ${n} is locked — needs the World ${session.worldForLevel(n)} Key.`);
+      notice(`Level ${n} is locked — needs the World ${session.worldForLevel(n)} Key.`);
     } else {
-      setStatus(`Level ${n} needs the Pull ability — find it in the multiworld.`);
+      notice(`Level ${n} needs the Pull ability — find it in the multiworld.`);
     }
     select.value = String(current);
     return;
@@ -199,22 +216,22 @@ function onSolved(): void {
         : ` (par ${par} — par check missed)`;
     }
     const next = nextPlayable(n);
-    setStatus(
+    notice(
       next
         ? `Solved ${solved}! (${game.moves} moves, ${game.pushes} pushes)${parNote} → next…`
         : `Solved ${solved}! (${game.pushes} pushes)${parNote} No more playable levels right now — open a world or check your goal.`,
-      true,
+      { win: true },
     );
     if (next) window.setTimeout(() => loadLevel(next.index), 1100);
     return;
   }
 
   const hasNext = current < levels.length - 1;
-  setStatus(
+  notice(
     hasNext
       ? `Solved ${solved}! (${game.moves} moves, ${game.pushes} pushes) → next…`
       : `Solved ${solved}! That's the last level. 🎉`,
-    true,
+    { win: true },
   );
   if (hasNext) window.setTimeout(() => loadLevel(current + 1), 1100);
 }
@@ -241,7 +258,7 @@ function move(dir: Dir): void {
 function pull(dir: Dir): void {
   if (!game || locked) return;
   if (!canPullNow()) {
-    setStatus("The Pull ability is needed here — find it in the multiworld.");
+    notice("The Pull ability is needed here — find it in the multiworld.");
     return;
   }
   if (!game.pull(effectiveDir(dir, reversedControls))) return;
@@ -264,7 +281,7 @@ function restart(): void {
 function undo(): void {
   if (!game || locked || !game.canUndo()) return;
   if (slot && session && !session.useUndo()) {
-    setStatus("No Undo Charges available.");
+    notice("No Undo Charges available.");
     return;
   }
   if (game.undo()) {
@@ -279,16 +296,16 @@ function useHint(): void {
   const n = levelNumber(game.level);
   const solution = solutions.get(n);
   if (!solution) {
-    setStatus("No hint is available for this level.");
+    notice("No hint is available for this level.");
     return;
   }
   const moves = parseSolution(solution);
   if (hintIndex >= moves.length - 1) {
-    setStatus("Hint: you're at the final step — finish it yourself! 🙂");
+    notice("Hint: you're at the final step — finish it yourself! 🙂");
     return;
   }
   if (!session.useHint()) {
-    setStatus("No Hint Tokens available.");
+    notice("No Hint Tokens available.");
     return;
   }
   hintIndex += 1;
@@ -303,11 +320,11 @@ function useSkip(): void {
   if (!game || !slot || !session) return;
   const n = levelNumber(game.level);
   if (!session.useSkip(n)) {
-    setStatus("No Skip Tokens available (or already solved).");
+    notice("No Skip Tokens available (or already solved).");
     return;
   }
   locked = true;
-  setStatus(`Skipped level ${n} — check sent.`, true);
+  notice(`Skipped level ${n} — check sent.`, { win: true });
   rebuildSelector();
   const next = nextPlayable(n);
   if (next) window.setTimeout(() => loadLevel(next.index), 900);
@@ -317,23 +334,23 @@ function useSkip(): void {
 function triggerTrap(variant: TrapVariant): void {
   if (variant === "reversed") {
     reversedControls = true;
-    setStatus("⚡ Trap: Reversed Controls — until you change levels!");
+    notice("⚡ Trap: Reversed Controls — until you change levels!");
     return;
   }
   const cls = variant === "scramble" ? "trap-scramble" : "trap-decoy";
   canvas.classList.add(cls);
   window.setTimeout(() => canvas.classList.remove(cls), 1500);
-  setStatus(variant === "scramble" ? "⚡ Trap: Scramble!" : "⚡ Trap: Decoy Box!");
+  notice(variant === "scramble" ? "⚡ Trap: Scramble!" : "⚡ Trap: Decoy Box!");
 }
 
 /** Toggle sticky pull mode (plain arrows pull). Shift+arrow always pulls regardless. */
 function togglePull(): void {
   if (!canPullNow()) {
-    setStatus("The Pull ability is needed here — find it in the multiworld.");
+    notice("The Pull ability is needed here — find it in the multiworld.");
     return;
   }
   pullMode = !pullMode;
-  setStatus(pullMode ? "Pull mode ON — arrows pull (Shift+arrow always pulls)." : "Pull mode off.");
+  notice(pullMode ? "Pull mode ON — arrows pull (Shift+arrow always pulls)." : "Pull mode off.");
   updateValveButtons();
 }
 
@@ -433,7 +450,7 @@ async function connect(): Promise<void> {
     },
     onUpdate: () => rebuildSelector(),
     onGoal: () => setConnStatus(`Goal complete! 🏆 (${slot?.goal})`, "ok"),
-    onMessage: (text) => setStatus(text),
+    onMessage: (text) => notice(text),
     onTrap: (variant) => triggerTrap(variant),
     onDisconnect: () => handleDisconnect(),
   };
