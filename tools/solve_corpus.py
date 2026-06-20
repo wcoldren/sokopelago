@@ -399,6 +399,11 @@ class Solver:
 PushEdge = tuple[int, int, int, int, frozenset[int]]
 State = tuple[int, frozenset[int]]
 
+# A move edge for the pull-aware search: (walk-to idx, direction index, box-move count,
+# player-after idx, new box config, is_pull). Pushes and pulls both move a box one cell
+# in ``direction``; they differ in where the player stands to do it and ends up.
+MoveEdge = tuple[int, int, int, int, frozenset[int], bool]
+
 
 def _search(
     solver: Solver, weight: float | None, time_budget: float, use_corral: bool = False
@@ -506,11 +511,33 @@ def _reconstruct(solver: Solver, edges: list[PushEdge]) -> str:
 
 
 def replay(level: Level, solution: str) -> bool:
-    """Replay a move string in the client's board model; True iff it solves the level."""
+    """Replay a move string in the client's board model; True iff it solves the level.
+
+    Walks are lowercase LURD, pushes uppercase LURD, and a *pull* is a two-char unit
+    ``P<DIR>`` (e.g. ``PR``): the player steps one cell in ``DIR`` and a box directly
+    behind (opposite ``DIR``) follows into the player's vacated cell. Pull units appear
+    only in expert-corpus solutions; pure push/walk strings replay unchanged.
+    """
     delta = dict(DIRS)
     player = level.player
     boxes = set(level.boxes)
-    for ch in solution:
+    i = 0
+    while i < len(solution):
+        ch = solution[i]
+        if ch in ("P", "p"):  # pull: the next char is the player's (and box's) move dir
+            i += 1
+            if i >= len(solution):
+                return False
+            dx, dy = delta[solution[i].lower()]
+            target = (player[0] + dx, player[1] + dy)  # player destination
+            behind = (player[0] - dx, player[1] - dy)  # box must be directly behind
+            if target not in level.walkable or target in boxes or behind not in boxes:
+                return False
+            boxes.discard(behind)
+            boxes.add(player)  # box follows into the player's old cell
+            player = target
+            i += 1
+            continue
         dx, dy = delta[ch.lower()]
         target = (player[0] + dx, player[1] + dy)
         if target not in level.walkable:
@@ -522,6 +549,7 @@ def replay(level: Level, solution: str) -> bool:
             boxes.discard(target)
             boxes.add(beyond)
         player = target
+        i += 1
     return boxes == set(level.goals)
 
 
@@ -639,6 +667,136 @@ def solve(level: Level) -> dict[str, object]:
         }
 
     return {"n": level.n, "name": level.name, "boxes": len(level.boxes), "solved": False, "optimal": False}
+
+
+PULL_NODE_BUDGET = 2_000_000  # expert corpora are small, hand-authored levels
+
+
+def _search_pull(solver: Solver, time_budget: float) -> tuple[list[MoveEdge], int] | None:
+    """Uniform-cost (Dijkstra) search over BOTH pushes and pulls; optimal box-move count.
+
+    A *pull* moves a box one cell in direction ``k`` with the player ahead of it (the
+    player steps in ``k`` and the box follows into the player's vacated cell). Pulls make
+    otherwise-unsolvable configurations solvable, so the push-only soundness prunings
+    (static dead squares, freeze-deadlock) are deliberately NOT applied here — a box on a
+    push-"dead" square may be pullable out. Authored expert levels are tiny, so the plain
+    closed-set search is fast enough without them. Returns (edges, nodes) or None.
+    """
+    if solver.start_boxes == solver.goal_set:
+        return [], 0
+
+    start: State = (solver.normalize(solver.start_player, solver.start_boxes), solver.start_boxes)
+    g_score: dict[State, int] = {start: 0}
+    came: dict[State, tuple[State, MoveEdge]] = {}
+    open_heap: list[tuple[int, int, State]] = [(0, 0, start)]
+    closed: set[State] = set()
+    counter = 0
+    nodes = 0
+    nbr = solver.neighbour
+    deadline = time.monotonic() + time_budget
+
+    while open_heap:
+        g, _, state = heapq.heappop(open_heap)
+        if state in closed:
+            continue
+        closed.add(state)
+        nodes += 1
+        if nodes > PULL_NODE_BUDGET or ((nodes & 0x3FFF) == 0 and time.monotonic() > deadline):
+            return None
+        player_norm, boxes = state
+        if boxes == solver.goal_set:
+            edges: list[MoveEdge] = []
+            cur = state
+            while cur in came:
+                prev, edge = came[cur]
+                edges.append(edge)
+                cur = prev
+            edges.reverse()
+            return edges, nodes
+        region = solver.reachable(player_norm, boxes)
+        successors: list[MoveEdge] = []
+        for b in boxes:
+            for k in range(4):
+                dest = nbr[b][k]  # box destination (one cell in dir k); same for push & pull
+                if dest == -1 or dest in boxes:
+                    continue
+                new_boxes = (boxes - {b}) | {dest}
+                standing = nbr[b][k ^ 1]  # push: player behind, ends on the box's old cell
+                if standing != -1 and standing in region:
+                    successors.append((standing, k, 1, b, new_boxes, False))
+                if dest in region:  # pull: player stands on `dest`, steps to `dest + k`
+                    player_end = nbr[dest][k]
+                    if player_end != -1 and player_end not in boxes:
+                        successors.append((dest, k, 1, player_end, new_boxes, True))
+        for walk_to, k, count, pa, new_boxes, is_pull in successors:
+            ng = g + count
+            nxt_norm = solver.normalize(pa, new_boxes)
+            nxt: State = (nxt_norm, new_boxes)
+            if nxt in closed or ng >= g_score.get(nxt, 1 << 30):
+                continue
+            g_score[nxt] = ng
+            came[nxt] = (state, (walk_to, k, count, pa, new_boxes, is_pull))
+            counter += 1
+            heapq.heappush(open_heap, (ng, counter, nxt))
+    return None
+
+
+def _reconstruct_pull(solver: Solver, edges: list[MoveEdge]) -> str:
+    """Expand pull-aware move edges into a concrete move string from the player start."""
+    player = solver.start_player
+    boxes = solver.start_boxes
+    moves: list[str] = []
+    for walk_to, k, count, player_after, new_boxes, is_pull in edges:
+        moves.extend(DIRS[step][0] for step in solver.bfs_path(player, walk_to, boxes))  # walks
+        if is_pull:
+            moves.append("P" + DIRS[k][0].upper())  # a single-cell pull
+        else:
+            moves.append(DIRS[k][0].upper() * count)  # push(es)
+        player = player_after
+        boxes = new_boxes
+    return "".join(moves)
+
+
+def push_solvable(level: Level) -> bool:
+    """True iff the level has a pure push-only solution (no external solver, no pulls)."""
+    solver = Solver(level)
+    return any(_search(solver, w, t, c) is not None for w, t, c in SEARCH_PHASES)
+
+
+def solve_pull(level: Level, time_budget: float = 30.0) -> dict[str, object]:
+    """Solve one level allowing pulls, tagging whether it *requires* a pull.
+
+    ``requires_pull`` is True when no push-only solution exists but a pull-aware one does
+    — i.e. the level is genuinely gated behind the Pull ability. Mirrors ``solve``'s entry
+    shape (par/moves/solution/boxes/difficulty inputs) so ``_attach_difficulty`` works."""
+    solver = Solver(level)
+    result = _search_pull(solver, time_budget)
+    needs_pull = not push_solvable(level)
+    if result is None:
+        return {
+            "n": level.n,
+            "name": level.name,
+            "boxes": len(level.boxes),
+            "solved": False,
+            "optimal": False,
+            "requires_pull": needs_pull,
+        }
+    edges, nodes = result
+    solution = _reconstruct_pull(solver, edges)
+    if not replay(level, solution):
+        raise SystemExit(f"level {level.n}: reconstructed pull solution does not replay to a win")
+    return {
+        "n": level.n,
+        "name": level.name,
+        "par": len(edges),  # box-moves (pushes + pulls)
+        "moves": len(solution),
+        "solution": solution,
+        "boxes": len(level.boxes),
+        "_nodes": nodes,
+        "solved": True,
+        "optimal": True,  # uniform-cost over push+pull -> minimal box-move count
+        "requires_pull": needs_pull,
+    }
 
 
 def _normalized(value: float, lo: float, hi: float) -> float:

@@ -147,6 +147,46 @@ class TestSolverTechniques:
         assert s.pi_corral(region, s.start_boxes) is None
 
 
+class TestPullSolver:
+    """The pull-aware solver mode (Phase 5 expert tier): pulls solve configurations that
+    pure pushing can't, and the solver flags which levels genuinely *require* a pull."""
+
+    def _level(self, board: str):
+        return xsb_levels.parse_levels(f"; t\n\n{board}")[0]
+
+    # A box pinned against the left wall: no cell to stand on its far side, so it can't be
+    # pushed toward the goal at all — but it can be pulled out. So the level REQUIRES pull.
+    PULL_REQUIRED = "#####\n#$ .#\n#@  #\n#####"
+    PUSH_OK = "#####\n#@$.#\n#####"
+
+    def test_push_only_cannot_solve_a_pull_level(self):
+        assert solve_corpus.push_solvable(self._level(self.PULL_REQUIRED)) is False
+
+    def test_pull_mode_solves_and_flags_requires_pull(self):
+        e = solve_corpus.solve_pull(self._level(self.PULL_REQUIRED))
+        assert e["solved"] is True
+        assert e["requires_pull"] is True
+        assert "P" in e["solution"]  # the recorded solution uses at least one pull
+
+    def test_pull_solution_replays_to_a_win(self):
+        lvl = self._level(self.PULL_REQUIRED)
+        e = solve_corpus.solve_pull(lvl)
+        assert solve_corpus.replay(lvl, e["solution"]) is True
+
+    def test_push_solvable_level_is_not_flagged_requires_pull(self):
+        lvl = self._level(self.PUSH_OK)
+        assert solve_corpus.push_solvable(lvl) is True
+        e = solve_corpus.solve_pull(lvl)
+        assert e["solved"] is True and e["requires_pull"] is False
+
+    def test_pull_marker_replays(self):
+        # Box at (1,1) pinned on the left wall; goal at (2,1) where the player starts. A
+        # single pull-right ("PR") drags the box onto the goal.
+        lvl = self._level("#####\n#$+ #\n#####")
+        assert solve_corpus.replay(lvl, "PR") is True
+        assert solve_corpus.replay(lvl, "r") is False  # a bare walk never wins it
+
+
 class TestChunkLevels:
     def test_even_split(self):
         worlds = layout.chunk_levels(30, 10)
