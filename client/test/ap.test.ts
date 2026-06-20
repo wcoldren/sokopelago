@@ -5,17 +5,21 @@ import {
   HINT_ID,
   KEY_BASE,
   LOC_BASE,
+  PAR_LOC_BASE,
   SKIP_ID,
   TRAP_ID_BASE,
   UNDO_ID,
   escapeValveForItem,
   levelForLocationId,
+  levelForParLocationId,
   locationIdForLevel,
+  locationIdForParLevel,
   worldForKeyItem,
 } from "../src/ap/ids";
 import {
   isGoalMet,
   levelsInWorld,
+  parForLevel,
   solvedInSeed,
   worldOfLevel,
   type SlotData,
@@ -51,6 +55,18 @@ describe("ap/ids — network id arithmetic", () => {
     expect(levelForLocationId(LOC_BASE)).toBeNull(); // n = 0
     expect(levelForLocationId(LOC_BASE + 156)).toBeNull();
     expect(levelForLocationId(KEY_BASE + 2)).toBeNull(); // an item id, not a location
+  });
+
+  it("round-trips par-location id <-> level number, in a band of its own", () => {
+    for (const n of [1, 2, 30, 155]) {
+      expect(locationIdForParLevel(n)).toBe(PAR_LOC_BASE + n);
+      expect(levelForParLocationId(locationIdForParLevel(n))).toBe(n);
+    }
+    // The two bands don't overlap: a solve id is not a par id and vice-versa.
+    expect(levelForParLocationId(locationIdForLevel(30))).toBeNull();
+    expect(levelForLocationId(locationIdForParLevel(30))).toBeNull();
+    expect(levelForParLocationId(PAR_LOC_BASE)).toBeNull(); // n = 0
+    expect(levelForParLocationId(PAR_LOC_BASE + 156)).toBeNull();
   });
 
   it("maps world-key item ids to world index", () => {
@@ -156,10 +172,24 @@ describe("ap/slotData — isGoalMet", () => {
   });
 });
 
+describe("ap/slotData — parForLevel", () => {
+  it("returns the push-par when present", () => {
+    const slot = sampleSlot({ par: { "7": 10, "8": 0 } });
+    expect(parForLevel(slot, 7)).toBe(10);
+  });
+
+  it("returns null for missing, zero, or absent par data", () => {
+    expect(parForLevel(sampleSlot({ par: { "8": 0 } }), 8)).toBeNull(); // non-positive
+    expect(parForLevel(sampleSlot({ par: { "7": 10 } }), 9)).toBeNull(); // not in map
+    expect(parForLevel(sampleSlot(), 7)).toBeNull(); // no par map at all
+  });
+});
+
 // The session is a thin wrapper over archipelago.js; we inject a stub client to
 // exercise inventory tallying, the skip->check routing invariant, and trap firing.
 interface SessionInternals {
   client: unknown;
+  slot: SlotData | null;
   received: { skip: number; undo: number; hint: number };
   syncItems(suppressTraps: boolean): void;
 }
@@ -232,5 +262,42 @@ describe("ap/session — escape valves", () => {
     expect(s.useUndo()).toBe(false);
     expect(s.useHint()).toBe(true);
     expect(s.useHint()).toBe(false);
+  });
+});
+
+describe("ap/session — par checks (Phase 4)", () => {
+  it("sends the par check when within par and par_checks is on", () => {
+    const { s, checked } = mockSession();
+    peek(s).slot = sampleSlot({ par_checks: true, par: { "7": 10 } });
+    s.reportSolved(7, 8); // 8 <= par 10
+    expect(checked).toEqual([locationIdForLevel(7), locationIdForParLevel(7)]);
+    expect(s.isLevelSolved(7)).toBe(true);
+    expect(s.isLevelPar(7)).toBe(true);
+  });
+
+  it("sends only the solve check when over par", () => {
+    const { s, checked } = mockSession();
+    peek(s).slot = sampleSlot({ par_checks: true, par: { "7": 10 } });
+    s.reportSolved(7, 12); // 12 > par 10
+    expect(checked).toEqual([locationIdForLevel(7)]);
+    expect(s.isLevelPar(7)).toBe(false);
+  });
+
+  it("never sends a par check when par_checks is off", () => {
+    const { s, checked } = mockSession();
+    peek(s).slot = sampleSlot({ par_checks: false, par: { "7": 10 } });
+    s.reportSolved(7, 1);
+    expect(checked).toEqual([locationIdForLevel(7)]);
+    expect(s.isLevelPar(7)).toBe(false);
+  });
+
+  it("a skip clears the level but never counts as a par clear", () => {
+    const { s, checked } = mockSession();
+    peek(s).slot = sampleSlot({ par_checks: true, par: { "7": 10 } });
+    peek(s).received.skip = 1;
+    expect(s.useSkip(7)).toBe(true); // reportSolved called without a push count
+    expect(checked).toEqual([locationIdForLevel(7)]);
+    expect(s.isLevelSolved(7)).toBe(true);
+    expect(s.isLevelPar(7)).toBe(false);
   });
 });
