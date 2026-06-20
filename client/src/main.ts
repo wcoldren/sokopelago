@@ -11,12 +11,7 @@ import { Renderer } from "./render";
 import { attachInput } from "./input";
 import { effectiveDir, type Dir, type Level } from "./types";
 import { Session, loadPrefs, type SessionCallbacks } from "./ap/session";
-import {
-  parForLevel,
-  efficientThresholdForLevel,
-  difficultyForLevel,
-  type SlotData,
-} from "./ap/slotData";
+import type { SlotData } from "./ap/slotData";
 import type { TrapVariant } from "./ap/ids";
 import { parseSolution, planHint, animateSolutionPrefix, type AnimationHandle } from "./solution";
 
@@ -31,6 +26,8 @@ interface ManifestEntry {
   name: string;
   board: string[];
   solution?: string;
+  par?: number;
+  difficulty?: number;
 }
 
 const $ = <T extends HTMLElement>(id: string): T => {
@@ -58,6 +55,12 @@ const renderer = new Renderer(canvas);
 
 let levels: Level[] = [];
 let solutions = new Map<number, string>(); // Microban number -> LURD solution string
+// Par (optimal pushes) and normalized difficulty per Microban number, read from the
+// bundled manifest so they work in BOTH solo free-play and AP-connected play (the seed's
+// slot_data carries the same par for the apworld<->client check contract, but display is
+// manifest-driven so it never depends on being connected).
+let manifestPar = new Map<number, number>();
+let manifestDifficulty = new Map<number, number>();
 let loadedCorpus = DEFAULT_CORPUS; // which corpus manifest is currently loaded
 let game: Game | null = null;
 let current = 0;
@@ -80,17 +83,24 @@ const msg = (e: unknown): string => (e instanceof Error ? e.message : String(e))
 /** Microban level number (1-based) for a parsed level (index is 0-based). */
 const levelNumber = (lvl: Level): number => lvl.index + 1;
 
-/** Push-par for a level when the connected seed has Par Checks on, else null. */
-const parTarget = (n: number): number | null => (slot?.par_checks ? parForLevel(slot, n) : null);
+/** Push-par (optimal) for a level, from the bundled manifest — shown in solo and AP alike. */
+const parTarget = (n: number): number | null => manifestPar.get(n) ?? null;
 
-/** Efficient-tier push threshold when the seed has Efficiency Checks on, else null. */
-const effTarget = (n: number): number | null =>
-  slot?.par_checks && slot?.efficiency_checks ? efficientThresholdForLevel(slot, n) : null;
+/** Efficient-tier push threshold, only when the connected seed has the efficiency tier on
+ * (an AP reward concept); computed from the manifest par + the seed's margin. */
+const effTarget = (n: number): number | null => {
+  if (!slot?.par_checks || !slot?.efficiency_checks) return null;
+  const par = manifestPar.get(n);
+  if (par === undefined) return null;
+  const margin = typeof slot.efficiency_margin === "number" ? slot.efficiency_margin : 0;
+  return Math.floor(par * (1 + margin / 100));
+};
 
-/** Difficulty tier for a level ("easy"/"medium"/"hard"), or null if no data (offline). */
+/** Difficulty tier for a level ("easy"/"medium"/"hard"), or null if the manifest has no
+ * score for it. Manifest-driven, so badges show in solo play too. */
 function difficultyTier(n: number): "easy" | "medium" | "hard" | null {
-  const d = slot ? difficultyForLevel(slot, n) : null;
-  if (d === null) return null;
+  const d = manifestDifficulty.get(n);
+  if (d === undefined) return null;
   return d >= 0.66 ? "hard" : d >= 0.33 ? "medium" : "easy";
 }
 
@@ -149,7 +159,10 @@ function optionLabel(lvl: Level): string {
   const n = levelNumber(lvl);
   const badge = difficultyBadge(n);
   const base = `${n}. ${lvl.name}${badge ? `  ${badge}` : ""}`;
-  if (!slot || !session) return base;
+  if (!slot || !session) {
+    // Solo free-play: still reflect levels solved this session.
+    return solvedOffline.has(n) ? `✓ ${base}` : base;
+  }
   if (session.isLevelSolved(n)) return `${solvedMarker(n)} ${base}`;
   // The world's lock state is shown by the <optgroup> label, so options just flag the gate.
   if (!session.isLevelUnlocked(n)) return `🔒 ${base}`;
@@ -287,7 +300,7 @@ function onSolved(): void {
     const par = parTarget(n);
     const eff = effTarget(n);
     let parNote = "";
-    if (par !== null) {
+    if (slot.par_checks && par !== null) {
       if (session.isLevelPar(n)) {
         parNote = ` ★ perfect — optimal ${par} pushes!`;
       } else if (session.isLevelEfficient(n)) {
@@ -319,11 +332,15 @@ function onSolved(): void {
   }
 
   solvedOffline.add(n);
+  rebuildSelector(); // reflect the ✓ in the dropdown for solo play
+  const par = parTarget(n);
+  const parNote =
+    par !== null ? (game.pushes <= par ? ` ★ optimal (${par} pushes)!` : ` (par ${par})`) : "";
   const hasNext = current < levels.length - 1;
   notice(
     hasNext
-      ? `Solved ${solved}! (${game.moves} moves, ${game.pushes} pushes) → next…`
-      : `Solved ${solved}! That's the last level. 🎉`,
+      ? `Solved ${solved}! (${game.moves} moves, ${game.pushes} pushes)${parNote} → next…`
+      : `Solved ${solved}!${parNote} That's the last level. 🎉`,
     { win: true },
   );
   if (hasNext) {
@@ -650,6 +667,14 @@ async function loadCorpus(corpus: string): Promise<void> {
   const entries = (await res.json()) as ManifestEntry[];
   levels = entries.map((e) => levelFromBoard(e.board, e.n - 1, e.name));
   solutions = new Map(entries.filter((e) => e.solution).map((e) => [e.n, e.solution as string]));
+  manifestPar = new Map(
+    entries.filter((e) => typeof e.par === "number").map((e) => [e.n, e.par as number]),
+  );
+  manifestDifficulty = new Map(
+    entries
+      .filter((e) => typeof e.difficulty === "number")
+      .map((e) => [e.n, e.difficulty as number]),
+  );
   loadedCorpus = corpus;
 }
 
