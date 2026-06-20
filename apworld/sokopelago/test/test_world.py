@@ -81,6 +81,25 @@ class TestShuffledBucketsSolveCount(SokopelagoTestBase):
     }
 
 
+class TestShuffledBucketsBossNearest(SokopelagoTestBase):
+    # A boss number that almost certainly isn't drawn (20 of 155 levels) must resolve to
+    # the nearest selected level, keeping the boss_level goal valid + beatable.
+    options = {
+        "goal": "boss_level",
+        "level_count": 20,
+        "levels_per_region": 5,
+        "goal_boss_level": 77,
+        "level_selection": "shuffled_buckets",
+        "difficulty_buckets": 5,
+    }
+
+    def test_boss_resolves_to_nearest_selected_level(self) -> None:
+        selected = [n for w in self.world.worlds for n in w]
+        assert self.world.boss_level in selected
+        expected = min(selected, key=lambda n: (abs(n - 77), n))
+        assert self.world.boss_level == expected
+
+
 class TestDifficultyOrderingOff(SokopelagoTestBase):
     # Native corpus order (the chunk_levels path) must be used verbatim when off.
     options = {"goal": "beat_final_region", "level_count": 30, "levels_per_region": 10, "difficulty_ordering": 0}

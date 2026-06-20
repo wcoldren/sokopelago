@@ -100,8 +100,17 @@ class SokopelagoWorld(World):
             self.worlds = chunk_list(levels, self.levels_per_region)
         self.region_count = len(self.worlds)
         self.goal_solve_count = clamp(self.options.goal_solve_count.value, 1, self.level_count)
+        # Resolve the boss to an actually-selected level: 0 -> the highest-numbered level
+        # in the seed ("the last level"); otherwise the requested number if it was drawn,
+        # else the nearest drawn level (ties favour the lower number). Under shuffled_buckets
+        # the requested number may not be in the seed, so "nearest" keeps the goal valid.
         raw_boss = self.options.goal_boss_level.value
-        self.boss_level = self.level_count if raw_boss == 0 else clamp(raw_boss, 1, self.level_count)
+        if raw_boss == 0:
+            self.boss_level = max(levels)
+        elif raw_boss in levels:
+            self.boss_level = raw_boss
+        else:
+            self.boss_level = min(levels, key=lambda n: (abs(n - raw_boss), n))
         # Expert Logic: hard-gate the seed's pull-required levels behind the Pull item.
         self.expert = bool(self.options.expert_logic.value)
         self.pull_levels = {n for n in levels if n in self.corpus_data.requires_pull} if self.expert else set()

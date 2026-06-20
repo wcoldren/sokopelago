@@ -38,8 +38,8 @@ class LevelSelection(Choice):
     shuffled_buckets: vary the selection per seed. Levels are grouped into Difficulty
     Buckets tiers and a size-proportional, randomly-shuffled subset of each tier is
     drawn, so different seeds play different puzzles while the easy→hard ramp is kept.
-    With this on, Goal Boss Level may name a level that isn't drawn — it then falls back
-    to the last world."""
+    With this on, Goal Boss Level may name a level that isn't drawn — the nearest selected
+    level is used instead."""
 
     display_name = "Level Selection"
     option_native = 0
@@ -92,7 +92,8 @@ class GoalSolveCount(Range):
 
 class GoalBossLevel(Range):
     """For the boss_level goal: which Microban number is the boss. 0 means "the last
-    level in the seed". Clamped into the selected level range."""
+    (highest-numbered) level in the seed". If the chosen number isn't one of the seed's
+    levels (possible with shuffled_buckets selection), the nearest selected level is used."""
 
     display_name = "Goal Boss Level"
     range_start = 0
