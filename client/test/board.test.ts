@@ -113,6 +113,43 @@ describe("Game — undo", () => {
   });
 });
 
+describe("Game — smart-undo primitives (hasBoxMove / undoStep)", () => {
+  it("hasBoxMove is false for pure walks, true once a box is pushed", () => {
+    const g = load(["######", "#@ $ #", "######"].join("\n"));
+    g.move("right"); // walk
+    expect(g.hasBoxMove()).toBe(false);
+    g.move("right"); // push box (3,1) -> (4,1)
+    expect(g.hasBoxMove()).toBe(true);
+  });
+
+  it("undoStep reports walk vs box and null when empty", () => {
+    const g = load(["######", "#@ $ #", "######"].join("\n"));
+    expect(g.undoStep()).toBeNull();
+    g.move("right"); // walk to (2,1)
+    g.move("right"); // push box (3,1) -> (4,1)
+    expect(g.undoStep()).toBe("box"); // reverses the push first
+    expect(g.boxAt(3, 1)).toBe(true);
+    expect(g.undoStep()).toBe("walk"); // then the earlier walk
+    expect(g.undoStep()).toBeNull();
+  });
+
+  it("a client smart-undo (loop walks until one box-move) reverts the last push", () => {
+    const g = load(["######", "#@$  #", "######"].join("\n"));
+    g.move("right"); // push box (2,1)->(3,1), player->(2,1)
+    g.move("right"); // push box (3,1)->(4,1), player->(3,1)
+    g.move("left"); // trailing walk back to (2,1)
+    expect(g.hasBoxMove()).toBe(true);
+    // Emulate main.ts smart undo: pop walks until a box-move is reverted.
+    let step: ReturnType<typeof g.undoStep>;
+    do {
+      step = g.undoStep();
+    } while (step === "walk");
+    expect(step).toBe("box"); // reverted the last push (box (4,1)->(3,1))
+    expect(g.boxAt(3, 1)).toBe(true);
+    expect(g.pushes).toBe(1); // one push remains
+  });
+});
+
 describe("Game — pull (expert mechanic)", () => {
   it("pulls a box directly behind the player into the vacated cell", () => {
     // box (1,1), player (2,1), free (3,1). Pull right: player->(3,1), box->(2,1).

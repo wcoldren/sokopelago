@@ -13,12 +13,7 @@ import { effectiveDir, type Dir, type Level } from "./types";
 import { Session, loadPrefs, type SessionCallbacks } from "./ap/session";
 import { parForLevel, difficultyForLevel, type SlotData } from "./ap/slotData";
 import type { TrapVariant } from "./ap/ids";
-import {
-  parseSolution,
-  revealCount,
-  animateSolutionPrefix,
-  type AnimationHandle,
-} from "./solution";
+import { parseSolution, planHint, animateSolutionPrefix, type AnimationHandle } from "./solution";
 
 const DEFAULT_CORPUS = "microban";
 // Base-relative so the fetch resolves under whatever path the site is served from
@@ -62,7 +57,7 @@ let loadedCorpus = DEFAULT_CORPUS; // which corpus manifest is currently loaded
 let game: Game | null = null;
 let current = 0;
 let locked = false; // briefly true between solving and auto-advancing
-let hintIndex = 0; // solution moves revealed on the current level
+let hintBoxMoves = 0; // box-moves (pushes/pulls) the Hint has revealed on the current level
 let hintAnim: AnimationHandle | null = null; // in-flight hint playback (cancelled on level change)
 let animating = false; // input blocked during a hint animation; never persists past it
 let reversedControls = false; // set by a Reversed-Controls trap; cleared on level change
@@ -70,7 +65,7 @@ let pullMode = false; // when on, plain direction input pulls instead of pushing
 let lastUnlockedCount = 0; // # of unlocked worlds last seen — detects a newly-opened world
 const solvedOffline = new Set<number>(); // levels solved this session in free play (no session)
 
-const BIG_HINT_MOVES = 3; // how many extra moves a "big" hint (Shift+Hint) reveals/animates
+const BIG_HINT_PUSHES = 3; // how many extra pushes a "big" hint (Shift+Hint) reveals/animates
 
 let session: Session | null = null;
 let slot: SlotData | null = null; // non-null once connected (AP mode)
@@ -236,7 +231,7 @@ function loadLevel(i: number): void {
   select.value = String(current);
   game = new Game(target);
   locked = false;
-  hintIndex = 0;
+  hintBoxMoves = 0;
   reversedControls = false; // a trap's curse lasts only for the level it hit
   renderer.draw(game);
   const par = parTarget(levelNumber(target));
@@ -311,10 +306,18 @@ function onSolved(): void {
   }
 }
 
-/** Whether the pull mechanic is usable now: always offline; gated by the Pull ability
- * in an AP seed with expert logic. */
+/** Whether Pull is part of this context at all: always in solo (god-mode for dev/testing);
+ * in AP only on a pull-capable corpus or an expert seed. */
+function pullInSeed(): boolean {
+  if (!session) return true;
+  return loadedCorpus !== DEFAULT_CORPUS || Boolean(slot?.expert_logic);
+}
+
+/** Whether the pull mechanic is usable right now: always in solo; in an AP seed only when
+ * Pull is part of it AND not still gated behind the (unreceived) Pull ability. */
 function canPullNow(): boolean {
-  return !session || session.canPull;
+  if (!session) return true;
+  return pullInSeed() && session.canPull;
 }
 
 function move(dir: Dir): void {
@@ -335,7 +338,11 @@ function move(dir: Dir): void {
 function pull(dir: Dir): void {
   if (!game || locked || animating) return;
   if (!canPullNow()) {
-    notice("The Pull ability is needed here — find it in the multiworld.");
+    notice(
+      pullInSeed()
+        ? "The Pull ability is needed here — find it in the multiworld."
+        : "Pull isn't used in this seed.",
+    );
     return;
   }
   if (!game.pull(effectiveDir(dir, reversedControls))) return;
@@ -360,33 +367,42 @@ function restart(): void {
 /** Undo the last move. Free offline; consumes an Undo Charge when connected. */
 function undo(): void {
   if (!game || locked || animating || !game.canUndo()) return;
-  if (slot && session && !session.useUndo()) {
-    notice("No Undo Charges available.");
-    return;
+  // Smart undo: if there's a push/pull in the history, this undo "takes back the last
+  // push" — rewinding the trailing walk steps and that one box-move (one Undo Charge).
+  // With only walk moves so far, step back a single walk for free.
+  if (game.hasBoxMove()) {
+    if (slot && session && !session.useUndo()) {
+      notice("No Undo Charges available.");
+      return;
+    }
+    let step: ReturnType<Game["undoStep"]>;
+    do {
+      step = game.undoStep();
+    } while (step === "walk"); // stop once the last box-move is reverted
+  } else {
+    game.undoStep(); // pure-walk history → free single step back
   }
-  if (game.undo()) {
-    renderer.draw(game);
-    refreshStatus();
-  }
+  renderer.draw(game);
+  refreshStatus();
 }
 
-/** Small hint: reveal one more solution move (the Hint button / H). */
+/** Small hint: reveal the next push (the Hint button / H). The first push is free. */
 function useHint(): void {
   runHint(1);
 }
 
-/** Big hint: reveal several more moves at once (Shift+Hint / Shift+H), costing more tokens. */
+/** Big hint: reveal several more pushes at once (Shift+Hint / Shift+H), costing more tokens. */
 function useBigHint(): void {
-  runHint(BIG_HINT_MOVES);
+  runHint(BIG_HINT_PUSHES);
 }
 
 /**
- * Reveal `tierMoves` more solution moves by restarting the board and *animating* the
- * optimal line from the start, one move at a time. Free in solo play; consumes one Hint
- * Token per move revealed when connected (so a bigger hint costs more). Never plays the
- * final winning move — the player finishes it themselves.
+ * Reveal `addPushes` more box-moves (pushes/pulls) by restarting the board and *animating*
+ * the optimal line from the start, up to that push. The first push is free; each push beyond
+ * it costs one Hint Token when connected (free in solo). Never plays the final winning push —
+ * the player finishes it themselves.
  */
-function runHint(tierMoves: number): void {
+function runHint(addPushes: number): void {
   if (!game || locked || animating) return;
   const n = levelNumber(game.level);
   const solution = solutions.get(n);
@@ -395,34 +411,38 @@ function runHint(tierMoves: number): void {
     return;
   }
   const moves = parseSolution(solution);
-  const target = revealCount(hintIndex, tierMoves, moves.length);
-  if (target <= hintIndex) {
-    notice("Hint: you're at the final step — finish it yourself! 🙂");
+  const plan = planHint(hintBoxMoves, addPushes, moves);
+  if (plan.atEnd) {
+    notice("Hint: you're at the final push — finish it yourself! 🙂");
     return;
   }
-  const cost = target - hintIndex; // one token per newly-revealed move (AP mode)
-  if (slot && session) {
-    if (session.available.hint < cost) {
-      notice(`Not enough Hint Tokens — need ${cost}, have ${session.available.hint}.`);
+  if (slot && session && plan.cost > 0) {
+    if (session.available.hint < plan.cost) {
+      notice(`Not enough Hint Tokens — need ${plan.cost}, have ${session.available.hint}.`);
       return;
     }
-    for (let i = 0; i < cost; i++) session.useHint();
+    for (let i = 0; i < plan.cost; i++) session.useHint();
   }
-  hintIndex = target;
-  const total = moves.length;
+  hintBoxMoves = plan.boxMoves;
+  const shown = plan.boxMoves; // pushes revealed (0 = the free walk-up on a single-push level)
   animating = true;
   updateValveButtons(); // reflect the spent tokens + disable controls during playback
   const g = game;
-  hintAnim = animateSolutionPrefix(g, moves, hintIndex, {
-    stepMs: 280,
+  hintAnim = animateSolutionPrefix(g, moves, plan.moveCount, {
     onStep: () => {
       renderer.draw(g);
-      setStatus(`Hint: replaying ${hintIndex} of ${total} solution moves…`);
+      setStatus(
+        shown > 0 ? `Hint: showing the first ${shown} push(es)…` : "Hint: walk to the box…",
+      );
     },
     onDone: () => {
       animating = false;
       hintAnim = null;
-      setStatus(`Hint: showing the first ${hintIndex} of ${total} solution moves. Your move!`);
+      setStatus(
+        shown > 0
+          ? `Hint: showing the first ${shown} push(es). Your move!`
+          : "Hint: there's the box — your move!",
+      );
       updateValveButtons();
     },
   });
@@ -473,8 +493,8 @@ function updateValveButtons(): void {
   hintBtn.hidden = false; // Hint is free in solo play (like Undo); token-gated when connected
   skipBtn.hidden = !ap;
 
-  // Pull is relevant on a non-Microban corpus (whose levels can need it) or any expert
-  // seed. It's usable immediately unless expert logic gates it behind the Pull item.
+  // Show the Pull button only when the loaded corpus/seed actually uses pull (so it stays
+  // out of the way in plain solo Microban). The keyboard god-mode (canPullNow) is separate.
   const pullRelevant = loadedCorpus !== DEFAULT_CORPUS || Boolean(slot?.expert_logic);
   pullBtn.hidden = !pullRelevant;
   if (pullRelevant) {
@@ -620,7 +640,7 @@ async function main(): Promise<void> {
   restartBtn.addEventListener("click", restart);
   undoBtn.addEventListener("click", undo);
   // Shift-click (or Shift+H) is a bigger hint: more moves animated for more tokens.
-  hintBtn.addEventListener("click", (e) => runHint(e.shiftKey ? BIG_HINT_MOVES : 1));
+  hintBtn.addEventListener("click", (e) => runHint(e.shiftKey ? BIG_HINT_PUSHES : 1));
   skipBtn.addEventListener("click", useSkip);
   pullBtn.addEventListener("click", togglePull);
   connectBtn.addEventListener("click", onConnectClick);

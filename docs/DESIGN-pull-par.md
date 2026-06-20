@@ -38,6 +38,10 @@ Three linked ideas, in increasing scope:
 - **Client** (`client/src/ap/session.ts`): `canPull = !expert_logic || pullReceived`;
   `needsPull(n) = expert_logic && requiresPull(slot, n)`. Par is reported in `reportSolved`
   when `pushCount <= par`. There is **no per-level pull counter** — only `game.pushes`.
+- **Shipped (this round):** Pull is now **solo-only god-mode** — always usable in solo free
+  play (`dev.sh`), but in AP it's gated to pull-capable/expert seeds (`main.ts pullInSeed`/
+  `canPullNow`), so `Shift+arrow` no longer pulls on a vanilla Microban AP seed. Full AP
+  gating (Options A/B below) is still TODO.
 
 ## Proposed design
 
@@ -100,6 +104,23 @@ Recommend deferring C until A is in and playtested; it adds the most surface are
   (`0.x → 0.(x+1)`) and a CHANGELOG entry when built.
 - Keep solvability push-only and precomputed (ROADMAP hard constraint): Pull gating only
   ever affects *optional* (par) checks or *expert* levels, never base solve-reachability.
+
+## Terminology: "expert" is a misnomer (rename when we touch this)
+
+`expert_logic` / "expert ability-logic tier" conflates two unrelated things: **using the
+Pull mechanic** and **being hard**. A pull-required level isn't inherently harder to *solve*
+than a tricky push-only one — it just needs a different verb. Rename the option/tier to name
+the mechanic, not a difficulty claim — e.g. `pull_logic` / "ability logic" / "pull tier".
+This is a **breaking** option/slot_data rename (existing yamls reference `expert_logic`), so
+batch it with the Pull/par build rather than doing it piecemeal. Touch points: option key in
+`Options.py`, `expert_logic` in `fill_slot_data`, `slotData.ts`, and `session.ts`/`main.ts`
+(`expert_logic` reads, the `pullInSeed`/`canPull` logic).
+
+Separately, **difficulty** (the `◆◇◇` pips) currently comes from the solver's normalized
+score. A naive **par-based** difficulty (more pushes ⇒ harder) was floated — cheap, and
+"probably good enough" — but it mismeasures cases like a long trivial corridor (many pushes,
+no thinking). If we revisit difficulty, consider blending par with the solver's branching/
+search metric rather than par alone. Low priority; the current solver score is fine.
 
 ## Recommended sequencing
 
