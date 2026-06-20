@@ -6,6 +6,33 @@ All notable changes to Sokopelago are documented here. The format follows
 apworld `world_version`, with the client kept in lockstep. Versions correspond to
 world/datapackage-affecting changes, not roadmap phase numbers.
 
+## [0.5.0] — Seed-varied selection + tiered par
+
+### Added
+- **Seed-varied puzzle selection** (`level_selection` option): the new `shuffled_buckets`
+  mode draws a different subset of corpus levels per seed. Levels are grouped into
+  `difficulty_buckets` tiers, shuffled within each tier using the multiworld's seeded RNG,
+  and a size-proportional share is taken — so different seeds play different puzzles while
+  the easy→hard ramp is preserved. Default is `native` (the previous deterministic
+  first-N-levels behaviour), so existing YAMLs are unchanged.
+- **Tiered par checks**: a new **efficient** tier on top of the existing **perfect** tier.
+  `efficiency_checks` adds a third location per level ("Solve Microban n efficiently") that
+  sends when a level is solved within `efficiency_margin` percent over the optimal push
+  count — a gettable reward, where the par-checks location still demands exactly optimal.
+  Efficient locations are filler-only (`EXCLUDED`); the tier requires Par Checks to be on.
+- slot_data gains `efficiency_checks` and `efficiency_margin`; a new efficiency location
+  band (`9_780_000 + n`) is added (additive — published solve/par IDs are unchanged, so
+  older seeds stay valid).
+
+### Changed
+- **Difficulty re-scored**: the offline solver now persists `search_nodes` (search
+  effort / branching) instead of discarding it, and the composite `difficulty` is
+  re-weighted toward par and branching (par .40 / nodes .35 / moves .15 / boxes .10).
+  Corpus manifests regenerated; pars, solutions, and boards are unchanged.
+- The `boss_level` goal now resolves to the **nearest selected level** when the requested
+  number isn't drawn (possible under `shuffled_buckets`); `0` means the seed's
+  highest-numbered level.
+
 ## [0.4.1] — Solo-play hints
 
 ### Fixed
