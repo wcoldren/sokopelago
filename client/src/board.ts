@@ -127,18 +127,33 @@ export class Game {
     return this.history.length > 0;
   }
 
-  /** Reverse the most recent move (push or pull included). Returns false if none. */
-  undo(): boolean {
+  /** True if any recorded move pushed or pulled a box (i.e. an undo could revert one). */
+  hasBoxMove(): boolean {
+    return this.history.some((r) => r.pushed || r.pulled);
+  }
+
+  /**
+   * Reverse the most recent move, reporting what it was: `"box"` for a push/pull, `"walk"`
+   * for a plain step, or `null` if there was nothing to undo. (Smart undo in the client
+   * repeats this until it reverts one box-move.)
+   */
+  undoStep(): "walk" | "box" | null {
     const record = this.history.pop();
-    if (!record) return false;
+    if (!record) return null;
     if (record.boxFrom && record.boxTo) {
       this.moveBox(record.boxTo.x, record.boxTo.y, record.boxFrom.x, record.boxFrom.y);
       this.pushes--;
-    } else {
-      this.moves--;
+      this.player = { ...record.player };
+      return "box";
     }
+    this.moves--;
     this.player = { ...record.player };
-    return true;
+    return "walk";
+  }
+
+  /** Reverse the most recent move (push or pull included). Returns false if none. */
+  undo(): boolean {
+    return this.undoStep() !== null;
   }
 
   private moveBox(fromX: number, fromY: number, toX: number, toY: number): void {

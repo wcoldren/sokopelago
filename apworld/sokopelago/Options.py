@@ -31,6 +31,33 @@ class LevelCount(Range):
     default = 30
 
 
+class LevelSelection(Choice):
+    """How the seed's levels are drawn from the corpus.
+    native: the first Level Count levels in corpus order (deterministic — every seed
+    with the same options gets the same puzzles).
+    shuffled_buckets: vary the selection per seed. Levels are grouped into Difficulty
+    Buckets tiers and a size-proportional, randomly-shuffled subset of each tier is
+    drawn, so different seeds play different puzzles while the easy→hard ramp is kept.
+    With this on, Goal Boss Level may name a level that isn't drawn — the nearest selected
+    level is used instead."""
+
+    display_name = "Level Selection"
+    option_native = 0
+    option_shuffled_buckets = 1
+    default = 0
+
+
+class DifficultyBuckets(Range):
+    """Number of difficulty tiers used by the shuffled_buckets Level Selection (ignored
+    by native selection). More buckets = a tighter difficulty ramp with less variety
+    within a tier; fewer = more variety but coarser ramping."""
+
+    display_name = "Difficulty Buckets"
+    range_start = 2
+    range_end = 12
+    default = 5
+
+
 class LevelsPerRegion(Range):
     """How many levels per region ("world"). Each world after the first is opened by a
     "World n Key" item shuffled into the multiworld."""
@@ -65,7 +92,8 @@ class GoalSolveCount(Range):
 
 class GoalBossLevel(Range):
     """For the boss_level goal: which Microban number is the boss. 0 means "the last
-    level in the seed". Clamped into the selected level range."""
+    (highest-numbered) level in the seed". If the chosen number isn't one of the seed's
+    levels (possible with shuffled_buckets selection), the nearest selected level is used."""
 
     display_name = "Goal Boss Level"
     range_start = 0
@@ -134,6 +162,29 @@ class ParChecks(Toggle):
     default = 0
 
 
+class EfficiencyChecks(Toggle):
+    """Add an "efficient" tier on top of Par Checks: a third location per level, "Solve
+    Microban n efficiently". It's a *gettable* efficiency reward — it sends when you
+    solve within Efficiency Margin percent of the optimal push count (whereas the Par
+    Checks location demands exactly optimal). Like par locations these only hold filler
+    (EXCLUDED), so they can't soft-lock the seed. Off by default; has no effect unless
+    Par Checks is also on."""
+
+    display_name = "Efficiency Checks"
+    default = 0
+
+
+class EfficiencyMargin(Range):
+    """For Efficiency Checks: how many percent over the optimal push count still counts
+    as an "efficient" solve. The efficient tier sends when pushes <= floor(optimal *
+    (1 + this/100)). 0 makes it identical to the perfect (Par Checks) tier."""
+
+    display_name = "Efficiency Margin"
+    range_start = 0
+    range_end = 100
+    default = 15
+
+
 class ExpertLogic(Toggle):
     """Expert ability-logic tier. When on, levels that require the Pull ability are
     hard-gated behind a "Pull" progression item shuffled into the multiworld — you can't
@@ -150,6 +201,8 @@ class ExpertLogic(Toggle):
 class SokopelagoOptions(PerGameCommonOptions):
     corpus: Corpus
     level_count: LevelCount
+    level_selection: LevelSelection
+    difficulty_buckets: DifficultyBuckets
     levels_per_region: LevelsPerRegion
     goal: Goal
     goal_solve_count: GoalSolveCount
@@ -160,4 +213,6 @@ class SokopelagoOptions(PerGameCommonOptions):
     trap_percentage: TrapPercentage
     difficulty_ordering: DifficultyOrdering
     par_checks: ParChecks
+    efficiency_checks: EfficiencyChecks
+    efficiency_margin: EfficiencyMargin
     expert_logic: ExpertLogic

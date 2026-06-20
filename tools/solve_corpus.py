@@ -6,16 +6,19 @@ For every level in ``levels/microban.xsb`` this computes a push-optimal solution
 for hints, then records par / move count / difficulty metrics. The result is written
 to ``apworld/sokopelago/data/microban.json`` with one entry per level::
 
-    {"n", "name", "par", "moves", "solution", "boxes", "difficulty", "optimal"}
+    {"n", "name", "par", "moves", "solution", "boxes", "search_nodes",
+     "difficulty", "optimal"}
 
-  * ``par``        — push count of the recorded solution (optimal unless flagged).
-  * ``moves``      — length of the expanded move string.
-  * ``solution``   — LURD move string (lowercase = walk, UPPERCASE = push),
-                     replayable in the client's board model.
-  * ``boxes``      — box count (a cheap difficulty signal).
-  * ``difficulty`` — normalized 0..1 composite (par/moves/boxes/search-effort),
-                     the canonical sort key; raw signals are kept so it can be
-                     re-weighted later without re-solving.
+  * ``par``         — push count of the recorded solution (optimal unless flagged).
+  * ``moves``       — length of the expanded move string.
+  * ``solution``    — LURD move string (lowercase = walk, UPPERCASE = push),
+                      replayable in the client's board model.
+  * ``boxes``       — box count (a cheap difficulty signal).
+  * ``search_nodes``— states the solver expanded (search effort / branching), the
+                      strongest "fiddliness" signal; persisted so difficulty can be
+                      re-weighted later without re-solving.
+  * ``difficulty``  — normalized 0..1 composite (weighted par + search_nodes, with
+                      moves/boxes as minor tie-breakers), the canonical sort key.
   * ``optimal``    — false when a per-level budget forced a non-optimal greedy
                      fallback (a few symmetric levels); the build never fails on it.
 
@@ -806,16 +809,23 @@ def _attach_difficulty(entries: list[dict[str, object]]) -> None:
     """Add a normalized 0..1 ``difficulty`` blend across the corpus, in place.
 
     Normalization spans the solved levels; any level the solver couldn't crack is, by
-    definition, among the hardest, so it is assigned the max difficulty (1.0)."""
+    definition, among the hardest, so it is assigned the max difficulty (1.0).
+
+    The blend is weighted toward ``par`` (optimal push count) and ``_nodes`` (search
+    effort / branching) — the two signals that best separate a fiddly puzzle from a long
+    but mechanical one — with ``moves``/``boxes`` as minor tie-breakers. The raw
+    ``_nodes`` count is persisted as ``search_nodes`` (it is the branching signal the
+    difficulty buckets lean on, and keeping it lets the weights be re-tuned without a
+    full re-solve)."""
     solved = [e for e in entries if e.get("solved")]
     signals = ("par", "moves", "boxes", "_nodes")
     bounds = {s: (min(float(e[s]) for e in solved), max(float(e[s]) for e in solved)) for s in signals}
-    weights = {"par": 0.4, "moves": 0.2, "boxes": 0.2, "_nodes": 0.2}
+    weights = {"par": 0.4, "_nodes": 0.35, "moves": 0.15, "boxes": 0.1}
     for e in entries:
         if e.get("solved"):
             score = sum(weights[s] * _normalized(float(e[s]), *bounds[s]) for s in signals)
             e["difficulty"] = round(score, 4)
-            del e["_nodes"]
+            e["search_nodes"] = int(e.pop("_nodes"))
         else:
             e["difficulty"] = 1.0
 
@@ -827,14 +837,39 @@ def main() -> None:
     out = manifest_json(name)
     pull_aware = name != "microban"  # expert corpora may require pulls
 
+    # Prior manifest (if any) so a re-run without the external solver doesn't downgrade a
+    # level only the external solver (SOKO_SOLVER_CMD) could crack — e.g. Microban 153.
+    prior_by_n: dict[int, dict[str, object]] = {}
+    if out.exists():
+        prior_by_n = {e["n"]: e for e in json.loads(out.read_text(encoding="utf-8"))}
+
     levels = load_corpus(corpus_xsb(name))
     entries: list[dict[str, object]] = []
     for level in levels:
         entry = solve_pull(level) if pull_aware else solve(level)
+        if not entry.get("solved"):
+            old = prior_by_n.get(level.n)
+            if old and old.get("solved") and old.get("solver") == "external":
+                # Keep the previously-found external solution; tag it as the hardest tier
+                # so _attach_difficulty scores it consistently (matching solve()'s external
+                # branch). Geometry (name/boxes) is refreshed from this run's parse.
+                entry = {
+                    "n": level.n,
+                    "name": level.name,
+                    "par": old["par"],
+                    "moves": old["moves"],
+                    "solution": old["solution"],
+                    "boxes": len(level.boxes),
+                    "_nodes": NODE_BUDGET,
+                    "solved": True,
+                    "optimal": False,
+                    "solver": "external",
+                }
         entries.append(entry)
         if entry.get("solved"):
+            ext = " (restored external)" if entry.get("solver") == "external" else ""
             extra = " requires_pull" if entry.get("requires_pull") else ""
-            status = f"par={entry['par']} optimal={entry['optimal']}{extra}"
+            status = f"par={entry['par']} optimal={entry['optimal']}{extra}{ext}"
         else:
             status = "UNSOLVED (no hint)"
         print(f"  level {level.n}: {status}", flush=True)

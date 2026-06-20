@@ -1,15 +1,19 @@
 """Location definitions for Sokopelago.
 
-Up to two locations per corpus level:
+Up to three locations per corpus level:
   * "Solve Microban n"                    — always present.
-  * "Solve Microban n in <= par pushes"   — added only when the Par Checks option is
-    on (Phase 4 check density). It lives in a parallel id band (``PAR_LOC_ID_BASE + n``)
-    that mirrors the solve band's ``+ n`` offset, so the two stay symmetric and survive
-    any future change to the corpus size.
+  * "Solve Microban n in <= par pushes"   — the *perfect* tier, added only when the Par
+    Checks option is on (Phase 4 check density). Sends when solved in the optimal push
+    count. Lives in a parallel id band (``PAR_LOC_ID_BASE + n``).
+  * "Solve Microban n efficiently"        — the *efficient* tier, added only when the
+    Efficiency Checks option is on (and Par Checks too). Sends when solved within a
+    configurable margin over optimal — a gettable reward below the perfect tier. Lives
+    in its own id band (``EFF_LOC_ID_BASE + n``).
 
-Locations are keyed by Microban number (from the bundled manifest) so IDs stay stable
-regardless of subtitle text or how many levels a given seed actually uses. A seed
-attaches only the selected subset (the first ``level_count`` levels) to its regions.
+Each band mirrors the solve band's ``+ n`` offset, so they stay symmetric and survive
+any future change to the corpus size. Locations are keyed by Microban number (from the
+bundled manifest) so IDs stay stable regardless of subtitle text or how many levels a
+given seed actually uses. A seed attaches only its selected subset to its regions.
 """
 
 from __future__ import annotations
@@ -20,6 +24,7 @@ from .corpus import LEVELS
 
 LOC_ID_BASE = 9_760_000  # "Solve Microban n" -> LOC_ID_BASE + n
 PAR_LOC_ID_BASE = 9_770_000  # "Solve Microban n in <= par pushes" -> PAR_LOC_ID_BASE + n
+EFF_LOC_ID_BASE = 9_780_000  # "Solve Microban n efficiently" -> EFF_LOC_ID_BASE + n
 
 
 class SokopelagoLocation(Location):
@@ -34,9 +39,14 @@ def par_location_name(n: int) -> str:
     return f"Solve Microban {n} in <= par pushes"
 
 
+def eff_location_name(n: int) -> str:
+    return f"Solve Microban {n} efficiently"
+
+
 location_table: dict[str, int] = {solve_location_name(entry["n"]): LOC_ID_BASE + entry["n"] for entry in LEVELS}
 par_location_table: dict[str, int] = {par_location_name(entry["n"]): PAR_LOC_ID_BASE + entry["n"] for entry in LEVELS}
+eff_location_table: dict[str, int] = {eff_location_name(entry["n"]): EFF_LOC_ID_BASE + entry["n"] for entry in LEVELS}
 
-# Both bands are registered so location_name_to_id is stable regardless of the per-seed
-# Par Checks toggle (Archipelago requires a fixed name->id map for the world).
-location_name_to_id: dict[str, int] = {**location_table, **par_location_table}
+# All bands are registered so location_name_to_id is stable regardless of the per-seed
+# Par Checks / Efficiency Checks toggles (Archipelago requires a fixed name->id map).
+location_name_to_id: dict[str, int] = {**location_table, **par_location_table, **eff_location_table}

@@ -10,6 +10,7 @@
     "optimal": true,
     "requires_pull": false,
     "difficulty": 0.0,
+    "search_nodes": 2,
     "board": [
       "#####",
       "#@$.#",
@@ -26,7 +27,8 @@
     "solved": true,
     "optimal": true,
     "requires_pull": false,
-    "difficulty": 0.0286,
+    "difficulty": 0.05,
+    "search_nodes": 3,
     "board": [
       "####",
       "#@ #",
@@ -46,6 +48,7 @@
     "optimal": true,
     "requires_pull": false,
     "difficulty": 0.0,
+    "search_nodes": 2,
     "board": [
       "#####",
       "#  .#",
@@ -64,7 +67,8 @@
     "solved": true,
     "optimal": true,
     "requires_pull": false,
-    "difficulty": 0.6889,
+    "difficulty": 0.7167,
+    "search_nodes": 9,
     "board": [
       "######",
       "#@ $.#",
@@ -82,7 +86,8 @@
     "solved": true,
     "optimal": true,
     "requires_pull": true,
-    "difficulty": 0.4063,
+    "difficulty": 0.3833,
+    "search_nodes": 3,
     "board": [
       "#####",
       "#$ .#",
@@ -100,7 +105,8 @@
     "solved": true,
     "optimal": true,
     "requires_pull": true,
-    "difficulty": 0.4063,
+    "difficulty": 0.3833,
+    "search_nodes": 3,
     "board": [
       "#####",
       "#. $#",
@@ -118,7 +124,8 @@
     "solved": true,
     "optimal": true,
     "requires_pull": true,
-    "difficulty": 0.4349,
+    "difficulty": 0.4333,
+    "search_nodes": 4,
     "board": [
       "######",
       "#$   #",
@@ -138,7 +145,8 @@
     "solved": true,
     "optimal": true,
     "requires_pull": true,
-    "difficulty": 0.3905,
+    "difficulty": 0.4,
+    "search_nodes": 4,
     "board": [
       "#####",
       "#.  #",
@@ -157,7 +165,8 @@
     "solved": true,
     "optimal": true,
     "requires_pull": true,
-    "difficulty": 0.6571,
+    "difficulty": 0.65,
+    "search_nodes": 4,
     "board": [
       "######",
       "#$  .#",
@@ -175,7 +184,8 @@
     "solved": true,
     "optimal": true,
     "requires_pull": true,
-    "difficulty": 0.6571,
+    "difficulty": 0.65,
+    "search_nodes": 4,
     "board": [
       "######",
       "#.  $#",

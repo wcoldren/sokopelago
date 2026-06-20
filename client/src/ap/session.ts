@@ -10,14 +10,23 @@ import { Client, itemsHandlingFlags } from "archipelago.js";
 import {
   escapeValveForItem,
   isPullItem,
+  levelForEfficientLocationId,
   levelForLocationId,
   levelForParLocationId,
+  locationIdForEfficientLevel,
   locationIdForLevel,
   locationIdForParLevel,
   worldForKeyItem,
   type TrapVariant,
 } from "./ids";
-import { isGoalMet, parForLevel, requiresPull, worldOfLevel, type SlotData } from "./slotData";
+import {
+  efficientThresholdForLevel,
+  isGoalMet,
+  parForLevel,
+  requiresPull,
+  worldOfLevel,
+  type SlotData,
+} from "./slotData";
 
 /** UI hooks the play loop subscribes to. */
 export interface SessionCallbacks {
@@ -107,6 +116,8 @@ export class Session {
   readonly solvedLevels = new Set<number>();
   /** Levels solved within par (the par-location check was sent). For the UI / restore. */
   readonly parLevels = new Set<number>();
+  /** Levels solved within the efficiency margin (the efficiency check was sent). */
+  readonly effLevels = new Set<number>();
 
   private worldOf = new Map<number, number>();
   private goaled = false;
@@ -203,6 +214,12 @@ export class Session {
     return this.parLevels.has(n);
   }
 
+  /** Whether level `n` was solved within the efficiency margin (its efficiency check
+   * was sent). A perfect (par) solve also satisfies this. */
+  isLevelEfficient(n: number): boolean {
+    return this.effLevels.has(n);
+  }
+
   worldForLevel(n: number): number | undefined {
     return this.worldOf.get(n);
   }
@@ -217,11 +234,22 @@ export class Session {
     if (!this.client.authenticated) return;
     this.client.check(locationIdForLevel(n));
     this.solvedLevels.add(n); // optimistic; the server echo is idempotent
-    if (this.slot?.par_checks && pushCount !== undefined && !this.parLevels.has(n)) {
-      const par = parForLevel(this.slot, n);
-      if (par !== null && pushCount <= par) {
-        this.client.check(locationIdForParLevel(n));
-        this.parLevels.add(n);
+    if (this.slot?.par_checks && pushCount !== undefined) {
+      // Perfect tier: exactly the optimal push count.
+      if (!this.parLevels.has(n)) {
+        const par = parForLevel(this.slot, n);
+        if (par !== null && pushCount <= par) {
+          this.client.check(locationIdForParLevel(n));
+          this.parLevels.add(n);
+        }
+      }
+      // Efficient tier: within the margin over optimal (a perfect solve fires this too).
+      if (this.slot.efficiency_checks && !this.effLevels.has(n)) {
+        const eff = efficientThresholdForLevel(this.slot, n);
+        if (eff !== null && pushCount <= eff) {
+          this.client.check(locationIdForEfficientLevel(n));
+          this.effLevels.add(n);
+        }
       }
     }
     this.maybeGoal();
@@ -335,6 +363,14 @@ export class Session {
       if (pn !== null) {
         if (!this.solvedLevels.has(pn)) this.solvedLevels.add(pn);
         if (!this.parLevels.has(pn)) this.parLevels.add(pn);
+        changed = true;
+      }
+      // An efficiency-location check implies an (at-least-)efficient solve; mark both so
+      // the badge and solved state survive a reconnect.
+      const en = levelForEfficientLocationId(id);
+      if (en !== null) {
+        if (!this.solvedLevels.has(en)) this.solvedLevels.add(en);
+        if (!this.effLevels.has(en)) this.effLevels.add(en);
         changed = true;
       }
     }
