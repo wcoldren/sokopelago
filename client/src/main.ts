@@ -5,7 +5,7 @@
 //   - AP-connected: the selector shows only the seed's levels, gated by received
 //     world keys; solving a level reports a check; meeting the goal reports GOAL.
 
-import { parseXsb } from "./xsb";
+import { levelFromBoard } from "./xsb";
 import { Game } from "./board";
 import { Renderer } from "./render";
 import { attachInput } from "./input";
@@ -15,8 +15,15 @@ import { parForLevel, difficultyForLevel, type SlotData } from "./ap/slotData";
 import type { TrapVariant } from "./ap/ids";
 import { parseSolution, replaySolutionPrefix } from "./solution";
 
-const CORPUS_URL = "/levels/microban.xsb";
 const MANIFEST_URL = "/data/microban.json";
+
+/** One level entry in the bundled manifest (data/microban.json). */
+interface ManifestEntry {
+  n: number;
+  name: string;
+  board: string[];
+  solution?: string;
+}
 
 const $ = <T extends HTMLElement>(id: string): T => {
   const el = document.getElementById(id);
@@ -372,24 +379,18 @@ function onConnectClick(): void {
 
 // --- Bootstrap -------------------------------------------------------------
 
-async function loadSolutions(): Promise<void> {
-  // Best-effort: hints just won't be available if the manifest can't be fetched.
-  try {
-    const res = await fetch(MANIFEST_URL);
-    if (!res.ok) return;
-    const entries = (await res.json()) as Array<{ n: number; solution?: string }>;
-    solutions = new Map(entries.filter((e) => e.solution).map((e) => [e.n, e.solution as string]));
-  } catch {
-    /* manifest unavailable — no hints */
-  }
+/** Fetch the single bundled manifest: boards (rendered) + solutions (hints). */
+async function loadCorpus(): Promise<void> {
+  const res = await fetch(MANIFEST_URL);
+  if (!res.ok) throw new Error(`failed to load ${MANIFEST_URL}: ${res.status}`);
+  const entries = (await res.json()) as ManifestEntry[];
+  levels = entries.map((e) => levelFromBoard(e.board, e.n - 1, e.name));
+  solutions = new Map(entries.filter((e) => e.solution).map((e) => [e.n, e.solution as string]));
 }
 
 async function main(): Promise<void> {
   setStatus("Loading levels…");
-  const res = await fetch(CORPUS_URL);
-  if (!res.ok) throw new Error(`failed to load ${CORPUS_URL}: ${res.status}`);
-  levels = parseXsb(await res.text());
-  await loadSolutions();
+  await loadCorpus();
 
   const prefs = loadPrefs();
   if (prefs) {

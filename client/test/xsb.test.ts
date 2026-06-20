@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { parseXsb } from "../src/xsb";
+import { parseXsb, levelFromBoard } from "../src/xsb";
 import { Tile } from "../src/types";
 
 const corpus = readFileSync(new URL("../../levels/microban.xsb", import.meta.url), "utf8");
@@ -65,5 +65,24 @@ describe("parseXsb — format handling", () => {
     const levels = parseXsb(xsb);
     expect(levels).toHaveLength(1);
     expect(levels[0].name).toBe("7");
+  });
+});
+
+describe("levelFromBoard — render from bundled manifest boards", () => {
+  it("builds a level from raw rows with a caller-supplied index/name", () => {
+    const lvl = levelFromBoard(["#####", "#+$.#", "#####"], 6, "7 — Test");
+    expect(lvl.index).toBe(6);
+    expect(lvl.name).toBe("7 — Test");
+    expect(lvl.player).toEqual({ x: 1, y: 1 });
+    expect(lvl.boxes).toEqual([{ x: 2, y: 1 }]);
+    expect(lvl.tiles[1][1]).toBe(Tile.Goal); // goal under the player (+)
+    expect(lvl.tiles[1][3]).toBe(Tile.Goal); // the '.'
+  });
+
+  it("matches parseXsb geometry for the same board (one source of truth)", () => {
+    const rows = ["####", "#@.#", "#$###", "####"];
+    const viaParse = parseXsb(rows.join("\n"))[0];
+    const viaBoard = levelFromBoard(rows, viaParse.index, viaParse.name);
+    expect(viaBoard).toEqual(viaParse);
   });
 });

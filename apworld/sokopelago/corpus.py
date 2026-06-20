@@ -15,10 +15,11 @@ from typing import TypedDict
 
 
 class LevelEntry(TypedDict, total=False):
-    # ``n`` and ``name`` are always present; the solver fields are added by
-    # ``tools/solve_corpus.py`` (older name-only manifests omit them).
+    # ``n``, ``name``, and ``board`` are always present; the solver fields are added by
+    # ``tools/solve_corpus.py`` (older manifests may omit them).
     n: int
     name: str
+    board: list[str]  # raw XSB rows; the client renders from these
     par: int
     moves: int
     solution: str

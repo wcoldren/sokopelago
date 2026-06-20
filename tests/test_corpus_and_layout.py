@@ -40,6 +40,16 @@ class TestBuildCorpus:
         levels = build_corpus.parse_levels(xsb)
         assert [lvl["n"] for lvl in levels] == [1, 2]
         assert levels[1]["name"] == "2 — Tricky"
+        assert levels[0]["board"] == ["#####", "#@$.#", "#####"]
+
+    def test_every_entry_bundles_its_board(self):
+        # The client renders from the manifest's bundled board, so each entry's board
+        # must match the canonical corpus rows verbatim (a stale rebuild fails here).
+        data = {e["n"]: e for e in json.loads(MANIFEST.read_text())}
+        levels = {lvl.n: lvl for lvl in xsb_levels.load_corpus()}
+        assert set(data) == set(levels)
+        for n, lvl in levels.items():
+            assert data[n].get("board") == list(lvl.rows), f"level {n} board mismatch"
 
 
 class TestEnrichedManifest:

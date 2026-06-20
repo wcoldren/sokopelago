@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
-"""Offline data-prep: build the names-only level manifest.
+"""Offline data-prep: build the geometry/names fields of the level manifest.
 
 Parses the canonical corpus ``levels/microban.xsb`` (via the shared ``xsb_levels``
 parser, so level splitting / numbering matches the client and the solver) and writes
-the ``{"n", "name"}`` fields of ``apworld/sokopelago/data/microban.json``.
+the ``{"n", "name", "board"}`` fields of ``apworld/sokopelago/data/microban.json``.
+``board`` is the raw XSB rows, bundled so the client renders from this one manifest
+instead of also fetching the ``.xsb`` (which stays the canonical authoring source).
 
 The enriched solver fields (par / solution / difficulty) are produced by
 ``tools/solve_corpus.py`` — the canonical manifest producer. This tool **merges**:
-it refreshes ``n``/``name`` while preserving any existing solver fields, so running it
-never downgrades an enriched manifest. It NEVER solves Sokoban; it only reads geometry
-and titles.
+it refreshes ``n``/``name``/``board`` while preserving any existing solver fields, so
+running it never downgrades an enriched manifest. It NEVER solves Sokoban; it only reads
+geometry and titles.
 
 Run:  python tools/build_corpus.py
 """
@@ -25,8 +27,8 @@ OUT = REPO_ROOT / "apworld" / "sokopelago" / "data" / "microban.json"
 
 
 def parse_levels(text: str) -> list[dict[str, object]]:
-    """Return [{"n": int, "name": str}, ...] in corpus order."""
-    return [{"n": lvl.n, "name": lvl.name} for lvl in _parse_full(text)]
+    """Return [{"n": int, "name": str, "board": list[str]}, ...] in corpus order."""
+    return [{"n": lvl.n, "name": lvl.name, "board": list(lvl.rows)} for lvl in _parse_full(text)]
 
 
 def main() -> None:
@@ -40,6 +42,7 @@ def main() -> None:
         merged = dict(existing.get(lvl.n, {}))  # keep any solver fields
         merged["n"] = lvl.n
         merged["name"] = lvl.name
+        merged["board"] = list(lvl.rows)
         out.append(merged)
 
     OUT.parent.mkdir(parents=True, exist_ok=True)

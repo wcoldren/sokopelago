@@ -53,6 +53,10 @@ class Level:
     goals: frozenset[Cell]
     player: Cell
     boxes: frozenset[Cell]
+    #: The raw XSB board rows, verbatim. Carried so the built manifest can bundle the
+    #: board (the client renders from the manifest; ``levels/microban.xsb`` stays the
+    #: canonical authoring source).
+    rows: tuple[str, ...]
 
 
 def is_board_row(line: str) -> bool:
@@ -108,6 +112,7 @@ def _build_level(rows: list[str], index: int, num: int | None, sub: str | None) 
         goals=frozenset(goals),
         player=player,
         boxes=frozenset(boxes),
+        rows=tuple(rows),
     )
 
 

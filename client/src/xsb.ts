@@ -66,6 +66,17 @@ export function parseXsb(text: string): Level[] {
 }
 
 function buildLevel(rows: string[], index: number, num: number | null, sub: string | null): Level {
+  const label = num !== null ? String(num) : String(index + 1);
+  const name = sub ? `${label} — ${sub}` : label;
+  return levelFromBoard(rows, index, name);
+}
+
+/**
+ * Build a level from its raw board rows with a caller-supplied name/index. Used both
+ * by {@link parseXsb} and by the client when rendering boards bundled in the manifest
+ * (`data/microban.json`), so a single geometry path serves both sources.
+ */
+export function levelFromBoard(rows: string[], index: number, name: string): Level {
   const height = rows.length;
   const width = Math.max(...rows.map((r) => r.length));
 
@@ -109,11 +120,8 @@ function buildLevel(rows: string[], index: number, num: number | null, sub: stri
   }
 
   if (!player) {
-    throw new Error(`Level ${num ?? index} has no player start (@ or +).`);
+    throw new Error(`Level ${name} has no player start (@ or +).`);
   }
-
-  const label = num !== null ? String(num) : String(index + 1);
-  const name = sub ? `${label} — ${sub}` : label;
 
   return { index, name, width, height, tiles, player, boxes };
 }
