@@ -1,0 +1,70 @@
+; Pullban — an original Sokopelago expert corpus by William Coldren (2026).
+; Purpose-built for the Phase 5 expert ability tier: a mix of ordinary push levels
+; (which host the shuffled "Pull" item) and levels that REQUIRE the Pull ability —
+; a box pinned against a wall you cannot get behind to push, but can pull free.
+; The offline solver (tools/solve_corpus.py --corpus pullban) proves which is which.
+; Freely distributable with attribution, same terms as the bundled Microban set.
+
+; 1
+#####
+#@$.#
+#####
+
+; 2
+####
+#@ #
+#$ #
+#. #
+####
+
+; 3
+#####
+#  .#
+#  $#
+#  @#
+#####
+
+; 4
+######
+#@ $.#
+#  $.#
+######
+
+; 5
+#####
+#$ .#
+#@  #
+#####
+
+; 6
+#####
+#. $#
+#  @#
+#####
+
+; 7
+######
+#$   #
+#    #
+#.   #
+#@   #
+######
+
+; 8
+#####
+#.  #
+#@  #
+#$  #
+#####
+
+; 9
+######
+#$  .#
+#@   #
+######
+
+; 10
+######
+#.  $#
+#   @#
+######

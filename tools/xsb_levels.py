@@ -26,7 +26,25 @@ from dataclasses import dataclass
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-CORPUS = REPO_ROOT / "levels" / "microban.xsb"
+
+# Known corpora: name -> canonical XSB source. ``microban`` is the v1 corpus; ``pullban``
+# is the Phase 5 expert corpus of original pull-required levels.
+CORPORA: dict[str, Path] = {
+    "microban": REPO_ROOT / "levels" / "microban.xsb",
+    "pullban": REPO_ROOT / "levels" / "pullban.xsb",
+}
+CORPUS = CORPORA["microban"]  # default (backwards-compatible)
+
+
+def corpus_xsb(name: str) -> Path:
+    """Canonical XSB source path for a corpus name."""
+    return CORPORA[name]
+
+
+def manifest_json(name: str) -> Path:
+    """Bundled manifest path the apworld/client consume for a corpus name."""
+    return REPO_ROOT / "apworld" / "sokopelago" / "data" / f"{name}.json"
+
 
 BOARD_CHARS = re.compile(r"^[#@+$*. ]+$")
 NON_SPACE_GLYPH = re.compile(r"[#@+$*.]")

@@ -1,0 +1,186 @@
+[
+  {
+    "n": 1,
+    "name": "1",
+    "par": 1,
+    "moves": 1,
+    "solution": "R",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.0,
+    "board": [
+      "#####",
+      "#@$.#",
+      "#####"
+    ]
+  },
+  {
+    "n": 2,
+    "name": "2",
+    "par": 1,
+    "moves": 1,
+    "solution": "D",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.0286,
+    "board": [
+      "####",
+      "#@ #",
+      "#$ #",
+      "#. #",
+      "####"
+    ]
+  },
+  {
+    "n": 3,
+    "name": "3",
+    "par": 1,
+    "moves": 1,
+    "solution": "U",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.0,
+    "board": [
+      "#####",
+      "#  .#",
+      "#  $#",
+      "#  @#",
+      "#####"
+    ]
+  },
+  {
+    "n": 4,
+    "name": "4",
+    "par": 2,
+    "moves": 5,
+    "solution": "rRldR",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.6889,
+    "board": [
+      "######",
+      "#@ $.#",
+      "#  $.#",
+      "######"
+    ]
+  },
+  {
+    "n": 5,
+    "name": "5",
+    "par": 2,
+    "moves": 9,
+    "solution": "ruPRdlluR",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": true,
+    "difficulty": 0.4063,
+    "board": [
+      "#####",
+      "#$ .#",
+      "#@  #",
+      "#####"
+    ]
+  },
+  {
+    "n": 6,
+    "name": "6",
+    "par": 2,
+    "moves": 9,
+    "solution": "luPLdrruL",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": true,
+    "difficulty": 0.4063,
+    "board": [
+      "#####",
+      "#. $#",
+      "#  @#",
+      "#####"
+    ]
+  },
+  {
+    "n": 7,
+    "name": "7",
+    "par": 2,
+    "moves": 9,
+    "solution": "uuPDruulD",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": true,
+    "difficulty": 0.4349,
+    "board": [
+      "######",
+      "#$   #",
+      "#    #",
+      "#.   #",
+      "#@   #",
+      "######"
+    ]
+  },
+  {
+    "n": 8,
+    "name": "8",
+    "par": 2,
+    "moves": 7,
+    "solution": "PUrddlU",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": true,
+    "difficulty": 0.3905,
+    "board": [
+      "#####",
+      "#.  #",
+      "#@  #",
+      "#$  #",
+      "#####"
+    ]
+  },
+  {
+    "n": 9,
+    "name": "9",
+    "par": 3,
+    "moves": 10,
+    "solution": "ruPRdlluRR",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": true,
+    "difficulty": 0.6571,
+    "board": [
+      "######",
+      "#$  .#",
+      "#@   #",
+      "######"
+    ]
+  },
+  {
+    "n": 10,
+    "name": "10",
+    "par": 3,
+    "moves": 10,
+    "solution": "luPLdrruLL",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": true,
+    "difficulty": 0.6571,
+    "board": [
+      "######",
+      "#.  $#",
+      "#   @#",
+      "######"
+    ]
+  }
+]

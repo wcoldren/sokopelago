@@ -18,12 +18,11 @@ Run:  python tools/build_corpus.py
 
 from __future__ import annotations
 
+import argparse
 import json
 
-from xsb_levels import REPO_ROOT, load_corpus
+from xsb_levels import REPO_ROOT, corpus_xsb, load_corpus, manifest_json
 from xsb_levels import parse_levels as _parse_full
-
-OUT = REPO_ROOT / "apworld" / "sokopelago" / "data" / "microban.json"
 
 
 def parse_levels(text: str) -> list[dict[str, object]]:
@@ -32,22 +31,27 @@ def parse_levels(text: str) -> list[dict[str, object]]:
 
 
 def main() -> None:
-    levels = load_corpus()
-    existing: dict[int, dict[str, object]] = {}
-    if OUT.exists():
-        existing = {entry["n"]: entry for entry in json.loads(OUT.read_text(encoding="utf-8"))}
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--corpus", default="microban", help="corpus name (default: microban)")
+    name = ap.parse_args().corpus
+    out = manifest_json(name)
 
-    out: list[dict[str, object]] = []
+    levels = load_corpus(corpus_xsb(name))
+    existing: dict[int, dict[str, object]] = {}
+    if out.exists():
+        existing = {entry["n"]: entry for entry in json.loads(out.read_text(encoding="utf-8"))}
+
+    entries: list[dict[str, object]] = []
     for lvl in levels:
         merged = dict(existing.get(lvl.n, {}))  # keep any solver fields
         merged["n"] = lvl.n
         merged["name"] = lvl.name
         merged["board"] = list(lvl.rows)
-        out.append(merged)
+        entries.append(merged)
 
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"wrote {len(out)} levels -> {OUT.relative_to(REPO_ROOT)}")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(f"wrote {len(entries)} levels -> {out.relative_to(REPO_ROOT)}")
 
 
 if __name__ == "__main__":

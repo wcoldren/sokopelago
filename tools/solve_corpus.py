@@ -54,6 +54,7 @@ Run:  python tools/solve_corpus.py
 
 from __future__ import annotations
 
+import argparse
 import heapq
 import json
 import os
@@ -64,9 +65,7 @@ import tempfile
 import time
 from collections import deque
 
-from xsb_levels import REPO_ROOT, Cell, Level, load_corpus
-
-OUT = REPO_ROOT / "apworld" / "sokopelago" / "data" / "microban.json"
+from xsb_levels import REPO_ROOT, Cell, Level, corpus_xsb, load_corpus, manifest_json
 
 # Optional build-time external-solver fallback (data-prep only — never on the generation
 # path). When SOKO_SOLVER_CMD is set, levels the pure-Python search can't crack are
@@ -822,19 +821,29 @@ def _attach_difficulty(entries: list[dict[str, object]]) -> None:
 
 
 def main() -> None:
-    levels = load_corpus()
+    ap = argparse.ArgumentParser(description="Solve a corpus into its enriched manifest.")
+    ap.add_argument("--corpus", default="microban", help="corpus name (default: microban)")
+    name = ap.parse_args().corpus
+    out = manifest_json(name)
+    pull_aware = name != "microban"  # expert corpora may require pulls
+
+    levels = load_corpus(corpus_xsb(name))
     entries: list[dict[str, object]] = []
     for level in levels:
-        entry = solve(level)
+        entry = solve_pull(level) if pull_aware else solve(level)
         entries.append(entry)
-        status = f"par={entry['par']} optimal={entry['optimal']}" if entry.get("solved") else "UNSOLVED (no hint)"
+        if entry.get("solved"):
+            extra = " requires_pull" if entry.get("requires_pull") else ""
+            status = f"par={entry['par']} optimal={entry['optimal']}{extra}"
+        else:
+            status = "UNSOLVED (no hint)"
         print(f"  level {level.n}: {status}", flush=True)
     _attach_difficulty(entries)
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     non_optimal = [e["n"] for e in entries if e.get("solved") and not e["optimal"]]
     unsolved = [e["n"] for e in entries if not e.get("solved")]
-    print(f"solved {len(entries) - len(unsolved)}/{len(entries)} levels -> {OUT.relative_to(REPO_ROOT)}")
+    print(f"solved {len(entries) - len(unsolved)}/{len(entries)} levels -> {out.relative_to(REPO_ROOT)}")
     if non_optimal:
         print(f"  note: non-optimal greedy fallback used for levels: {non_optimal}")
     if unsolved:

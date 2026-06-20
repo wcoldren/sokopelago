@@ -187,6 +187,43 @@ class TestPullSolver:
         assert solve_corpus.replay(lvl, "r") is False  # a bare walk never wins it
 
 
+class TestPullbanManifest:
+    """The original Phase 5 expert corpus: a mix of push hosts (which carry the shuffled
+    Pull item) and pull-gated levels, all replay-verified, each board bundled."""
+
+    PULLBAN = ROOT / "apworld/sokopelago/data/pullban.json"
+
+    def _levels(self):
+        return {lvl.n: lvl for lvl in xsb_levels.load_corpus(xsb_levels.corpus_xsb("pullban"))}
+
+    def test_all_solved_with_boards(self):
+        data = json.loads(self.PULLBAN.read_text())
+        assert len(data) >= 8
+        assert all(e["solved"] for e in data)
+        assert all("board" in e for e in data)
+
+    def test_has_both_pull_and_host_levels(self):
+        data = json.loads(self.PULLBAN.read_text())
+        pull = [e for e in data if e.get("requires_pull")]
+        hosts = [e for e in data if not e.get("requires_pull")]
+        # Gated levels make the tier meaningful; hosts give the Pull item a reachable home.
+        assert pull, "no pull-gated levels"
+        assert hosts, "no push-solvable host levels (Pull item would be unplaceable)"
+
+    def test_solutions_replay(self):
+        data = {e["n"]: e for e in json.loads(self.PULLBAN.read_text())}
+        for n, lvl in self._levels().items():
+            assert solve_corpus.replay(lvl, data[n]["solution"]), f"level {n} solution does not solve it"
+
+    def test_gated_levels_are_push_unsolvable(self):
+        # The gate is solver-proven: a requires_pull level has no pure push solution.
+        levels = self._levels()
+        data = {e["n"]: e for e in json.loads(self.PULLBAN.read_text())}
+        for n in levels:
+            if data[n].get("requires_pull"):
+                assert solve_corpus.push_solvable(levels[n]) is False, f"level {n} is actually push-solvable"
+
+
 class TestChunkLevels:
     def test_even_split(self):
         worlds = layout.chunk_levels(30, 10)
