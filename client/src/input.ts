@@ -1,10 +1,13 @@
-// Keyboard input: arrow keys / WASD to move, R to restart.
+// Keyboard input: arrow keys / WASD to move, R restart, U undo, H hint, K skip.
 
 import type { Dir } from "./types";
 
 export interface InputHandlers {
   onMove: (dir: Dir) => void;
   onRestart: () => void;
+  onUndo?: () => void;
+  onHint?: () => void;
+  onSkip?: () => void;
 }
 
 const KEY_TO_DIR: Record<string, Dir> = {
@@ -46,9 +49,16 @@ export function attachInput(handlers: InputHandlers): () => void {
       handlers.onMove(dir);
       return;
     }
-    if (e.key === "r" || e.key === "R") {
+    const action: Record<string, (() => void) | undefined> = {
+      r: handlers.onRestart,
+      u: handlers.onUndo,
+      h: handlers.onHint,
+      k: handlers.onSkip,
+    };
+    const handler = action[e.key.toLowerCase()];
+    if (handler) {
       e.preventDefault();
-      handlers.onRestart();
+      handler();
     }
   };
 

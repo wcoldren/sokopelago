@@ -19,6 +19,10 @@ export interface SlotData {
   goal_boss_level: number;
   /** Index of the final/highest world (= region count). */
   final_world: number;
+  /** Push-par per seed level (Microban number as a string key). */
+  par?: Record<string, number>;
+  /** Normalized 0..1 difficulty per seed level (Microban number as a string key). */
+  difficulty?: Record<string, number>;
   seed_name: string;
   player_name: string;
   player_id: number;

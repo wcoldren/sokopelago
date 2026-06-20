@@ -9,11 +9,16 @@ import { parseXsb } from "./xsb";
 import { Game } from "./board";
 import { Renderer } from "./render";
 import { attachInput } from "./input";
-import type { Level } from "./types";
+import type { Dir, Level } from "./types";
 import { Session, loadPrefs, type SessionCallbacks } from "./ap/session";
 import type { SlotData } from "./ap/slotData";
+import type { TrapVariant } from "./ap/ids";
+import { parseSolution } from "./solution";
 
 const CORPUS_URL = "/levels/microban.xsb";
+const MANIFEST_URL = "/data/microban.json";
+
+const OPPOSITE: Record<Dir, Dir> = { up: "down", down: "up", left: "right", right: "left" };
 
 const $ = <T extends HTMLElement>(id: string): T => {
   const el = document.getElementById(id);
@@ -24,6 +29,9 @@ const $ = <T extends HTMLElement>(id: string): T => {
 const canvas = $<HTMLCanvasElement>("board");
 const select = $<HTMLSelectElement>("level-select");
 const restartBtn = $<HTMLButtonElement>("restart-btn");
+const undoBtn = $<HTMLButtonElement>("undo-btn");
+const hintBtn = $<HTMLButtonElement>("hint-btn");
+const skipBtn = $<HTMLButtonElement>("skip-btn");
 const statusEl = $<HTMLDivElement>("status");
 const hostInput = $<HTMLInputElement>("ap-host");
 const slotInput = $<HTMLInputElement>("ap-slot");
@@ -34,9 +42,12 @@ const connStatusEl = $<HTMLDivElement>("conn-status");
 const renderer = new Renderer(canvas);
 
 let levels: Level[] = [];
+let solutions = new Map<number, string>(); // Microban number -> LURD solution string
 let game: Game | null = null;
 let current = 0;
 let locked = false; // briefly true between solving and auto-advancing
+let hintIndex = 0; // solution moves revealed on the current level
+let reversedControls = false; // set by a Reversed-Controls trap; cleared on level change
 
 let session: Session | null = null;
 let slot: SlotData | null = null; // non-null once connected (AP mode)
@@ -88,6 +99,7 @@ function rebuildSelector(): void {
     select.appendChild(opt);
   }
   if (game) select.value = String(current);
+  updateValveButtons();
 }
 
 /** Next unlocked, unsolved seed level — preferring ones after `afterN`. */
@@ -118,13 +130,17 @@ function loadLevel(i: number): void {
   select.value = String(current);
   game = new Game(target);
   locked = false;
+  hintIndex = 0;
+  reversedControls = false; // a trap's curse lasts only for the level it hit
   renderer.draw(game);
   setStatus(`Level ${game.level.name} — ${game.boxes.length} boxes`);
+  updateValveButtons();
 }
 
 function refreshStatus(): void {
   if (!game) return;
   setStatus(`Level ${game.level.name} — moves ${game.moves}, pushes ${game.pushes}`);
+  updateValveButtons();
 }
 
 function onSolved(): void {
@@ -158,8 +174,9 @@ function onSolved(): void {
   if (hasNext) window.setTimeout(() => loadLevel(current + 1), 1100);
 }
 
-function move(dir: "up" | "down" | "left" | "right"): void {
+function move(dir: Dir): void {
   if (!game || locked) return;
+  if (reversedControls) dir = OPPOSITE[dir];
   if (!game.move(dir)) return;
   renderer.draw(game);
   if (game.isWin()) onSolved();
@@ -172,6 +189,96 @@ function restart(): void {
   locked = false;
   renderer.draw(game);
   refreshStatus();
+}
+
+// --- Escape valves (AP mode) -----------------------------------------------
+
+/** Undo the last move. Free offline; consumes an Undo Charge when connected. */
+function undo(): void {
+  if (!game || locked || !game.canUndo()) return;
+  if (slot && session && !session.useUndo()) {
+    setStatus("No Undo Charges available.");
+    return;
+  }
+  if (game.undo()) {
+    renderer.draw(game);
+    refreshStatus();
+  }
+}
+
+/** Reveal the next solution move by replaying a restart-aligned prefix (AP mode). */
+function useHint(): void {
+  if (!game || locked || !slot || !session) return;
+  const n = levelNumber(game.level);
+  const solution = solutions.get(n);
+  if (!solution) {
+    setStatus("No hint is available for this level.");
+    return;
+  }
+  const moves = parseSolution(solution);
+  if (hintIndex >= moves.length - 1) {
+    setStatus("Hint: you're at the final step — finish it yourself! 🙂");
+    return;
+  }
+  if (!session.useHint()) {
+    setStatus("No Hint Tokens available.");
+    return;
+  }
+  hintIndex += 1;
+  game.restart(); // realign the board to the solution line, then replay the prefix
+  for (let i = 0; i < hintIndex; i++) game.move(moves[i]);
+  renderer.draw(game);
+  setStatus(`Hint: replayed ${hintIndex}/${moves.length} solution moves.`);
+  updateValveButtons();
+}
+
+/** Consume a Skip Token to clear the current level (sends its check), then advance. */
+function useSkip(): void {
+  if (!game || !slot || !session) return;
+  const n = levelNumber(game.level);
+  if (!session.useSkip(n)) {
+    setStatus("No Skip Tokens available (or already solved).");
+    return;
+  }
+  locked = true;
+  setStatus(`Skipped level ${n} — check sent.`, true);
+  rebuildSelector();
+  const next = nextPlayable(n);
+  if (next) window.setTimeout(() => loadLevel(next.index), 900);
+}
+
+/** Apply a (presentation-only) trap effect — never alters the solvable board. */
+function triggerTrap(variant: TrapVariant): void {
+  if (variant === "reversed") {
+    reversedControls = true;
+    setStatus("⚡ Trap: Reversed Controls — until you change levels!");
+    return;
+  }
+  const cls = variant === "scramble" ? "trap-scramble" : "trap-decoy";
+  canvas.classList.add(cls);
+  window.setTimeout(() => canvas.classList.remove(cls), 1500);
+  setStatus(variant === "scramble" ? "⚡ Trap: Scramble!" : "⚡ Trap: Decoy Box!");
+}
+
+/** Sync the valve buttons' labels/counts and enabled state with the session. */
+function updateValveButtons(): void {
+  const ap = Boolean(slot && session);
+  hintBtn.hidden = !ap;
+  skipBtn.hidden = !ap;
+  const canUndo = Boolean(game?.canUndo()) && !locked;
+  if (ap && session) {
+    const a = session.available;
+    undoBtn.textContent = `Undo (${a.undo})`;
+    undoBtn.disabled = !canUndo || a.undo <= 0;
+    hintBtn.textContent = `Hint (${a.hint})`;
+    hintBtn.disabled = a.hint <= 0 || locked;
+    skipBtn.textContent = `Skip (${a.skip})`;
+    skipBtn.disabled =
+      a.skip <= 0 || locked || (game ? session.isLevelSolved(levelNumber(game.level)) : true);
+  } else {
+    undoBtn.textContent = "Undo";
+    undoBtn.disabled = !canUndo;
+  }
 }
 
 // --- AP connection ---------------------------------------------------------
@@ -213,6 +320,7 @@ async function connect(): Promise<void> {
     onUpdate: () => rebuildSelector(),
     onGoal: () => setConnStatus(`Goal complete! 🏆 (${slot?.goal})`, "ok"),
     onMessage: (text) => setStatus(text),
+    onTrap: (variant) => triggerTrap(variant),
     onDisconnect: () => handleDisconnect(),
   };
 
@@ -236,11 +344,24 @@ function onConnectClick(): void {
 
 // --- Bootstrap -------------------------------------------------------------
 
+async function loadSolutions(): Promise<void> {
+  // Best-effort: hints just won't be available if the manifest can't be fetched.
+  try {
+    const res = await fetch(MANIFEST_URL);
+    if (!res.ok) return;
+    const entries = (await res.json()) as Array<{ n: number; solution?: string }>;
+    solutions = new Map(entries.filter((e) => e.solution).map((e) => [e.n, e.solution as string]));
+  } catch {
+    /* manifest unavailable — no hints */
+  }
+}
+
 async function main(): Promise<void> {
   setStatus("Loading levels…");
   const res = await fetch(CORPUS_URL);
   if (!res.ok) throw new Error(`failed to load ${CORPUS_URL}: ${res.status}`);
   levels = parseXsb(await res.text());
+  await loadSolutions();
 
   const prefs = loadPrefs();
   if (prefs) {
@@ -251,8 +372,11 @@ async function main(): Promise<void> {
   rebuildSelector();
   select.addEventListener("change", () => loadLevel(Number(select.value)));
   restartBtn.addEventListener("click", restart);
+  undoBtn.addEventListener("click", undo);
+  hintBtn.addEventListener("click", useHint);
+  skipBtn.addEventListener("click", useSkip);
   connectBtn.addEventListener("click", onConnectClick);
-  attachInput({ onMove: move, onRestart: restart });
+  attachInput({ onMove: move, onRestart: restart, onUndo: undo, onHint: useHint, onSkip: useSkip });
 
   loadLevel(0);
 }

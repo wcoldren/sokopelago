@@ -13,6 +13,33 @@ export const FILLER_ID = 9_750_001;
 /** Base id for `Solve Microban n` locations: id = LOC_BASE + n (n = 1..MAX_LEVELS). */
 export const LOC_BASE = 9_760_000;
 
+// Escape-valve / trap item ids — fixed by apworld/sokopelago/Items.py, in a band
+// clear of the key range (KEY_BASE + 2..155) and the location range (LOC_BASE+).
+export const SKIP_ID = 9_750_200;
+export const UNDO_ID = 9_750_201;
+export const HINT_ID = 9_750_202;
+export const TRAP_ID_BASE = 9_750_300;
+/** Trap variants, indexed by `id - TRAP_ID_BASE` (matches Items.TRAP_ITEM_NAMES). */
+export const TRAP_VARIANTS = ["scramble", "decoy", "reversed"] as const;
+export type TrapVariant = (typeof TRAP_VARIANTS)[number];
+
+export type ValveKind = "skip" | "undo" | "hint" | "trap";
+export interface ValveItem {
+  kind: ValveKind;
+  /** Present only when `kind === "trap"`. */
+  trap?: TrapVariant;
+}
+
+/** Classify a received item id as an escape valve / trap, or `null` if it is neither. */
+export function escapeValveForItem(id: number): ValveItem | null {
+  if (id === SKIP_ID) return { kind: "skip" };
+  if (id === UNDO_ID) return { kind: "undo" };
+  if (id === HINT_ID) return { kind: "hint" };
+  const t = id - TRAP_ID_BASE;
+  if (t >= 0 && t < TRAP_VARIANTS.length) return { kind: "trap", trap: TRAP_VARIANTS[t] };
+  return null;
+}
+
 /** Microban corpus size; the apworld caps worlds and levels at this count. */
 export const MAX_LEVELS = 155;
 export const MAX_WORLDS = 155;

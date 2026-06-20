@@ -5,23 +5,38 @@
 // LocationChecks, reconnection, PrintJSON). This module owns the game wiring:
 // world keys -> unlocked worlds, solved levels -> checks, goal -> StatusUpdate.
 
-import { Client, itemsHandlingFlags, type Item } from "archipelago.js";
+import { Client, itemsHandlingFlags } from "archipelago.js";
 
-import { levelForLocationId, locationIdForLevel, worldForKeyItem } from "./ids";
+import {
+  escapeValveForItem,
+  levelForLocationId,
+  locationIdForLevel,
+  worldForKeyItem,
+  type TrapVariant,
+} from "./ids";
 import { isGoalMet, worldOfLevel, type SlotData } from "./slotData";
 
 /** UI hooks the play loop subscribes to. */
 export interface SessionCallbacks {
   /** Authenticated; slot_data is available and the seed's levels are known. */
   onConnected: (slot: SlotData) => void;
-  /** Unlocked worlds and/or solved levels changed — refresh the selector. */
+  /** Unlocked worlds, solved levels, or token inventory changed — refresh the UI. */
   onUpdate: () => void;
   /** The client-side goal was just met (GOAL already sent to the server). */
   onGoal: () => void;
   /** A server message arrived (chat / item routing) — show it in the status line. */
   onMessage: (text: string) => void;
+  /** A newly-received trap should fire its (presentation-only) effect. */
+  onTrap: (variant: TrapVariant) => void;
   /** The socket dropped (intentionally or not). */
   onDisconnect: () => void;
+}
+
+/** Counts of the consumable escape-valve items. */
+export interface ValveCounts {
+  skip: number;
+  undo: number;
+  hint: number;
 }
 
 export interface ConnectPrefs {
@@ -91,6 +106,14 @@ export class Session {
   private worldOf = new Map<number, number>();
   private goaled = false;
 
+  // Escape-valve inventory. `received` is recomputed from the full item backlog
+  // (idempotent across reconnects); `consumed` is persisted to DataStorage because
+  // there is no server echo for using a token. available = received - consumed.
+  private ready = false;
+  private seenItemCount = 0;
+  private readonly received: ValveCounts = { skip: 0, undo: 0, hint: 0 };
+  private readonly consumed: ValveCounts = { skip: 0, undo: 0, hint: 0 };
+
   constructor(cb: SessionCallbacks) {
     this.cb = cb;
   }
@@ -101,8 +124,12 @@ export class Session {
    * wss then falls back to ws when the scheme is omitted.
    */
   async connect(host: string, slot: string, password?: string): Promise<void> {
-    // Register listeners before login so the connection backlog is captured.
-    this.client.items.on("itemsReceived", (items) => this.handleItems(items));
+    // Register listeners before login so the connection backlog is captured. Live
+    // item events are ignored until the connect-time backlog has been seeded (`ready`),
+    // so past traps don't re-fire on reconnect.
+    this.client.items.on("itemsReceived", () => {
+      if (this.ready) this.syncItems(false);
+    });
     this.client.room.on("locationsChecked", (locs) => this.handleChecked(locs));
     this.client.messages.on("message", (text) => this.cb.onMessage(text));
     this.client.socket.on("disconnected", () => this.cb.onDisconnect());
@@ -119,9 +146,12 @@ export class Session {
     this.slot = slotData;
     this.worldOf = worldOfLevel(slotData);
 
-    // Re-seed from current state in case events fired during login().
-    this.handleItems(this.client.items.received);
+    // Seed from current state: load consumed-token counts, then tally the item backlog
+    // (suppressing trap effects for already-received traps) and restore solved levels.
+    await this.loadConsumed();
+    this.syncItems(true);
     this.handleChecked(this.client.room.checkedLocations);
+    this.ready = true;
 
     savePrefs({ host, slot });
     this.cb.onConnected(slotData);
@@ -157,16 +187,94 @@ export class Session {
     this.maybeGoal();
   }
 
-  private handleItems(items: Item[]): void {
-    let changed = false;
-    for (const item of items) {
+  /** Currently-available escape-valve tokens (received minus consumed). */
+  get available(): ValveCounts {
+    return {
+      skip: Math.max(0, this.received.skip - this.consumed.skip),
+      undo: Math.max(0, this.received.undo - this.consumed.undo),
+      hint: Math.max(0, this.received.hint - this.consumed.hint),
+    };
+  }
+
+  /** Consume a Skip Token to mark level `n` solved (sends the check). Returns false
+   * if already solved or no token is available — guarantees a stuck level can clear. */
+  useSkip(n: number): boolean {
+    if (this.isLevelSolved(n) || !this.consume("skip")) return false;
+    this.reportSolved(n);
+    return true;
+  }
+
+  /** Consume an Undo Charge (the caller performs the board undo). */
+  useUndo(): boolean {
+    return this.consume("undo");
+  }
+
+  /** Consume a Hint Token (the caller reveals the move). */
+  useHint(): boolean {
+    return this.consume("hint");
+  }
+
+  private consume(kind: keyof ValveCounts): boolean {
+    if (this.available[kind] <= 0) return false;
+    this.consumed[kind] += 1;
+    this.persistConsumed(kind);
+    this.cb.onUpdate();
+    return true;
+  }
+
+  /** Recompute valve inventory + world unlocks from the full item backlog (idempotent),
+   * firing trap effects only for items received since the last sync. */
+  private syncItems(suppressTraps: boolean): void {
+    const received = this.client.items.received;
+    let skip = 0;
+    let undo = 0;
+    let hint = 0;
+    for (const item of received) {
       const w = worldForKeyItem(item.id);
-      if (w !== null && !this.unlockedWorlds.has(w)) {
+      if (w !== null) {
         this.unlockedWorlds.add(w);
-        changed = true;
+        continue;
+      }
+      const valve = escapeValveForItem(item.id);
+      if (valve?.kind === "skip") skip += 1;
+      else if (valve?.kind === "undo") undo += 1;
+      else if (valve?.kind === "hint") hint += 1;
+    }
+    this.received.skip = skip;
+    this.received.undo = undo;
+    this.received.hint = hint;
+
+    if (!suppressTraps) {
+      for (let i = this.seenItemCount; i < received.length; i++) {
+        const valve = escapeValveForItem(received[i].id);
+        if (valve?.kind === "trap" && valve.trap) this.cb.onTrap(valve.trap);
       }
     }
-    if (changed) this.cb.onUpdate();
+    this.seenItemCount = received.length;
+    this.cb.onUpdate();
+  }
+
+  private storageKey(kind: keyof ValveCounts): string {
+    const s = this.slot;
+    // Scope by seed + slot so concurrent worlds don't clobber each other's counters.
+    return `sokopelago:${s?.seed_name ?? ""}:${s?.player_id ?? 0}:consumed:${kind}`;
+  }
+
+  private async loadConsumed(): Promise<void> {
+    const keys = (["skip", "undo", "hint"] as const).map((k) => this.storageKey(k));
+    try {
+      const data = await this.client.storage.fetch<Record<string, number>>(keys, true);
+      this.consumed.skip = Number(data[this.storageKey("skip")] ?? 0);
+      this.consumed.undo = Number(data[this.storageKey("undo")] ?? 0);
+      this.consumed.hint = Number(data[this.storageKey("hint")] ?? 0);
+    } catch {
+      /* storage unavailable — treat nothing as consumed yet */
+    }
+  }
+
+  private persistConsumed(kind: keyof ValveCounts): void {
+    if (!this.slot) return;
+    void this.client.storage.prepare(this.storageKey(kind), 0).add(1).commit();
   }
 
   private handleChecked(locations: number[]): void {

@@ -6,12 +6,23 @@ import { DELTA, Tile, type Dir, type Level, type Vec } from "./types";
 
 const key = (x: number, y: number): string => `${x},${y}`;
 
+/** One reversible step, recorded before it is applied so `undo()` can replay it. */
+interface MoveRecord {
+  /** Player position before the move. */
+  player: Vec;
+  pushed: boolean;
+  /** Box origin / destination (only when `pushed`). */
+  boxFrom?: Vec;
+  boxTo?: Vec;
+}
+
 export class Game {
   readonly level: Level;
   player: Vec;
   /** Live box positions (kept in sync with `boxKeys`). */
   boxes: Vec[];
   private boxKeys: Set<string>;
+  private history: MoveRecord[] = [];
   moves = 0;
   pushes = 0;
 
@@ -27,6 +38,7 @@ export class Game {
     this.player = { ...this.level.player };
     this.boxes = this.level.boxes.map((b) => ({ ...b }));
     this.boxKeys = new Set(this.boxes.map((b) => key(b.x, b.y)));
+    this.history = [];
     this.moves = 0;
     this.pushes = 0;
   }
@@ -58,6 +70,8 @@ export class Game {
 
     if (!this.walkable(tx, ty)) return false;
 
+    const record: MoveRecord = { player: { ...this.player }, pushed: false };
+
     if (this.boxAt(tx, ty)) {
       const bx = tx + d.x;
       const by = ty + d.y;
@@ -65,11 +79,34 @@ export class Game {
       if (!this.walkable(bx, by) || this.boxAt(bx, by)) return false;
       this.moveBox(tx, ty, bx, by);
       this.pushes++;
+      record.pushed = true;
+      record.boxFrom = { x: tx, y: ty };
+      record.boxTo = { x: bx, y: by };
     } else {
       this.moves++;
     }
 
     this.player = { x: tx, y: ty };
+    this.history.push(record);
+    return true;
+  }
+
+  /** True if there is at least one move to undo. */
+  canUndo(): boolean {
+    return this.history.length > 0;
+  }
+
+  /** Reverse the most recent move (and its push, if any). Returns false if none. */
+  undo(): boolean {
+    const record = this.history.pop();
+    if (!record) return false;
+    if (record.pushed && record.boxFrom && record.boxTo) {
+      this.moveBox(record.boxTo.x, record.boxTo.y, record.boxFrom.x, record.boxFrom.y);
+      this.pushes--;
+    } else {
+      this.moves--;
+    }
+    this.player = { ...record.player };
     return true;
   }
 
