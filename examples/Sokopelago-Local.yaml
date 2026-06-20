@@ -1,0 +1,43 @@
+# Sokopelago — local playtest config (used by ../playtest.sh by default).
+#
+# A small single-player Microban seed with plenty of escape-valve tokens so the
+# AP-connected client has items, world keys, and Hint/Skip/Undo to exercise.
+# Generate + host + open the client in one shot:  ./playtest.sh
+
+# Your slot name (<= 16 chars). playtest.sh reads this and prints it for you to
+# enter in the client's connect form.
+name: Player1
+
+description: Sokopelago local playtest — Microban, 15 levels, 3 worlds, lots of valves.
+
+game: Sokopelago
+requires:
+  version: 0.6.7 # Archipelago version required for this yaml.
+  game:
+    Sokopelago: 0.4.1 # World version required for this yaml.
+
+Sokopelago:
+  # Only Microban for now (pullban is the expert corpus; needs expert_logic).
+  corpus: microban
+
+  # First N levels of the corpus (keeps the difficulty ramp). Small = quick to play.
+  level_count: 15
+
+  # Levels per world; each world after the first opens with a "World n Key" item.
+  # 15 / 5 => 3 worlds, so you actually receive world keys to test gating.
+  levels_per_region: 5
+
+  # Win condition: beat_final_region | solve_count | boss_level
+  goal: beat_final_region
+
+  # --- Escape valves (carved out of the filler budget; kept under budget so the
+  # generator doesn't trim them). Hint Tokens are the point of this seed. ---
+  skip_tokens: 2
+  undo_charges: 2
+  hint_tokens: 5
+
+  # Presentation-only traps off, to keep the playtest signal clean.
+  trap_percentage: 0
+
+  # Balance measured difficulty across worlds (and order each world easiest-first).
+  difficulty_ordering: true
