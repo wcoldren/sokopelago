@@ -4,8 +4,9 @@ A [Sokoban](https://en.wikipedia.org/wiki/Sokoban) implementation for the
 [Archipelago](https://archipelago.gg) multiworld randomizer. Solve Sokoban levels to
 send items to other players; receive items that unlock more levels and abilities.
 
-See **[ROADMAP.md](ROADMAP.md)** for the authoritative scope and phase sequencing.
-**v1 ships Phases 0–2** (region-key logic, solve-checks, a simple goal, plus escape valves).
+See **[ROADMAP.md](ROADMAP.md)** for the authoritative scope and phase sequencing, and
+**[VERSIONING.md](VERSIONING.md)** for the release/versioning policy (the project is in
+beta — see **[CHANGELOG.md](CHANGELOG.md)**).
 
 ## Repository layout
 
@@ -16,10 +17,13 @@ levels/      Canonical level corpus (XSB), shared by the client now and the apwo
 ROADMAP.md   Source of truth for scope + phasing
 ```
 
-## Current status: Phase 0 — Scaffolding + Corpus (local-only, no AP yet)
+## Current status: Phase 4 done (`0.3.0`)
 
-The client plays the Microban corpus locally in a browser with no Archipelago
-connection. The apworld is a stub until Phase 1.
+Phases 0–4 are shipped and CI-green: local Sokoban play, the apworld core (region-key
+logic, solve-checks, goals), the live AP protocol client, Phase 3 escape valves
+(skip/undo/hint tokens + traps), and Phase 4 per-level par checks. Remaining roadmap
+work: **Phase 5** (expert ability-logic tier) and **Phase 6** (polish — PopTracker,
+multiple corpora, settings UX).
 
 ## Client quickstart
 

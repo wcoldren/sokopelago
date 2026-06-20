@@ -1,9 +1,9 @@
 # Sokopelago apworld
 
-The Archipelago world for Sokopelago. **Phase 0 status: stub only** — the package
-`sokopelago/` is an empty, importable placeholder. The real world (items, locations,
-regions, rules, options, slot_data) lands in **Phase 1**, modelled on
-`worlds/checksfinder` in the Archipelago tree.
+The Archipelago world for Sokopelago. The package `sokopelago/` implements the full
+world — items, locations, regions, rules, options, and slot_data — modelled on
+`worlds/checksfinder` in the Archipelago tree. Current version `0.3.0` (Phases 0–4; see
+the repo-root [CHANGELOG.md](../CHANGELOG.md) and [VERSIONING.md](../VERSIONING.md)).
 
 ## Integration model (independent repo + symlink, never a fork)
 
@@ -26,10 +26,9 @@ Why this works and stays clean:
   link and matches `entry.is_dir()`), so this stays live-editable from source.
 - Package names can't start with `.` or `_`; `sokopelago` is fine.
 
-**Runner:** vanilla `vendor/Archipelago` (pinned 0.6.7). Sokopelago needs no engine
-changes, so the Emerald fork is deliberately not the runner.
-
-The symlink + first `Generate.py` run are **Phase 1** work. Phase 0 touches no clone.
+**Runner:** vanilla `vendor/Archipelago` (pinned 0.6.7, matching `minimum_ap_version` in
+`sokopelago/archipelago.json`). Sokopelago needs no engine changes, so the Emerald fork
+is deliberately not the runner.
 
 ## Level corpus
 
