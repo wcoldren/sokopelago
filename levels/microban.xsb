@@ -1,3 +1,12 @@
+; ===========================================================================
+; Microban level set — by David W. Skinner.
+; Bundled by Sokopelago with credit, per Skinner's free-distribution terms:
+; "These sets may be freely distributed provided they remain properly credited."
+; Source: https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/
+; Skinner's original set header and all 155 puzzles follow verbatim below.
+; (Lines starting with ';' are XSB comments, ignored by the level parsers.)
+; ===========================================================================
+;
 ; Microban (155 puzzles, revised April, 2000)
 ; This is a good set for beginners and children. Most of the puzzles are small and illustrate
 ; a particular concept. More experienced players should also find them interesting, since they

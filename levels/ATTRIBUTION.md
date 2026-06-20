@@ -13,8 +13,12 @@ under his stated terms:
 
 > These sets may be freely distributed provided they remain properly credited.
 
-This is an attribution-only permission. The file is included here unmodified, retaining
-Skinner's original header, so the credit travels with the levels.
+This is an attribution-only permission. Skinner's original header and all 155 puzzles
+are retained verbatim; the only change is a short attribution header prepended to
+`microban.xsb` (XSB `;` comment lines, ignored by every parser) naming Skinner and
+linking his source, so the credit travels with the levels even if the file is copied
+on its own. A repo-level summary lives in [`../CREDITS.md`](../CREDITS.md), and the
+client surfaces the credit in its footer.
 
 ### Source
 
