@@ -219,7 +219,7 @@ describe("ap/slotData — difficultyForLevel", () => {
 
 describe("ap/slotData — requiresPull", () => {
   it("is true only for levels flagged in requires_pull", () => {
-    const slot = sampleSlot({ expert_logic: true, requires_pull: { "21": true } });
+    const slot = sampleSlot({ pull_logic: true, requires_pull: { "21": true } });
     expect(requiresPull(slot, 21)).toBe(true);
     expect(requiresPull(slot, 22)).toBe(false);
     expect(requiresPull(sampleSlot(), 21)).toBe(false); // no map at all
@@ -309,7 +309,7 @@ describe("ap/session — escape valves", () => {
 describe("ap/session — Pull ability (expert logic)", () => {
   it("gates pulling until the Pull item is received", () => {
     const { s, client } = mockSession();
-    peek(s).slot = sampleSlot({ expert_logic: true, requires_pull: { "21": true } });
+    peek(s).slot = sampleSlot({ pull_logic: true, requires_pull: { "21": true } });
     expect(s.canPull).toBe(false);
     expect(s.needsPull(21)).toBe(true);
     expect(s.needsPull(22)).toBe(false);
@@ -320,7 +320,7 @@ describe("ap/session — Pull ability (expert logic)", () => {
 
   it("pulling is always available without expert logic", () => {
     const { s } = mockSession();
-    peek(s).slot = sampleSlot({ expert_logic: false });
+    peek(s).slot = sampleSlot({ pull_logic: false });
     expect(s.canPull).toBe(true);
     expect(s.needsPull(21)).toBe(false);
   });

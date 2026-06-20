@@ -21,8 +21,8 @@ ROADMAP.md   Source of truth for scope + phasing
 
 Phases 0–5 are shipped and CI-green: local Sokoban play, the apworld core (region-key
 logic, solve-checks, goals), the live AP protocol client, Phase 3 escape valves
-(skip/undo/hint tokens + traps), Phase 4 per-level par checks, and the Phase 5 expert
-ability-logic tier — a **Pull** ability (opt-in Expert Logic) that hard-gates the
+(skip/undo/hint tokens + traps), Phase 4 per-level par checks, and the Phase 5 pull
+ability-logic tier — a **Pull** ability (opt-in Pull Logic) that hard-gates the
 pull-required levels of the original **Pullban** corpus. Remaining roadmap work:
 **Phase 6** (polish — PopTracker, more abilities/corpora, hosting/UX).
 
@@ -73,7 +73,7 @@ The web client is served on **GitHub Pages** and the world ships as an **.apworl
    [latest release](../../releases/latest), then in the Archipelago launcher click
    **Install APWorld** (or drag the file onto it).
 2. **Generate a seed** locally with a YAML (`corpus: microban` or `pullban`;
-   `expert_logic: true` enables the Pull tier). Custom worlds must be generated locally —
+   `pull_logic: true` enables the Pull tier). Custom worlds must be generated locally —
    archipelago.gg can't generate them.
 3. **Host it:** upload the generated output to
    [archipelago.gg → Host Game](https://archipelago.gg). (You need a `wss` room, which

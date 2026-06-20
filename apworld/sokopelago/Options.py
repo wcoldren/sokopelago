@@ -13,7 +13,7 @@ class Corpus(Choice):
     """Which level corpus to play.
     microban: the standard 155-level Microban set (push-only).
     pullban: a small expert set whose harder levels require the Pull ability (see
-    Expert Logic)."""
+    Pull Logic)."""
 
     display_name = "Corpus"
     option_microban = 0
@@ -185,15 +185,15 @@ class EfficiencyMargin(Range):
     default = 15
 
 
-class ExpertLogic(Toggle):
-    """Expert ability-logic tier. When on, levels that require the Pull ability are
+class PullLogic(Toggle):
+    """Pull ability-logic tier. When on, levels that require the Pull ability are
     hard-gated behind a "Pull" progression item shuffled into the multiworld — you can't
     solve (or send checks for) those levels until you receive Pull. When off, the Pull
     mechanic is simply always available and nothing is gated. Only has an effect with a
     corpus that has pull-required levels (e.g. pullban); a no-op on Microban. Off by
-    default."""
+    default. (Renamed from the old `expert_logic` in 0.6.0.)"""
 
-    display_name = "Expert Logic"
+    display_name = "Pull Logic"
     default = 0
 
 
@@ -215,4 +215,4 @@ class SokopelagoOptions(PerGameCommonOptions):
     par_checks: ParChecks
     efficiency_checks: EfficiencyChecks
     efficiency_margin: EfficiencyMargin
-    expert_logic: ExpertLogic
+    pull_logic: PullLogic

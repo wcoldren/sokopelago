@@ -189,15 +189,15 @@ export class Session {
     return w !== undefined && this.unlockedWorlds.has(w);
   }
 
-  /** Whether the pull mechanic is available: always, unless expert logic gates it behind
+  /** Whether the pull mechanic is available: always, unless pull logic gates it behind
    * the (not-yet-received) Pull ability. */
   get canPull(): boolean {
-    return !this.slot?.expert_logic || this.pullReceived;
+    return !this.slot?.pull_logic || this.pullReceived;
   }
 
-  /** Whether level `n` needs the Pull ability under this seed's expert logic. */
+  /** Whether level `n` needs the Pull ability under this seed's pull logic. */
   needsPull(n: number): boolean {
-    return Boolean(this.slot?.expert_logic) && this.slot !== null && requiresPull(this.slot, n);
+    return Boolean(this.slot?.pull_logic) && this.slot !== null && requiresPull(this.slot, n);
   }
 
   /** Playable = the world key is held AND (no pull gate, or Pull has been received). */

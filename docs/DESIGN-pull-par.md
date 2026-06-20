@@ -26,17 +26,17 @@ Three linked ideas, in increasing scope:
 ## Current state (what exists today)
 
 - **Options** (`apworld/sokopelago/Options.py`): `ParChecks` (Toggle, default off),
-  `ExpertLogic` (Toggle, default off). Par locations are added per level when `par_checks`
-  is on; they're marked `LocationProgressType.EXCLUDED` (filler-only, can't hold
-  progression), so a hard par requirement can never soft-lock a seed.
+  `PullLogic` (Toggle, default off — renamed from `ExpertLogic` in 0.6.0). Par locations are
+  added per level when `par_checks` is on; they're marked `LocationProgressType.EXCLUDED`
+  (filler-only, can't hold progression), so a hard par requirement can never soft-lock a seed.
 - **Pull gating** (`apworld/sokopelago/__init__.py`): `self.pull_levels` is non-empty only
-  when `expert_logic` is on AND the corpus has `requires_pull` levels. `_apply_pull_gate(loc,
+  when `pull_logic` is on AND the corpus has `requires_pull` levels. `_apply_pull_gate(loc,
   n)` sets `loc.access_rule = lambda s: s.has(PULL_NAME, p)` on both the solve and par
   locations of a pull-required level. Exactly one `Pull` progression item is created.
-- **slot_data**: `expert_logic: bool`, `requires_pull: {levelStr: true}` (only gated
+- **slot_data**: `pull_logic: bool`, `requires_pull: {levelStr: true}` (only gated
   levels), `par_checks: bool`, `par: {levelStr: pushCount}`.
-- **Client** (`client/src/ap/session.ts`): `canPull = !expert_logic || pullReceived`;
-  `needsPull(n) = expert_logic && requiresPull(slot, n)`. Par is reported in `reportSolved`
+- **Client** (`client/src/ap/session.ts`): `canPull = !pull_logic || pullReceived`;
+  `needsPull(n) = pull_logic && requiresPull(slot, n)`. Par is reported in `reportSolved`
   when `pushCount <= par`. There is **no per-level pull counter** — only `game.pushes`.
 - **Shipped (this round):** Pull is now **solo-only god-mode** — always usable in solo free
   play (`dev.sh`), but in AP it's gated to pull-capable/expert seeds (`main.ts pullInSeed`/
@@ -105,17 +105,16 @@ Recommend deferring C until A is in and playtested; it adds the most surface are
 - Keep solvability push-only and precomputed (ROADMAP hard constraint): Pull gating only
   ever affects *optional* (par) checks or *expert* levels, never base solve-reachability.
 
-## Terminology: "expert" is a misnomer (rename when we touch this)
+## Terminology: "expert" was a misnomer — renamed to `pull_logic` (DONE in 0.6.0)
 
-`expert_logic` / "expert ability-logic tier" conflates two unrelated things: **using the
-Pull mechanic** and **being hard**. A pull-required level isn't inherently harder to *solve*
-than a tricky push-only one — it just needs a different verb. Rename the option/tier to name
-the mechanic, not a difficulty claim — e.g. `pull_logic` / "ability logic" / "pull tier".
-This is a **breaking** option/slot_data rename (existing yamls reference `expert_logic`), so
-batch it with the Pull/par build rather than doing it piecemeal. **Confirmed (2026-06-20):
-fold this rename into the next Pull/par round.** Touch points: option key in
-`Options.py`, `expert_logic` in `fill_slot_data`, `slotData.ts`, and `session.ts`/`main.ts`
-(`expert_logic` reads, the `pullInSeed`/`canPull` logic).
+The old `expert_logic` / "expert ability-logic tier" conflated two unrelated things: **using
+the Pull mechanic** and **being hard**. A pull-required level isn't inherently harder to
+*solve* than a tricky push-only one — it just needs a different verb. **Shipped in 0.6.0:**
+the option/tier was renamed to `pull_logic` / "Pull Logic" to name the mechanic, not a
+difficulty claim. This was a **breaking** option/slot_data rename (old yamls used
+`expert_logic`; no alias — AP ignores the unknown key). Touch points covered: option key in
+`Options.py`, the `fill_slot_data` key, `slotData.ts`, and `session.ts`/`main.ts`
+(`pull_logic` reads + the `pullInSeed`/`canPull` logic).
 
 Separately, **difficulty** (the `◆◇◇` pips) currently comes from the solver's normalized
 score. A naive **par-based** difficulty (more pushes ⇒ harder) was floated — cheap, and

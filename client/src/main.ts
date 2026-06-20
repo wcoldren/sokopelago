@@ -335,10 +335,10 @@ function onSolved(): void {
 }
 
 /** Whether Pull is part of this context at all: always in solo (god-mode for dev/testing);
- * in AP only on a pull-capable corpus or an expert seed. */
+ * in AP only on a pull-capable corpus or a pull-logic seed. */
 function pullInSeed(): boolean {
   if (!session) return true;
-  return loadedCorpus !== DEFAULT_CORPUS || Boolean(slot?.expert_logic);
+  return loadedCorpus !== DEFAULT_CORPUS || Boolean(slot?.pull_logic);
 }
 
 /** Whether the pull mechanic is usable right now: always in solo; in an AP seed only when
@@ -523,7 +523,7 @@ function updateValveButtons(): void {
 
   // Show the Pull button only when the loaded corpus/seed actually uses pull (so it stays
   // out of the way in plain solo Microban). The keyboard god-mode (canPullNow) is separate.
-  const pullRelevant = loadedCorpus !== DEFAULT_CORPUS || Boolean(slot?.expert_logic);
+  const pullRelevant = loadedCorpus !== DEFAULT_CORPUS || Boolean(slot?.pull_logic);
   pullBtn.hidden = !pullRelevant;
   if (pullRelevant) {
     const usable = canPullNow();

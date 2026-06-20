@@ -116,7 +116,7 @@ class TestPullbanExpert(SokopelagoTestBase):
     # WorldTestBase fill/reachability battery proves the gated seed is still beatable.
     options = {
         "corpus": "pullban",
-        "expert_logic": 1,
+        "pull_logic": 1,
         "level_count": 10,
         "levels_per_region": 5,
         "difficulty_ordering": 0,
@@ -135,7 +135,7 @@ class TestPullbanNoExpert(SokopelagoTestBase):
     # Same corpus without expert logic: no Pull item, nothing gated, still beatable.
     options = {
         "corpus": "pullban",
-        "expert_logic": 0,
+        "pull_logic": 0,
         "level_count": 10,
         "levels_per_region": 5,
         "difficulty_ordering": 0,

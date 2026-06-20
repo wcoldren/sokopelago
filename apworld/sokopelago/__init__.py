@@ -75,8 +75,8 @@ class SokopelagoWorld(World):
     levels_per_region: int
     goal_solve_count: int
     boss_level: int
-    expert: bool
-    pull_levels: set[int]  # seed levels hard-gated behind the Pull ability (expert only)
+    pull_logic: bool
+    pull_levels: set[int]  # seed levels hard-gated behind the Pull ability (pull-logic only)
 
     def generate_early(self) -> None:
         self.corpus_data = load_corpus_data(self.options.corpus.current_key)
@@ -111,9 +111,9 @@ class SokopelagoWorld(World):
             self.boss_level = raw_boss
         else:
             self.boss_level = min(levels, key=lambda n: (abs(n - raw_boss), n))
-        # Expert Logic: hard-gate the seed's pull-required levels behind the Pull item.
-        self.expert = bool(self.options.expert_logic.value)
-        self.pull_levels = {n for n in levels if n in self.corpus_data.requires_pull} if self.expert else set()
+        # Pull Logic: hard-gate the seed's pull-required levels behind the Pull item.
+        self.pull_logic = bool(self.options.pull_logic.value)
+        self.pull_levels = {n for n in levels if n in self.corpus_data.requires_pull} if self.pull_logic else set()
 
     def create_regions(self) -> None:
         menu = Region("Menu", self.player, self.multiworld)
@@ -163,7 +163,7 @@ class SokopelagoWorld(World):
 
     def create_items(self) -> None:
         keys: list[SokopelagoItem] = [self.create_item(world_key_name(n)) for n in range(2, self.region_count + 1)]
-        # Expert Logic adds one Pull ability (progression) that gates the pull-required
+        # Pull Logic adds one Pull ability (progression) that gates the pull-required
         # levels. Like the keys it's a fixed progression item; it's carved from the budget
         # so the pool size stays exactly the location count.
         abilities: list[SokopelagoItem] = [self.create_item(PULL_NAME)] if self.pull_levels else []
@@ -200,7 +200,7 @@ class SokopelagoWorld(World):
         return items
 
     def _completion(self, base: Any) -> Any:
-        """Wrap a key-based completion rule, ANDing in Pull when expert logic gates levels
+        """Wrap a key-based completion rule, ANDing in Pull when pull logic gates levels
         (winning means solving the pull-gated levels, so Pull is genuinely required)."""
         if self.pull_levels:
             player = self.player
@@ -257,9 +257,9 @@ class SokopelagoWorld(World):
             # over optimal, i.e. pushes <= floor(par * (1 + efficiency_margin/100)).
             "efficiency_checks": bool(self.options.par_checks.value) and bool(self.options.efficiency_checks.value),
             "efficiency_margin": self.options.efficiency_margin.value,
-            # Expert Logic (Phase 5): when on, the client requires the Pull item before
+            # Pull Logic (Phase 5): when on, the client requires the Pull item before
             # the listed levels can be played; requires_pull maps those level numbers.
-            "expert_logic": self.expert,
+            "pull_logic": self.pull_logic,
             "requires_pull": {str(n): True for n in sorted(self.pull_levels)},
             # Per-level par + normalized difficulty for the client's UI / hints. Full
             # solution strings are NOT shipped here (bloat) — the client reads those

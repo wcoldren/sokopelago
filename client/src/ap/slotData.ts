@@ -30,8 +30,8 @@ export interface SlotData {
   efficiency_checks?: boolean;
   /** Percent over the optimal push count that still counts as an efficient solve. */
   efficiency_margin?: number;
-  /** Expert Logic: when true, requires_pull levels are gated behind the Pull item. */
-  expert_logic?: boolean;
+  /** Pull Logic: when true, requires_pull levels are gated behind the Pull item. */
+  pull_logic?: boolean;
   /** Level numbers (string keys) that need the Pull ability to be solved. */
   requires_pull?: Record<string, boolean>;
   seed_name: string;

@@ -17,7 +17,7 @@ requires:
     Sokopelago: 0.4.1 # World version required for this yaml.
 
 Sokopelago:
-  # Only Microban for now (pullban is the expert corpus; needs expert_logic).
+  # Only Microban for now (pullban is the expert corpus; needs pull_logic).
   corpus: microban
 
   # First N levels of the corpus (keeps the difficulty ramp). Small = quick to play.
