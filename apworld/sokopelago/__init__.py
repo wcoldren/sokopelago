@@ -17,9 +17,10 @@ from typing import Any
 from BaseClasses import LocationProgressType, Region
 from worlds.AutoWorld import WebWorld, World
 
-from .corpus import DIFFICULTY_BY_N, LEVEL_COUNT, PAR_BY_N
+from .corpus import CorpusData, load_corpus_data
 from .Items import (
     FILLER_NAME,
+    PULL_NAME,
     TRAP_ITEM_NAMES,
     VALVE_ITEM_NAMES,
     SokopelagoItem,
@@ -64,25 +65,32 @@ class SokopelagoWorld(World):
     location_name_to_id = location_name_to_id
 
     # Set in generate_early.
+    corpus_data: CorpusData
     worlds: list[list[int]]
     region_count: int
     level_count: int
     levels_per_region: int
     goal_solve_count: int
     boss_level: int
+    expert: bool
+    pull_levels: set[int]  # seed levels hard-gated behind the Pull ability (expert only)
 
     def generate_early(self) -> None:
-        self.level_count = clamp(self.options.level_count.value, 5, LEVEL_COUNT)
+        self.corpus_data = load_corpus_data(self.options.corpus.current_key)
+        self.level_count = clamp(self.options.level_count.value, 5, self.corpus_data.count)
         self.levels_per_region = clamp(self.options.levels_per_region.value, 1, self.level_count)
         levels = list(range(1, self.level_count + 1))
-        if self.options.difficulty_ordering.value and DIFFICULTY_BY_N:
-            self.worlds = assign_levels_by_difficulty(levels, DIFFICULTY_BY_N, self.levels_per_region)
+        if self.options.difficulty_ordering.value and self.corpus_data.difficulty_by_n:
+            self.worlds = assign_levels_by_difficulty(levels, self.corpus_data.difficulty_by_n, self.levels_per_region)
         else:
             self.worlds = chunk_levels(self.level_count, self.levels_per_region)
         self.region_count = len(self.worlds)
         self.goal_solve_count = clamp(self.options.goal_solve_count.value, 1, self.level_count)
         raw_boss = self.options.goal_boss_level.value
         self.boss_level = self.level_count if raw_boss == 0 else clamp(raw_boss, 1, self.level_count)
+        # Expert Logic: hard-gate the seed's pull-required levels behind the Pull item.
+        self.expert = bool(self.options.expert_logic.value)
+        self.pull_levels = {n for n in levels if n in self.corpus_data.requires_pull} if self.expert else set()
 
     def create_regions(self) -> None:
         menu = Region("Menu", self.player, self.multiworld)
@@ -93,7 +101,9 @@ class SokopelagoWorld(World):
             region = Region(f"World {i}", self.player, self.multiworld)
             for n in level_ns:
                 loc_name = solve_location_name(n)
-                region.locations.append(SokopelagoLocation(self.player, loc_name, location_table[loc_name], region))
+                loc = SokopelagoLocation(self.player, loc_name, location_table[loc_name], region)
+                self._apply_pull_gate(loc, n)
+                region.locations.append(loc)
                 if par_checks:
                     # The par location shares the region's key gate, but is EXCLUDED so
                     # only filler lands there — a hard par requirement (which escape
@@ -101,6 +111,7 @@ class SokopelagoWorld(World):
                     par_name = par_location_name(n)
                     par_loc = SokopelagoLocation(self.player, par_name, par_location_table[par_name], region)
                     par_loc.progress_type = LocationProgressType.EXCLUDED
+                    self._apply_pull_gate(par_loc, n)
                     region.locations.append(par_loc)
             self.multiworld.regions.append(region)
 
@@ -114,15 +125,24 @@ class SokopelagoWorld(World):
                     rule=lambda state, key=key: state.has(key, self.player),
                 )
 
+    def _apply_pull_gate(self, loc: SokopelagoLocation, n: int) -> None:
+        """Gate a pull-required level's location behind the Pull item (expert logic)."""
+        if n in self.pull_levels:
+            loc.access_rule = lambda state, p=self.player: state.has(PULL_NAME, p)
+
     def create_items(self) -> None:
         keys: list[SokopelagoItem] = [self.create_item(world_key_name(n)) for n in range(2, self.region_count + 1)]
+        # Expert Logic adds one Pull ability (progression) that gates the pull-required
+        # levels. Like the keys it's a fixed progression item; it's carved from the budget
+        # so the pool size stays exactly the location count.
+        abilities: list[SokopelagoItem] = [self.create_item(PULL_NAME)] if self.pull_levels else []
         # One item per location. Par Checks adds a second (EXCLUDED) location per level,
         # so the pool must grow to match; the extra slots are plain filler.
         total_locations = self.level_count * (2 if self.options.par_checks.value else 1)
-        budget = total_locations - len(keys)  # non-key items the pool can hold
+        budget = total_locations - len(keys) - len(abilities)  # non-key/ability items the pool can hold
         extras = self._escape_valve_items(budget)
         filler = [self.create_filler() for _ in range(budget - len(extras))]
-        self.multiworld.itempool += keys + extras + filler
+        self.multiworld.itempool += keys + abilities + extras + filler
 
     def _escape_valve_items(self, budget: int) -> list[SokopelagoItem]:
         """Escape-valve + trap items, carved out of the filler budget (never on top),
@@ -144,31 +164,34 @@ class SokopelagoWorld(World):
             items.append(self.create_item(TRAP_ITEM_NAMES[i % len(TRAP_ITEM_NAMES)]))
         return items
 
+    def _completion(self, base: Any) -> Any:
+        """Wrap a key-based completion rule, ANDing in Pull when expert logic gates levels
+        (winning means solving the pull-gated levels, so Pull is genuinely required)."""
+        if self.pull_levels:
+            player = self.player
+            return lambda state: base(state) and state.has(PULL_NAME, player)
+        return base
+
     def set_rules(self) -> None:
         player = self.player
         goal = self.options.goal
         all_keys = [world_key_name(n) for n in range(2, self.region_count + 1)]
+        cc = self.multiworld.completion_condition
 
         if goal == "solve_count":
-            world_sizes = [len(w) for w in self.worlds]
-            k = solve_count_keys_needed(world_sizes, self.goal_solve_count)
+            k = solve_count_keys_needed([len(w) for w in self.worlds], self.goal_solve_count)
             if k == 0:
-                self.multiworld.completion_condition[player] = lambda state: True
+                cc[player] = self._completion(lambda s: True)
             else:
-                self.multiworld.completion_condition[player] = lambda state: state.has_from_list(all_keys, player, k)
+                cc[player] = self._completion(lambda s: s.has_from_list(all_keys, player, k))
         elif goal == "boss_level":
             bw = boss_world_index(self.worlds, self.boss_level)
-            if bw == 1:
-                self.multiworld.completion_condition[player] = lambda state: True
-            else:
-                key = world_key_name(bw)
-                self.multiworld.completion_condition[player] = lambda state: state.has(key, player)
+            boss_key = world_key_name(bw)
+            cc[player] = self._completion((lambda s: True) if bw == 1 else (lambda s, key=boss_key: s.has(key, player)))
         else:  # beat_final_region
-            if self.region_count <= 1:
-                self.multiworld.completion_condition[player] = lambda state: True
-            else:
-                key = world_key_name(self.region_count)
-                self.multiworld.completion_condition[player] = lambda state: state.has(key, player)
+            final_key = world_key_name(self.region_count)
+            single = self.region_count <= 1
+            cc[player] = self._completion((lambda s: True) if single else (lambda s, key=final_key: s.has(key, player)))
 
     def create_item(self, name: str) -> SokopelagoItem:
         data = item_table[name]
@@ -179,8 +202,10 @@ class SokopelagoWorld(World):
 
     def fill_slot_data(self) -> dict[str, Any]:
         seed_levels = [n for world in self.worlds for n in world]
+        par_by_n = self.corpus_data.par_by_n
+        difficulty_by_n = self.corpus_data.difficulty_by_n
         return {
-            "corpus": "microban",
+            "corpus": self.corpus_data.name,
             "level_count": self.level_count,
             "levels_per_region": self.levels_per_region,
             "levels": seed_levels,
@@ -192,11 +217,15 @@ class SokopelagoWorld(World):
             # When on, the client sends the parallel par-location check for any level
             # solved within its push-par (Phase 4 check density).
             "par_checks": bool(self.options.par_checks.value),
+            # Expert Logic (Phase 5): when on, the client requires the Pull item before
+            # the listed levels can be played; requires_pull maps those level numbers.
+            "expert_logic": self.expert,
+            "requires_pull": {str(n): True for n in sorted(self.pull_levels)},
             # Per-level par + normalized difficulty for the client's UI / hints. Full
             # solution strings are NOT shipped here (bloat) — the client reads those
             # from the bundled manifest it serves.
-            "par": {str(n): PAR_BY_N[n] for n in seed_levels if n in PAR_BY_N},
-            "difficulty": {str(n): DIFFICULTY_BY_N[n] for n in seed_levels if n in DIFFICULTY_BY_N},
+            "par": {str(n): par_by_n[n] for n in seed_levels if n in par_by_n},
+            "difficulty": {str(n): difficulty_by_n[n] for n in seed_levels if n in difficulty_by_n},
             "seed_name": self.multiworld.seed_name,
             "player_name": self.player_name,
             "player_id": self.player,

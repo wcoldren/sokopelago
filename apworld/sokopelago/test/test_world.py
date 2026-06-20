@@ -52,3 +52,40 @@ class TestDifficultyOrderingOff(SokopelagoTestBase):
     def test_layout_is_native_chunk_order(self) -> None:
         native = chunk_levels(self.world.level_count, self.world.levels_per_region)
         assert self.world.worlds == native
+
+
+class TestPullbanExpert(SokopelagoTestBase):
+    # The expert tier on the pull corpus: the Pull item is shuffled in and the
+    # pull-required levels are hard-gated behind it. Native order so World 1 holds the
+    # push-solvable hosts (a reachable home for Pull / the World 2 Key). The inherited
+    # WorldTestBase fill/reachability battery proves the gated seed is still beatable.
+    options = {
+        "corpus": "pullban",
+        "expert_logic": 1,
+        "level_count": 10,
+        "levels_per_region": 5,
+        "difficulty_ordering": 0,
+    }
+
+    def test_pull_item_is_progression_and_gates_exist(self) -> None:
+        pull = [i for i in self.multiworld.itempool if i.name == "Pull"]
+        assert len(pull) == 1 and pull[0].advancement
+        assert self.world.pull_levels, "expert pullban should have pull-gated levels"
+
+    def test_gated_levels_are_a_subset_of_the_corpus_pull_levels(self) -> None:
+        assert self.world.pull_levels <= set(self.world.corpus_data.requires_pull)
+
+
+class TestPullbanNoExpert(SokopelagoTestBase):
+    # Same corpus without expert logic: no Pull item, nothing gated, still beatable.
+    options = {
+        "corpus": "pullban",
+        "expert_logic": 0,
+        "level_count": 10,
+        "levels_per_region": 5,
+        "difficulty_ordering": 0,
+    }
+
+    def test_no_pull_item_and_no_gates(self) -> None:
+        assert "Pull" not in {i.name for i in self.multiworld.itempool}
+        assert not self.world.pull_levels

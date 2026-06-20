@@ -44,6 +44,12 @@ VALVE_ITEM_NAMES: dict[str, str] = {"skip": SKIP_NAME, "undo": UNDO_NAME, "hint"
 TRAP_ID_BASE = 9_750_300
 TRAP_ITEM_NAMES: list[str] = ["Trap: Scramble", "Trap: Decoy Box", "Trap: Reversed Controls"]
 
+# Ability items (band 9_750_400+). Unlike the Phase 3 valves, these ARE progression: an
+# ability hard-gates the levels that require it under the Expert Logic option (Phase 5).
+ABILITY_ID_BASE = 9_750_400
+PULL_NAME = "Pull"
+PULL_ID = 9_750_400
+
 
 class ItemData(typing.NamedTuple):
     code: int
@@ -67,5 +73,6 @@ item_table[UNDO_NAME] = ItemData(UNDO_ID, ItemClassification.useful)
 item_table[HINT_NAME] = ItemData(HINT_ID, ItemClassification.useful)
 for _i, _trap in enumerate(TRAP_ITEM_NAMES):
     item_table[_trap] = ItemData(TRAP_ID_BASE + _i, ItemClassification.trap)
+item_table[PULL_NAME] = ItemData(PULL_ID, ItemClassification.progression)
 
 item_name_to_id: dict[str, int] = {name: data.code for name, data in item_table.items()}
