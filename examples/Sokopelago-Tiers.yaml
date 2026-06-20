@@ -1,0 +1,53 @@
+# Sokopelago — tiered-par + seed-varied-selection playtest config (v0.5.0+).
+#
+# A single-player Microban seed that exercises the 0.5.0 features:
+#   - shuffled_buckets level selection (different puzzles per seed, ramp preserved)
+#   - the perfect (★) and efficient (✦) par tiers
+# Generate + host + open the client in one shot:
+#   AP_PYTHON="mamba run -n archipelago python" ./playtest.sh examples/Sokopelago-Tiers.yaml
+
+# Your slot name (<= 16 chars). playtest.sh reads this and prints it for you to
+# enter in the client's connect form.
+name: Player1
+
+description: Sokopelago tiers playtest — Microban, 20 levels, seed-varied + par tiers.
+
+game: Sokopelago
+requires:
+  version: 0.6.7 # Archipelago version required for this yaml.
+  game:
+    Sokopelago: 0.5.0 # World version required (shuffled_buckets + efficiency tier).
+
+Sokopelago:
+  corpus: microban
+
+  # 20 levels / 5 per world => 4 worlds (so you receive world keys to test gating).
+  level_count: 20
+  levels_per_region: 5
+
+  goal: beat_final_region
+
+  # --- Seed-varied selection (new in 0.5.0) ---
+  # Draw a different subset of puzzles per seed, grouped into difficulty tiers and
+  # shuffled within each tier so the easy->hard ramp survives. Re-generate to get a
+  # different (but reproducible-per-seed) set. `native` reverts to the first-N levels.
+  level_selection: shuffled_buckets
+  difficulty_buckets: 5
+
+  # --- Tiered par checks (new efficiency tier in 0.5.0) ---
+  # par_checks adds the "perfect" location (solve in exactly the optimal push count, ★).
+  # efficiency_checks adds a gettable "efficient" location (✦): solve within
+  # efficiency_margin percent over optimal. The efficient tier needs par_checks on.
+  par_checks: true
+  efficiency_checks: true
+  efficiency_margin: 15 # <= optimal * 1.15 counts as efficient
+
+  # --- Escape valves (carved out of the filler budget) ---
+  skip_tokens: 2
+  undo_charges: 2
+  hint_tokens: 5
+
+  trap_percentage: 0
+
+  # Balance measured difficulty across worlds (and order each world easiest-first).
+  difficulty_ordering: true
