@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  EFF_LOC_BASE,
   FILLER_ID,
   HINT_ID,
   KEY_BASE,
@@ -12,14 +13,17 @@ import {
   UNDO_ID,
   escapeValveForItem,
   isPullItem,
+  levelForEfficientLocationId,
   levelForLocationId,
   levelForParLocationId,
+  locationIdForEfficientLevel,
   locationIdForLevel,
   locationIdForParLevel,
   worldForKeyItem,
 } from "../src/ap/ids";
 import {
   difficultyForLevel,
+  efficientThresholdForLevel,
   isGoalMet,
   levelsInWorld,
   parForLevel,
@@ -356,5 +360,95 @@ describe("ap/session — par checks (Phase 4)", () => {
     expect(checked).toEqual([locationIdForLevel(7)]);
     expect(s.isLevelSolved(7)).toBe(true);
     expect(s.isLevelPar(7)).toBe(false);
+  });
+});
+
+describe("ap/ids — efficiency-location band", () => {
+  it("round-trips efficiency-location id <-> level number, in its own band", () => {
+    for (const n of [1, 2, 30, 155]) {
+      expect(locationIdForEfficientLevel(n)).toBe(EFF_LOC_BASE + n);
+      expect(levelForEfficientLocationId(locationIdForEfficientLevel(n))).toBe(n);
+    }
+    // No overlap with the solve or par bands.
+    expect(levelForEfficientLocationId(locationIdForLevel(30))).toBeNull();
+    expect(levelForEfficientLocationId(locationIdForParLevel(30))).toBeNull();
+    expect(levelForEfficientLocationId(EFF_LOC_BASE)).toBeNull(); // n = 0
+    expect(levelForEfficientLocationId(EFF_LOC_BASE + 156)).toBeNull();
+  });
+});
+
+describe("ap/slotData — efficientThresholdForLevel", () => {
+  it("is floor(par * (1 + margin/100))", () => {
+    expect(
+      efficientThresholdForLevel(sampleSlot({ par: { "7": 10 }, efficiency_margin: 15 }), 7),
+    ).toBe(11);
+    expect(
+      efficientThresholdForLevel(sampleSlot({ par: { "7": 20 }, efficiency_margin: 25 }), 7),
+    ).toBe(25);
+  });
+
+  it("equals par when the margin is 0 or absent", () => {
+    expect(
+      efficientThresholdForLevel(sampleSlot({ par: { "7": 10 }, efficiency_margin: 0 }), 7),
+    ).toBe(10);
+    expect(efficientThresholdForLevel(sampleSlot({ par: { "7": 10 } }), 7)).toBe(10);
+  });
+
+  it("is null when no par is shipped for the level", () => {
+    expect(efficientThresholdForLevel(sampleSlot({ efficiency_margin: 15 }), 7)).toBeNull();
+  });
+});
+
+describe("ap/session — efficiency tier", () => {
+  const effSlot = (over: Partial<SlotData> = {}) =>
+    sampleSlot({
+      par_checks: true,
+      efficiency_checks: true,
+      efficiency_margin: 20,
+      par: { "7": 10 },
+      ...over,
+    });
+
+  it("a perfect solve fires solve + par + efficiency", () => {
+    const { s, checked } = mockSession();
+    peek(s).slot = effSlot();
+    s.reportSolved(7, 9); // 9 <= par 10, also <= eff floor(10*1.2)=12
+    expect(checked).toEqual([
+      locationIdForLevel(7),
+      locationIdForParLevel(7),
+      locationIdForEfficientLevel(7),
+    ]);
+    expect(s.isLevelPar(7)).toBe(true);
+    expect(s.isLevelEfficient(7)).toBe(true);
+  });
+
+  it("an efficient-but-not-perfect solve fires solve + efficiency only", () => {
+    const { s, checked } = mockSession();
+    peek(s).slot = effSlot();
+    s.reportSolved(7, 12); // 12 > par 10 but <= eff 12
+    expect(checked).toEqual([locationIdForLevel(7), locationIdForEfficientLevel(7)]);
+    expect(s.isLevelPar(7)).toBe(false);
+    expect(s.isLevelEfficient(7)).toBe(true);
+  });
+
+  it("an inefficient solve fires only the solve check", () => {
+    const { s, checked } = mockSession();
+    peek(s).slot = effSlot();
+    s.reportSolved(7, 13); // 13 > eff 12
+    expect(checked).toEqual([locationIdForLevel(7)]);
+    expect(s.isLevelEfficient(7)).toBe(false);
+  });
+
+  it("never sends an efficiency check when the tier is off", () => {
+    const { s, checked } = mockSession();
+    peek(s).slot = sampleSlot({
+      par_checks: true,
+      efficiency_checks: false,
+      efficiency_margin: 20,
+      par: { "7": 10 },
+    });
+    s.reportSolved(7, 12);
+    expect(checked).toEqual([locationIdForLevel(7)]);
+    expect(s.isLevelEfficient(7)).toBe(false);
   });
 });

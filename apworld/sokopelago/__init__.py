@@ -31,13 +31,16 @@ from .Items import (
 from .layout import (
     assign_levels_by_difficulty,
     boss_world_index,
-    chunk_levels,
+    chunk_list,
     clamp,
     escape_valve_counts,
+    select_bucketed_levels,
     solve_count_keys_needed,
 )
 from .Locations import (
     SokopelagoLocation,
+    eff_location_name,
+    eff_location_table,
     location_name_to_id,
     location_table,
     par_location_name,
@@ -79,11 +82,22 @@ class SokopelagoWorld(World):
         self.corpus_data = load_corpus_data(self.options.corpus.current_key)
         self.level_count = clamp(self.options.level_count.value, 5, self.corpus_data.count)
         self.levels_per_region = clamp(self.options.levels_per_region.value, 1, self.level_count)
-        levels = list(range(1, self.level_count + 1))
+        if self.options.level_selection == "shuffled_buckets":
+            # Vary which puzzles a seed draws (per the multiworld's seeded RNG) while
+            # keeping the difficulty ramp; native selection is the first N in corpus order.
+            levels = select_bucketed_levels(
+                self.corpus_data.difficulty_by_n,
+                self.corpus_data.count,
+                self.level_count,
+                self.options.difficulty_buckets.value,
+                self.multiworld.random,
+            )
+        else:
+            levels = list(range(1, self.level_count + 1))
         if self.options.difficulty_ordering.value and self.corpus_data.difficulty_by_n:
             self.worlds = assign_levels_by_difficulty(levels, self.corpus_data.difficulty_by_n, self.levels_per_region)
         else:
-            self.worlds = chunk_levels(self.level_count, self.levels_per_region)
+            self.worlds = chunk_list(levels, self.levels_per_region)
         self.region_count = len(self.worlds)
         self.goal_solve_count = clamp(self.options.goal_solve_count.value, 1, self.level_count)
         raw_boss = self.options.goal_boss_level.value
@@ -97,6 +111,7 @@ class SokopelagoWorld(World):
         self.multiworld.regions.append(menu)
 
         par_checks = bool(self.options.par_checks.value)
+        eff_checks = par_checks and bool(self.options.efficiency_checks.value)
         for i, level_ns in enumerate(self.worlds, start=1):
             region = Region(f"World {i}", self.player, self.multiworld)
             for n in level_ns:
@@ -105,14 +120,13 @@ class SokopelagoWorld(World):
                 self._apply_pull_gate(loc, n)
                 region.locations.append(loc)
                 if par_checks:
-                    # The par location shares the region's key gate, but is EXCLUDED so
-                    # only filler lands there — a hard par requirement (which escape
-                    # valves can't bypass) can never strand a progression item.
-                    par_name = par_location_name(n)
-                    par_loc = SokopelagoLocation(self.player, par_name, par_location_table[par_name], region)
-                    par_loc.progress_type = LocationProgressType.EXCLUDED
-                    self._apply_pull_gate(par_loc, n)
-                    region.locations.append(par_loc)
+                    # The par/efficiency locations share the region's key gate, but are
+                    # EXCLUDED so only filler lands there — a hard push-count requirement
+                    # (which escape valves can't bypass) can never strand a progression
+                    # item. Par = exactly optimal (perfect); efficiency = within margin.
+                    self._add_excluded_check(region, par_location_name(n), par_location_table, n)
+                    if eff_checks:
+                        self._add_excluded_check(region, eff_location_name(n), eff_location_table, n)
             self.multiworld.regions.append(region)
 
             if i == 1:
@@ -130,15 +144,27 @@ class SokopelagoWorld(World):
         if n in self.pull_levels:
             loc.access_rule = lambda state, p=self.player: state.has(PULL_NAME, p)
 
+    def _add_excluded_check(self, region: Region, name: str, table: dict[str, int], n: int) -> None:
+        """Attach a filler-only (EXCLUDED) skill check (par/efficiency) for level ``n``,
+        sharing the region key gate and the level's pull gate."""
+        loc = SokopelagoLocation(self.player, name, table[name], region)
+        loc.progress_type = LocationProgressType.EXCLUDED
+        self._apply_pull_gate(loc, n)
+        region.locations.append(loc)
+
     def create_items(self) -> None:
         keys: list[SokopelagoItem] = [self.create_item(world_key_name(n)) for n in range(2, self.region_count + 1)]
         # Expert Logic adds one Pull ability (progression) that gates the pull-required
         # levels. Like the keys it's a fixed progression item; it's carved from the budget
         # so the pool size stays exactly the location count.
         abilities: list[SokopelagoItem] = [self.create_item(PULL_NAME)] if self.pull_levels else []
-        # One item per location. Par Checks adds a second (EXCLUDED) location per level,
-        # so the pool must grow to match; the extra slots are plain filler.
-        total_locations = self.level_count * (2 if self.options.par_checks.value else 1)
+        # One item per location. Par Checks adds a second (EXCLUDED) location per level and
+        # Efficiency Checks a third, so the pool must grow to match; the extra slots are
+        # plain filler.
+        par_checks = bool(self.options.par_checks.value)
+        eff_checks = par_checks and bool(self.options.efficiency_checks.value)
+        per_level = 1 + (1 if par_checks else 0) + (1 if eff_checks else 0)
+        total_locations = self.level_count * per_level
         budget = total_locations - len(keys) - len(abilities)  # non-key/ability items the pool can hold
         extras = self._escape_valve_items(budget)
         filler = [self.create_filler() for _ in range(budget - len(extras))]
@@ -215,8 +241,13 @@ class SokopelagoWorld(World):
             "goal_boss_level": self.boss_level,
             "final_world": self.region_count,
             # When on, the client sends the parallel par-location check for any level
-            # solved within its push-par (Phase 4 check density).
+            # solved within its push-par (the "perfect" tier — exactly optimal).
             "par_checks": bool(self.options.par_checks.value),
+            # Efficiency tier (only meaningful with par_checks): the client also sends an
+            # efficiency-location check when a solve is within efficiency_margin percent
+            # over optimal, i.e. pushes <= floor(par * (1 + efficiency_margin/100)).
+            "efficiency_checks": bool(self.options.par_checks.value) and bool(self.options.efficiency_checks.value),
+            "efficiency_margin": self.options.efficiency_margin.value,
             # Expert Logic (Phase 5): when on, the client requires the Pull item before
             # the listed levels can be played; requires_pull maps those level numbers.
             "expert_logic": self.expert,

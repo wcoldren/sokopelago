@@ -25,6 +25,7 @@ class LevelEntry(TypedDict, total=False):
     moves: int
     solution: str
     boxes: int
+    search_nodes: int  # states the solver expanded (search effort / branching signal)
     difficulty: float
     optimal: bool
     solved: bool

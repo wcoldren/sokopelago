@@ -6,17 +6,84 @@ None of this solves Sokoban; it only chunks the level list and counts keys.
 
 from __future__ import annotations
 
+from typing import Any
+
 
 def clamp(value: int, lo: int, hi: int) -> int:
     return max(lo, min(hi, value))
 
 
+def chunk_list(levels: list[int], levels_per_region: int) -> list[list[int]]:
+    """Split an explicit level list into worlds of ``levels_per_region`` levels each,
+    preserving order. The last world may be smaller."""
+    size = max(1, levels_per_region)
+    return [levels[i : i + size] for i in range(0, len(levels), size)]
+
+
 def chunk_levels(level_count: int, levels_per_region: int) -> list[list[int]]:
     """Split the first ``level_count`` Microban numbers (1-based) into worlds of
     ``levels_per_region`` levels each. The last world may be smaller."""
-    size = max(1, levels_per_region)
-    numbers = list(range(1, level_count + 1))
-    return [numbers[i : i + size] for i in range(0, len(numbers), size)]
+    return chunk_list(list(range(1, level_count + 1)), levels_per_region)
+
+
+def _bucketize(ordered: list[int], bucket_count: int) -> list[list[int]]:
+    """Split a difficulty-ordered level list into ``bucket_count`` near-equal contiguous
+    tiers (bucket 0 = easiest). Clamped to at most one bucket per level."""
+    n = len(ordered)
+    bucket_count = max(1, min(bucket_count, n)) if n else 1
+    base, rem = divmod(n, bucket_count)
+    buckets: list[list[int]] = []
+    i = 0
+    for b in range(bucket_count):
+        size = base + (1 if b < rem else 0)
+        buckets.append(ordered[i : i + size])
+        i += size
+    return buckets
+
+
+def _allocate(total: int, sizes: list[int]) -> list[int]:
+    """Largest-remainder apportionment of ``total`` picks across buckets of the given
+    sizes (proportional to size). ``total <= sum(sizes)`` guarantees no bucket is
+    over-allocated, so each result is in ``[0, size]``."""
+    grand = sum(sizes)
+    if grand <= 0:
+        return [0 for _ in sizes]
+    quotas = [sz * total for sz in sizes]
+    alloc = [q // grand for q in quotas]
+    rem = total - sum(alloc)
+    # Hand out the leftover picks to the largest fractional remainders (ties by index),
+    # so the apportionment is deterministic for a given (total, sizes).
+    order = sorted(range(len(sizes)), key=lambda i: (-(quotas[i] % grand), i))
+    for i in order[:rem]:
+        alloc[i] += 1
+    return alloc
+
+
+def select_bucketed_levels(
+    difficulty_by_n: dict[int, float],
+    corpus_count: int,
+    level_count: int,
+    bucket_count: int,
+    rng: Any,
+) -> list[int]:
+    """Pick ``level_count`` levels from a ``corpus_count``-level corpus, varied per seed
+    but keeping the difficulty ramp.
+
+    Levels are difficulty-ordered, split into ``bucket_count`` tiers, shuffled *within*
+    each tier (``rng`` is the multiworld's seeded RNG, so different seeds draw different
+    subsets while a given seed is reproducible), then a size-proportional share is taken
+    from each tier. The result is concatenated easiest-tier-first, so it still ramps
+    easy→hard. Levels missing a difficulty score sort as 0 (easiest)."""
+    level_count = clamp(level_count, 1, corpus_count)
+    ordered = sorted(range(1, corpus_count + 1), key=lambda n: (difficulty_by_n.get(n, 0.0), n))
+    buckets = _bucketize(ordered, bucket_count)
+    for bucket in buckets:
+        rng.shuffle(bucket)
+    alloc = _allocate(level_count, [len(b) for b in buckets])
+    selected: list[int] = []
+    for bucket, take in zip(buckets, alloc, strict=True):
+        selected.extend(bucket[:take])
+    return selected
 
 
 def solve_count_keys_needed(world_sizes: list[int], target: int) -> int:
@@ -80,7 +147,7 @@ def assign_levels_by_difficulty(
     counting and goal logic are unchanged), but deals difficulty-sorted levels
     round-robin across worlds so no single key-gated world is a brutal cluster, then
     orders each world easiest-first. Levels missing a difficulty score sort as 0."""
-    sizes = [len(world) for world in chunk_levels(len(levels), levels_per_region)]
+    sizes = [len(world) for world in chunk_list(levels, levels_per_region)]
     worlds: list[list[int]] = [[] for _ in sizes]
     ordered = sorted(levels, key=lambda n: (difficulty.get(n, 0.0), n))
     wi = 0

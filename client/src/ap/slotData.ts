@@ -25,6 +25,11 @@ export interface SlotData {
   difficulty?: Record<string, number>;
   /** When true, the seed has par-location checks; solving within par sends a second check. */
   par_checks?: boolean;
+  /** When true, the seed also has the efficiency tier; solving within the margin over
+   * optimal sends a third check. Only meaningful alongside par_checks. */
+  efficiency_checks?: boolean;
+  /** Percent over the optimal push count that still counts as an efficient solve. */
+  efficiency_margin?: number;
   /** Expert Logic: when true, requires_pull levels are gated behind the Pull item. */
   expert_logic?: boolean;
   /** Level numbers (string keys) that need the Pull ability to be solved. */
@@ -53,6 +58,18 @@ export function levelsInWorld(slot: SlotData, world: number): number[] {
 export function parForLevel(slot: SlotData, n: number): number | null {
   const par = slot.par?.[String(n)];
   return typeof par === "number" && par > 0 ? par : null;
+}
+
+/**
+ * Push threshold for the efficient tier of a level, or `null` if unknown. Solving in
+ * `<= ` this many pushes sends the efficiency check (whereas exactly the par count sends
+ * the perfect tier). Equals `floor(par * (1 + margin/100))`.
+ */
+export function efficientThresholdForLevel(slot: SlotData, n: number): number | null {
+  const par = parForLevel(slot, n);
+  if (par === null) return null;
+  const margin = typeof slot.efficiency_margin === "number" ? slot.efficiency_margin : 0;
+  return Math.floor(par * (1 + margin / 100));
 }
 
 /** Normalized 0..1 difficulty for a level, or `null` if none was shipped. */

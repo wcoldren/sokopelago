@@ -11,7 +11,12 @@ import { Renderer } from "./render";
 import { attachInput } from "./input";
 import { effectiveDir, type Dir, type Level } from "./types";
 import { Session, loadPrefs, type SessionCallbacks } from "./ap/session";
-import { parForLevel, difficultyForLevel, type SlotData } from "./ap/slotData";
+import {
+  parForLevel,
+  efficientThresholdForLevel,
+  difficultyForLevel,
+  type SlotData,
+} from "./ap/slotData";
 import type { TrapVariant } from "./ap/ids";
 import { parseSolution, planHint, animateSolutionPrefix, type AnimationHandle } from "./solution";
 
@@ -78,6 +83,10 @@ const levelNumber = (lvl: Level): number => lvl.index + 1;
 /** Push-par for a level when the connected seed has Par Checks on, else null. */
 const parTarget = (n: number): number | null => (slot?.par_checks ? parForLevel(slot, n) : null);
 
+/** Efficient-tier push threshold when the seed has Efficiency Checks on, else null. */
+const effTarget = (n: number): number | null =>
+  slot?.par_checks && slot?.efficiency_checks ? efficientThresholdForLevel(slot, n) : null;
+
 /** Difficulty tier for a level ("easy"/"medium"/"hard"), or null if no data (offline). */
 function difficultyTier(n: number): "easy" | "medium" | "hard" | null {
   const d = slot ? difficultyForLevel(slot, n) : null;
@@ -128,13 +137,20 @@ function shownLevels(): Level[] {
   return slot.levels.map((n) => levels[n - 1]).filter((l): l is Level => Boolean(l));
 }
 
-// Option markers — see the legend under the board: ★ par, ✓ solved, 🔒 locked, ◆ difficulty.
+// Option markers — see the legend under the board: ★ par, ✦ efficient, ✓ solved, 🔒 locked, ◆ difficulty.
+function solvedMarker(n: number): string {
+  if (!session) return "✓";
+  if (session.isLevelPar(n)) return "★"; // perfect (exactly optimal)
+  if (session.isLevelEfficient(n)) return "✦"; // within the efficiency margin
+  return "✓";
+}
+
 function optionLabel(lvl: Level): string {
   const n = levelNumber(lvl);
   const badge = difficultyBadge(n);
   const base = `${n}. ${lvl.name}${badge ? `  ${badge}` : ""}`;
   if (!slot || !session) return base;
-  if (session.isLevelSolved(n)) return `${session.isLevelPar(n) ? "★" : "✓"} ${base}`;
+  if (session.isLevelSolved(n)) return `${solvedMarker(n)} ${base}`;
   // The world's lock state is shown by the <optgroup> label, so options just flag the gate.
   if (!session.isLevelUnlocked(n)) return `🔒 ${base}`;
   if (session.needsPull(n) && !session.canPull) return `🔒 ${base} (needs Pull)`;
@@ -235,7 +251,9 @@ function loadLevel(i: number): void {
   reversedControls = false; // a trap's curse lasts only for the level it hit
   renderer.draw(game);
   const par = parTarget(levelNumber(target));
-  const parSuffix = par !== null ? ` — par ${par} pushes` : "";
+  const eff = effTarget(levelNumber(target));
+  const parSuffix =
+    par !== null ? ` — par ${par} pushes${eff !== null && eff > par ? ` (eff ≤${eff})` : ""}` : "";
   const tier = difficultyTier(levelNumber(target));
   const diffSuffix = tier ? ` — ${tier}` : "";
   setStatus(`Level ${game.level.name} — ${game.boxes.length} boxes${parSuffix}${diffSuffix}`);
@@ -245,7 +263,9 @@ function loadLevel(i: number): void {
 function refreshStatus(): void {
   if (!game) return;
   const par = parTarget(levelNumber(game.level));
-  const parSuffix = par !== null ? ` / par ${par}` : "";
+  const eff = effTarget(levelNumber(game.level));
+  const parSuffix =
+    par !== null ? ` / par ${par}${eff !== null && eff > par ? ` (eff ≤${eff})` : ""}` : "";
   setStatus(`Level ${game.level.name} — moves ${game.moves}, pushes ${game.pushes}${parSuffix}`);
   updateValveButtons();
 }
@@ -265,11 +285,19 @@ function onSolved(): void {
     session.reportSolved(n, game.pushes);
     rebuildSelector(); // mark the just-solved option
     const par = parTarget(n);
+    const eff = effTarget(n);
     let parNote = "";
     if (par !== null) {
-      parNote = session.isLevelPar(n)
-        ? ` ✓ under par (${par})!`
-        : ` (par ${par} — par check missed)`;
+      if (session.isLevelPar(n)) {
+        parNote = ` ★ perfect — optimal ${par} pushes!`;
+      } else if (session.isLevelEfficient(n)) {
+        parNote = ` ✦ efficient (≤${eff}, par ${par})!`;
+      } else {
+        parNote =
+          eff !== null && eff > par
+            ? ` (par ${par} / eff ≤${eff} — missed)`
+            : ` (par ${par} — par check missed)`;
+      }
     }
     const next = nextPlayable(n);
     notice(
