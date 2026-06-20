@@ -6,6 +6,15 @@ All notable changes to Sokopelago are documented here. The format follows
 apworld `world_version`, with the client kept in lockstep. Versions correspond to
 world/datapackage-affecting changes, not roadmap phase numbers.
 
+## [0.4.1] — Solo-play hints
+
+### Fixed
+- The **Hint** button now works in solo play (no AP connection): it reveals the next
+  solution move for free, mirroring how **Undo** already behaves offline. Previously the
+  button was hidden and `useHint()` no-opped without a connected session, since Hint
+  Tokens only exist as multiworld items. When connected, Hint still consumes a token.
+  Client-only change; no datapackage/generation impact.
+
 ## [0.4.0] — Phase 5: expert ability-logic tier (Pull)
 
 ### Added

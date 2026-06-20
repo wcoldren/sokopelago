@@ -292,9 +292,10 @@ function undo(): void {
   }
 }
 
-/** Reveal the next solution move by replaying a restart-aligned prefix (AP mode). */
+/** Reveal the next solution move by replaying a restart-aligned prefix. Free in solo
+ * play; consumes a Hint Token when connected (mirrors Undo). */
 function useHint(): void {
-  if (!game || locked || !slot || !session) return;
+  if (!game || locked) return;
   const n = levelNumber(game.level);
   const solution = solutions.get(n);
   if (!solution) {
@@ -306,7 +307,7 @@ function useHint(): void {
     notice("Hint: you're at the final step — finish it yourself! 🙂");
     return;
   }
-  if (!session.useHint()) {
+  if (slot && session && !session.useHint()) {
     notice("No Hint Tokens available.");
     return;
   }
@@ -359,7 +360,7 @@ function togglePull(): void {
 /** Sync the valve buttons' labels/counts and enabled state with the session. */
 function updateValveButtons(): void {
   const ap = Boolean(slot && session);
-  hintBtn.hidden = !ap;
+  hintBtn.hidden = false; // Hint is free in solo play (like Undo); token-gated when connected
   skipBtn.hidden = !ap;
 
   // Pull is relevant on a non-Microban corpus (whose levels can need it) or any expert
@@ -386,6 +387,8 @@ function updateValveButtons(): void {
   } else {
     undoBtn.textContent = "Undo";
     undoBtn.disabled = !canUndo;
+    hintBtn.textContent = "Hint";
+    hintBtn.disabled = locked || !game || !solutions.has(levelNumber(game.level));
   }
 }
 
