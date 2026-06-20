@@ -1,622 +1,1708 @@
 [
   {
     "n": 1,
-    "name": "1"
+    "name": "1",
+    "par": 8,
+    "moves": 33,
+    "solution": "dlUrrrdLullddrUluRuulDrddrruLdlUU",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0288
   },
   {
     "n": 2,
-    "name": "2"
+    "name": "2",
+    "par": 3,
+    "moves": 16,
+    "solution": "rddLruulDuullddR",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0324
   },
   {
     "n": 3,
-    "name": "3"
+    "name": "3",
+    "par": 13,
+    "moves": 41,
+    "solution": "ruuLLLulDrrrrddlUruLLLddllluurRDrdLuuurDD",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0365
   },
   {
     "n": 4,
-    "name": "4"
+    "name": "4",
+    "par": 7,
+    "moves": 31,
+    "solution": "ullDLurrrdLLulllddrrRurrddlUruL",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0405
   },
   {
     "n": 5,
-    "name": "5"
+    "name": "5",
+    "par": 6,
+    "moves": 31,
+    "solution": "LuurrdLrrddlUlldRuuulldDrddlluR",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0526
   },
   {
     "n": 6,
-    "name": "6"
+    "name": "6",
+    "par": 29,
+    "moves": 133,
+    "solution": "ulldllllulllddRluurDRRlllddrrUdlluRuurrdRRRlllulldRRllddrUluurrdRRdrrrruullDurrddlLLLuRdrrruullDurrddlLLulllulldRRRRRdrrruullDurrddlL",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0894
   },
   {
     "n": 7,
-    "name": "7"
+    "name": "7",
+    "par": 6,
+    "moves": 42,
+    "solution": "lluurUdlddrrrruulUdrddlUdllUluurrDulluurrD",
+    "boxes": 6,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0817
   },
   {
     "n": 8,
-    "name": "8"
+    "name": "8",
+    "par": 32,
+    "moves": 103,
+    "solution": "llDDDDDDldddrruuLuuuuuuurrdLulDDDDDDlllddrrUddrruuLrddllulluurRllddrrUrUUUUUUluRdddddddldlluurRdrUUUUUU",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.073
   },
   {
     "n": 9,
-    "name": "9"
+    "name": "9",
+    "par": 10,
+    "moves": 30,
+    "solution": "urrDulldRdRluurDrDDlUruLdlUruL",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0305
   },
   {
     "n": 10,
-    "name": "10"
+    "name": "10",
+    "par": 21,
+    "moves": 103,
+    "solution": "rddrruuLLddrrrruuuuurrdddLruuullddDLLddrrUUUUddddlllluuRRRlddlllluuRlddrrrrrruUUdddlllllluurRRRRlddrruU",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0732
   },
   {
     "n": 11,
-    "name": "11"
+    "name": "11",
+    "par": 16,
+    "moves": 78,
+    "solution": "ulllddddrrrruLdllluuuurrrdDDrdLLLLullddrUluRdrrrruulDrdLLLUllddrUrrruuruullldD",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0483
   },
   {
     "n": 12,
-    "name": "12"
+    "name": "12",
+    "par": 11,
+    "moves": 49,
+    "solution": "uululldRdRluurDrDDrddlluRuuulldRurDDrrrddllUdlluR",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0359
   },
   {
     "n": 13,
-    "name": "13"
+    "name": "13",
+    "par": 21,
+    "moves": 63,
+    "solution": "rDlDDRddlUUUUruLddddrrruLLdlUUUrDlddrruLdlUruullUdrruLdrddlUruL",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0643
   },
   {
     "n": 14,
-    "name": "14"
+    "name": "14",
+    "par": 10,
+    "moves": 51,
+    "solution": "uulllldddrrUlluurrrrddLLLrrruullDurrddlLdllURRuullD",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0352
   },
   {
     "n": 15,
-    "name": "15"
+    "name": "15",
+    "par": 12,
+    "moves": 43,
+    "solution": "DrdddllUUddrruuulLLLdlluRRRRdddrruuLrddlluU",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0358
   },
   {
     "n": 16,
-    "name": "16"
+    "name": "16",
+    "par": 39,
+    "moves": 132,
+    "solution": "lddrUdrruLLdlUUUruLLLrrdrrDullddrUruLdddrruLdlUruululllulDDDlddrUruLuurrrrdrddlUlUdrruLuLLLulDDDrddlluRdrUluuurrrrddlUruLLLulDDDDldR",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1012
   },
   {
     "n": 17,
-    "name": "17"
+    "name": "17",
+    "par": 9,
+    "moves": 32,
+    "solution": "dlDurrDulldRddlUUddrrruLdlUrUdlU",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0431
   },
   {
     "n": 18,
-    "name": "18"
+    "name": "18",
+    "par": 13,
+    "moves": 75,
+    "solution": "ruuuulllddrRDrddlUruUUdllluuurrrrdLddddlUruuuLulldddrRdrUUdllluuurrdLurrrdL",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0441
   },
   {
     "n": 19,
-    "name": "19"
+    "name": "19",
+    "par": 20,
+    "moves": 48,
+    "solution": "urrDDDlddrUUUUruLLLdlluRdrRurDllluRdrrDDlddrUUUU",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0465
   },
   {
     "n": 20,
-    "name": "20"
+    "name": "20",
+    "par": 16,
+    "moves": 56,
+    "solution": "urDDDlddrUUrrruulLLLrrrrddlllUdrrruullulldRRRlulllldRRRR",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0435
   },
   {
     "n": 21,
-    "name": "21"
+    "name": "21",
+    "par": 5,
+    "moves": 17,
+    "solution": "dllUdlUluurDRddlU",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0217
   },
   {
     "n": 22,
-    "name": "22"
+    "name": "22",
+    "par": 15,
+    "moves": 65,
+    "solution": "drrruulDLdlUUUluRdddrrrdLullddrUluuuuRdldddrruLdlUUUruLdddrruruuL",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0443
   },
   {
     "n": 23,
-    "name": "23"
+    "name": "23",
+    "par": 10,
+    "moves": 56,
+    "solution": "ruulluRdrdddllUUdrruululldRddrruuruLLrdddlluuRurDDullluR",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0363
   },
   {
     "n": 24,
-    "name": "24"
+    "name": "24",
+    "par": 9,
+    "moves": 35,
+    "solution": "ullDDlddrruLuuurrdLulDDDullddrRuulD",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0304
   },
   {
     "n": 25,
-    "name": "25"
+    "name": "25",
+    "par": 7,
+    "moves": 29,
+    "solution": "urrdLulluurDldRlddrUrruuLLulD",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.04
   },
   {
     "n": 26,
-    "name": "26"
+    "name": "26",
+    "par": 10,
+    "moves": 45,
+    "solution": "drddlUdrddlUUlldRurruuulldRDrdLrddlUruuluurDD",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0472
   },
   {
     "n": 27,
-    "name": "27"
+    "name": "27",
+    "par": 10,
+    "moves": 50,
+    "solution": "dlULddlluuuurrrDulllddddrruuLrdrruLuullldDDurRdrUU",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.035
   },
   {
     "n": 28,
-    "name": "28"
+    "name": "28",
+    "par": 9,
+    "moves": 33,
+    "solution": "rDulldRddrruLdlUUluurrdDldRuuulDD",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.03
   },
   {
     "n": 29,
-    "name": "29"
+    "name": "29",
+    "par": 22,
+    "moves": 114,
+    "solution": "ullldRurrdrrddllllllluuRurrdRRRlulllldRRRllllddrrrrrrruUUUddddllllllluurrrrRRllllllddrrrrrrruUUruuLDDDuuuulldRurDD",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0635
   },
   {
     "n": 30,
-    "name": "30"
+    "name": "30",
+    "par": 5,
+    "moves": 23,
+    "solution": "drUluluurDlddrrruuLLulD",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0363
   },
   {
     "n": 31,
-    "name": "31"
+    "name": "31",
+    "par": 6,
+    "moves": 17,
+    "solution": "DuRurDDrddlluUluR",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0362
   },
   {
     "n": 32,
-    "name": "32"
+    "name": "32",
+    "par": 9,
+    "moves": 36,
+    "solution": "ullDullddrUrurrdLLLddrUluRurrdLululD",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.044
   },
   {
     "n": 33,
-    "name": "33"
+    "name": "33",
+    "par": 10,
+    "moves": 45,
+    "solution": "ulLrrddlLLulDrrUlluurDlddrrrruulLLrddlluUrrdL",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0472
   },
   {
     "n": 34,
-    "name": "34"
+    "name": "34",
+    "par": 8,
+    "moves": 43,
+    "solution": "drrrURdlllluurrurDrddllUdlluurRdRluurDllldR",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0577
   },
   {
     "n": 35,
-    "name": "35"
+    "name": "35",
+    "par": 31,
+    "moves": 104,
+    "solution": "lluluuRDrDullddrdrruLuLrddlUlUdrruLuuluurDrDLuuurDlddrDuluurDlddrDlddrruLdlUUUUUruLdrDDDlddrruLdlUUUUruL",
+    "boxes": 5,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1122
   },
   {
     "n": 36,
-    "name": "36"
+    "name": "36",
+    "par": 59,
+    "moves": 218,
+    "solution": "dllllllluLdrrruLdrrruLdllllllluurDldRRRuLdrRRuLLdllluurDldRRRuLrrrdRRuLLLLdRRllllluurDldRRRuLdlluurDldRurrrrrrdRuRRllllldRullldRullldRurrrrrrrrdrruLLLLLLLLLLdlluurDrrrdLurrrdLurrrdLurrrdLulllldLurrrdLurrrdLulldLurrrdLL",
+    "boxes": 5,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1714
   },
   {
     "n": 37,
-    "name": "37"
+    "name": "37",
+    "par": 23,
+    "moves": 85,
+    "solution": "drruulLuLLdRRRlddrruUUUddllullulldRldRRRlluurDrdRRlullldRurrdddrruUUdllulldRRRlddrruU",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0716
   },
   {
     "n": 38,
-    "name": "38"
+    "name": "38",
+    "par": 8,
+    "moves": 37,
+    "solution": "llluuurrrdDuurrrrddllLrrrddlllULLrURR",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.043
   },
   {
     "n": 39,
-    "name": "39"
+    "name": "39",
+    "par": 27,
+    "moves": 85,
+    "solution": "ruuLLLuullddRluurrdDrrrddlUruLLLuullddRRRRurDlllDDllddrrUUUUlluurrDullddrRRRdRUddrruL",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.063
   },
   {
     "n": 40,
-    "name": "40"
+    "name": "40",
+    "par": 7,
+    "moves": 24,
+    "solution": "UdlluRuurrdLDuulDrrDullD",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0389
   },
   {
     "n": 41,
-    "name": "41"
+    "name": "41",
+    "par": 13,
+    "moves": 61,
+    "solution": "urrrDullDRurrdddlllUluurrdRurDulllldRRRllddrrURdllluuurrrDulD",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0543
   },
   {
     "n": 42,
-    "name": "42"
+    "name": "42",
+    "par": 15,
+    "moves": 60,
+    "solution": "rdddLdllluurrRUruulDDDlllddrrrUrUUluurDldDlllddrrURdllluurRR",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0565
   },
   {
     "n": 43,
-    "name": "43"
+    "name": "43",
+    "par": 22,
+    "moves": 78,
+    "solution": "dddllLDLdlluurRRRRdrUllldlddrUllUrurrrrUdllllddrUluRRRurDuluurDlddlldllluRRRRR",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0688
   },
   {
     "n": 44,
-    "name": "44 — Duh!"
+    "name": "44 — Duh!",
+    "par": 1,
+    "moves": 1,
+    "solution": "R",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0
   },
   {
     "n": 45,
-    "name": "45"
+    "name": "45",
+    "par": 11,
+    "moves": 47,
+    "solution": "luluuurrrdLullddddrrruLUUruLdLrdddlluuUddRdrUUU",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0488
   },
   {
     "n": 46,
-    "name": "46"
+    "name": "46",
+    "par": 8,
+    "moves": 47,
+    "solution": "dlluuRuRDrUdlllddrrUdlluururrdLddlluuluururrrDD",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0319
   },
   {
     "n": 47,
-    "name": "47"
+    "name": "47",
+    "par": 22,
+    "moves": 107,
+    "solution": "rrruuulldRRddlllluuRRurrrrdLulDDuulldllddrrrRuuulldRlllddrrrrRRdrruLLLLLLdlluuurrurrDDulllldddrrurRlldlluRR",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0619
   },
   {
     "n": 48,
-    "name": "48"
+    "name": "48",
+    "par": 14,
+    "moves": 91,
+    "solution": "rddDLruuullddlddrUrrurDrddllUdrruLuuluulldlddrUluurrrddrdLLruuulllddrDuluurDurrdddrddlUruLL",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0622
   },
   {
     "n": 49,
-    "name": "49"
+    "name": "49",
+    "par": 21,
+    "moves": 114,
+    "solution": "ldddRluuurrrddlDDDldRuuulluRluurDDuurrddLddddRluuuuruulldlddRluuurrrddlDDulluurDrddDlddrruLdrrruLdlluuuuulldRurDDD",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0756
   },
   {
     "n": 50,
-    "name": "50"
+    "name": "50",
+    "par": 17,
+    "moves": 96,
+    "solution": "llulDDulldRRurrrrrdddlllllUUluRRldddrrrrruuulldlLrrurrdddllllluUruRdllluRdrruRdllluRdrruRldlluRR",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0535
   },
   {
     "n": 51,
-    "name": "51"
+    "name": "51",
+    "par": 8,
+    "moves": 34,
+    "solution": "rddllulURuLdlluurDldRRurDlddrrruuL",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.029
   },
   {
     "n": 52,
-    "name": "52"
+    "name": "52",
+    "par": 8,
+    "moves": 29,
+    "solution": "ddLruulDlldddrRdrUlluUluRRurD",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0546
   },
   {
     "n": 53,
-    "name": "53"
+    "name": "53",
+    "par": 12,
+    "moves": 45,
+    "solution": "lUluuRurrDrddLUUdddlluluurRllddrUUdddrruLdlUU",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0629
   },
   {
     "n": 54,
-    "name": "54"
+    "name": "54",
+    "par": 30,
+    "moves": 98,
+    "solution": "drURuRRRdrUUdllllddrUluRRRlllulDrddlluRRllluRdrrurrrRlllldlluRRRRRdrrUUlDurruulDrdLdlllllddrUluRRR",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0962
   },
   {
     "n": 55,
-    "name": "55"
+    "name": "55",
+    "par": 27,
+    "moves": 68,
+    "solution": "drrrrddlUdrddlUUruuLLLulldRRRRurDDDldRulUddrRluuuLLLulldRRRRurDDDldR",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0593
   },
   {
     "n": 56,
-    "name": "56"
+    "name": "56",
+    "par": 6,
+    "moves": 23,
+    "solution": "uulLulldRurDrddllURuulD",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0242
   },
   {
     "n": 57,
-    "name": "57"
+    "name": "57",
+    "par": 23,
+    "moves": 66,
+    "solution": "dddrdrruLLdLUlldRRRulUUruulDDDDldRurrrddlUruLLLdRllluRdrrurDllluRR",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.054
   },
   {
     "n": 58,
-    "name": "58"
+    "name": "58",
+    "par": 11,
+    "moves": 46,
+    "solution": "luluurDRDulldRddrruLdlUrrruuLLLrrrddllUdrruulL",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0486
   },
   {
     "n": 59,
-    "name": "59"
+    "name": "59",
+    "par": 50,
+    "moves": 450,
+    "solution": "dlllllldddlUruurrrrruullllllllddddRRlluuuurrrrrrrrddllllldRurrrruullllllllddddrrdrUllluuuurrrrrrrrddllllllDurrrrrruullllllllddddrRuurrdRullldRlddrUUdllluuuurrrrrrrrddllldLurrrruullllllllddddrruuRRRRllllddrUluRdrrurRdLurRuullllllllddddrruurRdldllluuuurrrrrrrrdrDDDrddlluRuuuuulllllllllddddrruurrRRRdlLLullddrUluRRRdlldllluuuurrrrrrrrdrdddddrUUluuuulllllllllddddrrurrrrruRurDDDuulldlluRdllldllluuuurrrrrrrrddrddrdLuuuuulllllllllddddrruurrrrRRurDDDuurDD",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1849
   },
   {
     "n": 60,
-    "name": "60"
+    "name": "60",
+    "par": 44,
+    "moves": 259,
+    "solution": "urrrrrrdddLLulldRRRllDDrddlUUUddLLdlluRRRllUUluuruurrrrrrddDDuuuullllllddDDDuuuuurrrrrrddddDuullulldRRRllddrddlUUUddlldlluRuuuuuurrrrrrddDuuullllllddddddRRlluuuuuurrrrrrdddDullulldRRRllddrddlUllluuuuuurrrrrrddDuuullllllddddddrrrUUddllluuuuuurrrrrrdddllulldRRR",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1486
   },
   {
     "n": 61,
-    "name": "61"
+    "name": "61",
+    "par": 21,
+    "moves": 114,
+    "solution": "lDDlDDrrULdlUruuuruullllldddddrRRdrUUUddrruLdllllluuuuurrrrrddLLrruullllldddddrrrrUUddlllluuuuurrrrrddLdddlluRdrUU",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.089
   },
   {
     "n": 62,
-    "name": "62"
+    "name": "62",
+    "par": 30,
+    "moves": 88,
+    "solution": "LLLLullDRdLurRldlLrurrRlldllLrruulDLddlluuRRRRRRldlLulllddrrUdlluurRddlUruRRRdllllluRRRR",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0939
   },
   {
     "n": 63,
-    "name": "63"
+    "name": "63",
+    "par": 50,
+    "moves": 109,
+    "solution": "llllLLulLLLLLLulldRurDrrrrrrrddlUruLLLLLLLulldRRRRRRRllllddlUrurrrrRurDllllllLulldRRRRRRRRdRUdRRRRRdrruLLLLLL",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0958
   },
   {
     "n": 64,
-    "name": "64"
+    "name": "64",
+    "par": 30,
+    "moves": 103,
+    "solution": "ldlluulUluurrrddLLrruullDurrdLddddrrurrdLLLdlUUUUruulDDDDDuuuuulldRurDDDDulUruulldRlldRuurrDDDuulldRurD",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0973
   },
   {
     "n": 65,
-    "name": "65"
+    "name": "65",
+    "par": 41,
+    "moves": 192,
+    "solution": "uuuuLrddddlluuRUrDDulldlluRddrrdrruLLLullddrUruLLurRRuruulDrdDDullddrdrruLLLullddrUluRurrruulDrdddllluurRurDDulllddrrdrruLLLrruullldlddrUluurrruuulldRurDDrdddlllluurrRurDDullllddrrrdrruLLLLdlU",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1303
   },
   {
     "n": 66,
-    "name": "66"
+    "name": "66",
+    "par": 15,
+    "moves": 95,
+    "solution": "DDlldlddddrdRluluuuururrDDlddrdDlddrruLuuuluuruurrdrddddldLruruuuulullddlddrUUUddddDDrddlluRdrU",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0643
   },
   {
     "n": 67,
-    "name": "67"
+    "name": "67",
+    "par": 8,
+    "moves": 53,
+    "solution": "uurrdDuullddRluurrdrddLruulullddrRdrrddllUlURuuullddR",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0466
   },
   {
     "n": 68,
-    "name": "68"
+    "name": "68",
+    "par": 28,
+    "moves": 112,
+    "solution": "rUdlluuurrrRdrruLLLLLulDDlddrrruUddllluururRRRdLullldlddrrruUddllluurDuurRdrruLLLrdrrrruLLdllululDDurrdrruLLLulD",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0836
   },
   {
     "n": 69,
-    "name": "69"
+    "name": "69",
+    "par": 37,
+    "moves": 161,
+    "solution": "urrrurrrDrrddlUdlUUdrruLULLLulDrrrrddlUruLLruurDDlddrruLullLdLLrruulDrdLrddllluUUdddrrruulLrrddllluluurDuluurDlddrrrurrrrddlUruLLLulDrdddlllluurrRllluurDldRDldRR",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1052
   },
   {
     "n": 70,
-    "name": "70"
+    "name": "70",
+    "par": 26,
+    "moves": 92,
+    "solution": "drrrrddlUruLLLdRulullddRDDDuuuluurDDDDldRuuuurrdLulDDDuuurrrrdLulldlddrDulldRuuuurrrdLLulDDD",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0901
   },
   {
     "n": 71,
-    "name": "71"
+    "name": "71",
+    "par": 21,
+    "moves": 120,
+    "solution": "urDDuullldRldddddrrrrrrrrrruuuuulllddllldlluRRRRdrUUdlllluuulldRurDDullldddddrrrrrrrrrruuuuullulldRRRllddllldlluRRRRdrUU",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0636
   },
   {
     "n": 72,
-    "name": "72"
+    "name": "72",
+    "par": 40,
+    "moves": 121,
+    "solution": "llLDDulluRdrdDrrddlULLdlluurDDurruuuluRddddrruLdlUUUluurDDDDrdLLdlluurDldRurruuuuRRdrruLLLLulDldRurDDDrdLLDlluurDldRlddrU",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0999
   },
   {
     "n": 73,
-    "name": "73"
+    "name": "73",
+    "par": 25,
+    "moves": 139,
+    "solution": "uulllluurDDDurrrddddlllluuRuurruLdrrruLLdllluurDldRddlddrrrruuuuulLrdrddddlllluuruuRRurDDDDuuulllddlddrrrdrruLuuuulllluurDDDurrrddddLLLdlUU",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.086
   },
   {
     "n": 74,
-    "name": "74"
+    "name": "74",
+    "par": 34,
+    "moves": 121,
+    "solution": "lulDDDRRlluurrDRRRurrddlUruLdllllullddrddrruUddlluuRuRRRRurDllluRRdlllldlddrruUlllldRurruRRRurDllldddllUluRRlddrruUluRRRR",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1061
   },
   {
     "n": 75,
-    "name": "75"
+    "name": "75",
+    "par": 34,
+    "moves": 100,
+    "solution": "ddlluLuLLdRurRddrruuLLLrddrUlulLdlUUluRRRllddrrrdrruLLLLdlUUluRRlddrrrddlUruLLdlUUluRdlldRRdrruLdlUU",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1014
   },
   {
     "n": 76,
-    "name": "76"
+    "name": "76",
+    "par": 56,
+    "moves": 267,
+    "solution": "ddrdrdrrrrUUlDuuuurrdLulDDDrUluurrdLulDrddddLLLdlUUluuuuurrddddLdlUdrdrrrruulDuruulDDrddLLLdlUUluUluuurrrddddLruuuulldlddrUluurrrddddldlUdrdrrrruulDrdLLLdlUUluluurUluRddlddrUluuururrdddddLruuuuullddlddrUluururrdddddldlUluuuurRurDDDuulllddrUluRRurDDullddlddrUUUluRRurD",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1514
   },
   {
     "n": 77,
-    "name": "77"
+    "name": "77",
+    "par": 55,
+    "moves": 253,
+    "solution": "ddddrruLdlUUUddrrrrruLdrrruLdlllllluururrrrrDDrdLLLuRdlLLdlluuururrrrrdDldllluRdrrurrdLLuruullllldldddrruurRRlldldlluuururrrrrdDuullllldlluRRdldddrruLdlUUUddrrurrrdLLLurrrrrdLLulldldlluuuruRRRllldlluRRdldddrruLdlUUUruRRlldlluRRRldlddrrurrrdLLLLdlUUUluRR",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1605
   },
   {
     "n": 78,
-    "name": "78"
+    "name": "78",
+    "par": 33,
+    "moves": 177,
+    "solution": "uUrRuullDRurrrdDDuuulllddrRlluurDldRullldRddrrrRRRlllllluuuurrrrdDDuuulldRurDlllldddrrrRRllllluuurrrrDDuulldRullldRRllddrdrrrruLLdlluluuurrrrDDuulldRlllddrdrruRdllluRlluuurrrrDD",
+    "boxes": 5,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1307
   },
   {
     "n": 79,
-    "name": "79"
+    "name": "79",
+    "par": 18,
+    "moves": 52,
+    "solution": "lLLdlluRRluurDDRRRllluurrDullddrRdrrULLLrrrruulDrdLL",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0583
   },
   {
     "n": 80,
-    "name": "80"
+    "name": "80",
+    "par": 38,
+    "moves": 161,
+    "solution": "lddrUdrruLUUdddlluRdrruuluUUdllluUluurDrrdRRRurDlllddllluUddrrruurrrDulllddddrddlUUUUUdllluuluurDrrdRRRdrUdlddrUluulldddddlluRdrUUUUdllluUluurDrrdRRRllddllluUluR",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1197
   },
   {
     "n": 81,
-    "name": "81"
+    "name": "81",
+    "par": 12,
+    "moves": 46,
+    "solution": "luuurrdLDldddrruLUUUruulldDrddlluRdrUdddlUUluR",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0498
   },
   {
     "n": 82,
-    "name": "82"
+    "name": "82",
+    "par": 14,
+    "moves": 52,
+    "solution": "drrruUlUdrruLuLLulldRDDlddrUdrrruuuulLulDrrrddlUruLL",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0535
   },
   {
     "n": 83,
-    "name": "83"
+    "name": "83",
+    "par": 47,
+    "moves": 272,
+    "solution": "urruuuuLullDDDDDrrruulUdrddllluuuRRdrdddlldlUrurruululluurrDrDDDuuulullddrRdrdDuuluuulDrddrddrdLulldlUUUUdddrrruuluuullldRdRluurrdrDDuulullddrRuulDlddddrrrdLulluuuurrddrDDllluuuRurrDDuulldRlldddrrrrdLullluuurrdrDululldddrrRlllddrUluuuurrdrdddLuruuluurDDDDldRuuuullldddRldR",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1553
   },
   {
     "n": 84,
-    "name": "84"
+    "name": "84",
+    "par": 68,
+    "moves": 263,
+    "solution": "uRlddRluurDrDDuuruLuullllddddddrrrRuuulluRdrdddlllluuuuuurrrrdDDuuullllddddddrrrrRRdrruLLLLLLLdlUUUUUluurrrrrdddDDuulldRuuruulllllddrddddrrrRRRdrruLLLLLLdlluuuuuluurrrrrdddDDuuuuulllllddrUluRRldddddddrruLdlUUUUUluurrRlllddrUluRRlddddddrrrRRRdrruLLLLLLLdlUUUUUUluR",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1649
   },
   {
     "n": 85,
-    "name": "85"
+    "name": "85",
+    "par": 51,
+    "moves": 175,
+    "solution": "luuuurrurrdRullldlluRdrRurrdLLLrurrrrdLulldllLuRllDDDDldRRlddrrrruuuulldDlluuuurrrrurrdLLLLuRdlLulDDDDldRRRRlllddrrrruUUruLddllDullddrRuulluuuuurrrRRdrruulDrdLLLLLLulDDDDldRRR",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1251
   },
   {
     "n": 86,
-    "name": "86"
+    "name": "86",
+    "par": 25,
+    "moves": 119,
+    "solution": "drrrUrruullDlDururrddlLdLLdlluurDldRuuuRuRldlddrrrurruululDDulldRDuurrrddlLdLLrrurruullDllldDuurrDuurrrddlLdLLrruulDrdL",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0949
   },
   {
     "n": 87,
-    "name": "87"
+    "name": "87",
+    "par": 53,
+    "moves": 193,
+    "solution": "luRluurDllluRUUluRRRRdrruulDrdLulldlldddrruLdlUUdddrdrUdrruLLdlUluurrDullddrUddrruLdlUluuuUrurrrdLulldlluRRRRdrruulDldLurrrdLLullldddddrruuLrddlUlUUUluRRRRdrruulDrdLullllddddrruLdlUUUluRRRRRurD",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1449
   },
   {
     "n": 88,
-    "name": "88"
+    "name": "88",
+    "par": 63,
+    "moves": 219,
+    "solution": "rrruulDuruulDuruulDrdddddLLdlluRRRuruuuuuurrdddddddldlUUUUUUddlDDuuruulDDrdddLLdlluRRRuruuuuluurrrdddddddldlUUUUlDDrdLLdlluRRRuuuuuuurrrdddddddldlUUluuuurUluRRurDDDDDDuuuuullddlddrUUUluRRurDDDDuuullddddlddrUUUUUluRRurDD",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1492
   },
   {
     "n": 89,
-    "name": "89"
+    "name": "89",
+    "par": 35,
+    "moves": 223,
+    "solution": "ddddrUluuuurrddLruulldDDDrddlluluuuuRldddddrrruLuuurruullDlldddddrruurUdddllluuuuurrDDuuurrddLdlDururuulldDulllulldRRRRldddddrrruulDLruruulDurruullDurrddldddlldlUUdrrruulDrdLuururuulldDrdddlLruruulDrddlldlUrrrdLLurruulDrdLL",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1299
   },
   {
     "n": 90,
-    "name": "90"
+    "name": "90",
+    "par": 16,
+    "moves": 82,
+    "solution": "lldRdDrdrrruLdlluluuRlddrdrruLdlLuuuurrrDDuulldRlldddrrrruLdlllulldRRuuuurrrDDDrdL",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0759
   },
   {
     "n": 91,
-    "name": "91"
+    "name": "91",
+    "par": 14,
+    "moves": 48,
+    "solution": "rrdrrruulDrdLLruLLLullllddrrURldlluRuRRdRlulldRR",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.066
   },
   {
     "n": 92,
-    "name": "92"
+    "name": "92",
+    "par": 48,
+    "moves": 168,
+    "solution": "uuullllLLrrddllULLdlluRRRURRRRRRlllddllUdrruurrrRuurrddLruulldDllllddlluluRRRRRRllllllUluurDDDrdLLdlluRRRurrrddllUdrruurrrRDDrruuLrddlluUddrddlUUrruullllllddlluluRRRRRR",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1199
   },
   {
     "n": 93,
-    "name": "93"
+    "name": "93",
+    "par": 84,
+    "moves": 293,
+    "solution": "rUrruullDDuurDldlddRddrruuLrdLuLUllUlluurDldRRdDllddrrUURRRddlUruLdrrruLdlluuURuulDDurrrdLulldLLDurrurrdLLDlluRlLuurDldRullldRurrddrrDRlullDurrdrdrruLddllUULLDLdlluurRdrUrrdrruLLLLdldlluurRRRlllldRddrrUlluurrUULuurDDullldRurrdDrdLLDlddrruUluRuuulldRurDDDldlddrUluluRddrrUUUdddlluuRlddrUrUdlluR",
+    "boxes": 8,
+    "solved": true,
+    "optimal": false,
+    "difficulty": 0.2655
   },
   {
     "n": 94,
-    "name": "94"
+    "name": "94",
+    "par": 29,
+    "moves": 95,
+    "solution": "rdRRurDDulllulldRDuRRRurrdLdDllldlluRuurrRurrdLddrddlUruLuuLLLrrrddLruulllulldRRRRurDDDrddlUruL",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.081
   },
   {
     "n": 95,
-    "name": "95"
+    "name": "95",
+    "par": 8,
+    "moves": 57,
+    "solution": "ddRldddrrUlluuuurrrDullddlddrrRllluurDuuurrdrrddLUruulldL",
+    "boxes": 8,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1141
   },
   {
     "n": 96,
-    "name": "96"
+    "name": "96",
+    "par": 37,
+    "moves": 92,
+    "solution": "RRdrruLLLrdrddLLdlluRuuUUUruLdddLLulldRRRRRRdrruLLLrdrddlLdlluRRRlluuUUUruulDDDDuuuulldRurDD",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0899
   },
   {
     "n": 97,
-    "name": "97"
+    "name": "97",
+    "par": 41,
+    "moves": 192,
+    "solution": "drRlluurrRRdddddllluUluuurrruurDrRRRRRllllllldllldddrddrruruuuUlllldddrruRldlluuurrruRRRRRRllllldllllddRdddrruruUUUllllddrRRllluurrruRRRRRlllldlllldddrddrruruUUUluRRRdLurRlllldlllddrrrruUluRRR",
+    "boxes": 5,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1435
   },
   {
     "n": 98,
-    "name": "98"
+    "name": "98",
+    "par": 110,
+    "moves": 383,
+    "solution": "dlllluuuullLLLuLulldRDRRRRRllllluurDrdrrrRurDDDDuuulllllulldRRRRRRurDDullllllDDrddlUUUddlluRdrUlUUluurrdrdrrrrrdDlddRRRllluurDuuulllllulullddrRRRRRRllllululDldRurrdrrrrurDDDlddRdrruRdllluRRllluurDuuulllllulldRRRRRlllllddrUluurrdrrrRurDDDlddRRdrrUdlluRllluurDuuulllllulldRRRRRRurDDDlddRUUUddddrruLdlUluuruUddlddrUUUddddrrrrULLLdlUUUddrrrrruulDrdLdlluuRlddrruLLLdlUUdrrrrruulDrdLLLLdlU",
+    "boxes": 5,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.2714
   },
   {
     "n": 99,
-    "name": "99"
+    "name": "99",
+    "par": 131,
+    "moves": 491,
+    "solution": "rdrrrrrrddrrrrrrrrrruulDrdLLLLLLLLLdlUUUruulDrdLLrddrrrrrruRRdrruulDrdLLulldlllllluulLLLLulllddrrUrrrrrrddrrrrrrurrdLLLLLLLdlUUdrrrrUUUluRRdrruruulldDrdLLulDDDldllluUllllluLLrdrrrrrrruulDrdLLLLLLuulllldddrrrUrrrrrrddrrrurRdLLLLdlUUdrrrurrRRRdrruulDrdLLLLLulldllluUllllluLullDurrdLrdrrrrrrruulDrdLLLLLLuulllldddrrrUrrrrrrddrrrurrdLLLLdlUUUruulDrdLLLLLLuulldRullldRRllddrUluurrrrDulldRullldddrrrURRRRRRlllllldlluluurrrrDulllldddrrruRRRRRlllluulldRurDldRRRlluulllldRurrddrrrRllluullldRRurDldRRR",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.309
   },
   {
     "n": 100,
-    "name": "100"
+    "name": "100",
+    "par": 52,
+    "moves": 169,
+    "solution": "lddrDuluurDrrrDldddrruuLrddlluUrrdLuuullllddrUdlddrUUluuRRRurDDDlUdrrddllUUruuLLrrddrdLuuullLulDDDrUluRRRurDDDlUdrrddllUUruuLLLulDDurrrrddlUruLLLulDrrrddddrUruLdlUUruLLL",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1382
   },
   {
     "n": 101,
-    "name": "101 — Lockdown"
+    "name": "101 — Lockdown",
+    "par": 15,
+    "moves": 79,
+    "solution": "ruulllldDllddrrUrrUUdrruuuulLuullddRddRRlddrrrruUrruullDllDDullddddrRddrruuLuuL",
+    "boxes": 5,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0874
   },
   {
     "n": 102,
-    "name": "102"
+    "name": "102",
+    "par": 44,
+    "moves": 196,
+    "solution": "rurrurrrddddLruulDuruulDLLLdllluurrDrdLurrrrrddlUdrddlUUddlluRdrruuuuLLLLrrrrddlUdrddlUUruuLulldldlLdlUluurrrDrrurrdLLrrrddlUruLulldLdLLdlluuurrrDrddlluLUluRdddrrruururrdLLLddllllUUddrrrruLUdLdlUU",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1347
   },
   {
     "n": 103,
-    "name": "103"
+    "name": "103",
+    "par": 12,
+    "moves": 57,
+    "solution": "ulLrrddllUdrruulullDurrdrddlluUdLrdddlluRdrUUrruullDlDRlD",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0656
   },
   {
     "n": 104,
-    "name": "104"
+    "name": "104",
+    "par": 27,
+    "moves": 99,
+    "solution": "ulLDuLLDlluRRRRurrddddllllUUddrrruruuullddDuulLdlluRRRldddrRurruuullDDDrruuLrddlDLddrUluurruuullDDD",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0795
   },
   {
     "n": 105,
-    "name": "105"
+    "name": "105",
+    "par": 24,
+    "moves": 77,
+    "solution": "uurRurrdLLLddrUllluRddddlLdlluRRRuulDrrrdLrRdrruLLUluurDDuullulLulldRRDrddlUU",
+    "boxes": 8,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1409
   },
   {
     "n": 106,
-    "name": "106"
+    "name": "106",
+    "par": 50,
+    "moves": 261,
+    "solution": "urrrrrdLLulldlddrrrrUruulldLurrrdLulldLurrrdLLrrddllldRullldRurrrrDrrddllUUUUruLddlldRullldRRurruuullllDDuurrdLurrrdddlldllluRdrrurruuLLrrddDrrddllUUUlldlluRdrRurUruLullllDDuurrrrdddldlluRdllluRRluuurrdLulDDuurrrrdLLLrrrddDllllluRdrrrruuuullllDDurrrrdddrrddllUU",
+    "boxes": 5,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1698
   },
   {
     "n": 107,
-    "name": "107"
+    "name": "107",
+    "par": 10,
+    "moves": 60,
+    "solution": "llllluuRRlluuurrrrrddLDrddllllluurruRldRllluuurrDDrdLuuulldR",
+    "boxes": 11,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1572
   },
   {
     "n": 108,
-    "name": "108"
+    "name": "108",
+    "par": 68,
+    "moves": 340,
+    "solution": "rdrrrrrrrrUruuLrddldllluRdrruruulullDDDuuurrdrddldlLLLLLLulllddrrUruLLrddlluUrrdrrrrruruuurrdLulDDDuurrrddldlLLLLLLulllddrrUruLdrrrrrrrruLrruullldDuurrDullddrdLuuurrdrdLLdlLLLrrrruruulldDldllLullddlluuUdddrruuLrddlluUrrrrdLulllddrrUdlluurRRdrrrrurrdLLLLLLulllddrrUruLdrrruLdlldlluuluuRlddrUdddrruuLrddlluluurDrrdrruLLLLulDuuurDlddrrruuLLulD",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1963
   },
   {
     "n": 109,
-    "name": "109"
+    "name": "109",
+    "par": 42,
+    "moves": 323,
+    "solution": "ldddrdrdrrdddlluUlURdddrruuuuuuuuuullddlldddrDrdRldddrruuUllulululldRdRdRRlluluurDrDrddddrruuuUddddlluuuululuuuuurrrrddLLuulldddddrdrddddrruuuuUUUUddddddddlluuuRlululuuuuurrddrrddddDDullululldRdRRRllluuuuuuurrddrrddddDlllluuuuuRluurrrrDulllldddddrDuluuuuurrrrdDDDuuuulllldddddddRRRlululuuuuurrrrddddDuuuuullllddrRRluurrdDDD",
+    "boxes": 5,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1751
   },
   {
     "n": 110,
-    "name": "110"
+    "name": "110",
+    "par": 14,
+    "moves": 55,
+    "solution": "lUruuurrdLulDulluurDldRlddlluRdrUUruulDrdRdrruLdlDLddrU",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0675
   },
   {
     "n": 111,
-    "name": "111"
+    "name": "111",
+    "par": 61,
+    "moves": 330,
+    "solution": "DuluurDRllddrRUrUUddrdddllUUddrruuuluuUdddrdddlluulluurRllddrrddrruuulUUdlllddrUluRddrddrruuLrddlllUUddrrruuuluuruuLrddlUUdddddrddllululuurRllddrddrrruuulUUdlllddrUluRddddrrruuuluuruuuLdLLLrrrrddlUddddrddlluluuuRlddddrrruuulUUdlldRlddrUluurruruuLLrrddlUruulLdRdddllddrrUUUdddlUruuUUluRdddddlluRdrUUUUluLulldRRldRullldRurrdRlulldRR",
+    "boxes": 6,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.2196
   },
   {
     "n": 112,
-    "name": "112"
+    "name": "112",
+    "par": 94,
+    "moves": 374,
+    "solution": "rrruuuuruuLLLDlddrUlulluururrDulldRllddrrURRRurDDDrdLulDDDuuuruulllldlluururrDulldlddrruRRRurDDDuuulLdlldlluururrDulldRdRRlluurDrrrdddldddDrddlUruLuuuurrdLuuuulldRurDDDlDDDuuuruuulllldRRllddrUluurrrrdddldddDrdLLLrruuuuurrdLuuuulldRurDDDlDDDuuuruuulllldRRurrdddldddDrdLLruuuuurrdLulDDDuuuruuulldRurDDDldddDrdLuuuuurrdLulDDDDrddlUUUUUdddLLulldRRRlllddrrUdlluurRdRRdrUllldlUluR",
+    "boxes": 5,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.2547
   },
   {
     "n": 113,
-    "name": "113"
+    "name": "113",
+    "par": 51,
+    "moves": 196,
+    "solution": "rRRddrRDrUlluluurDrDullddrdrruLuLrddlddrUUlUUddrruLuuLLLLdlUruLdrrrrdrddlUUruLLLLrrrddrrruLLullllulLLrruullldlddrUrrrrddlUUUddrrrrrddlUruLLLLdlUUdrrrrddlUruLLLulDulllluurDldRuurururrddLDuruulldldR",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1437
   },
   {
     "n": 114,
-    "name": "114"
+    "name": "114",
+    "par": 60,
+    "moves": 326,
+    "solution": "dddLuruuruLddddldllUUUdddrruurrrdLurrrdLullllddlluuuURRllluurrrDrDDuululllddrrRuullDldRRlddddrruuRRRRlllldLdlUUUddrrurrdLurrrdLulldLurrrdLullddlluuuUluurrrdrDDuululllddrrRllddddrruuRRRlllddlluuuurrurDDulllddddrruuRRlldLdlUUUddrruruuululllddRRRuullDldRRldddrrurrdLLdlluuuuuurrdrDDuulullddrRllddddrruuRdldlluuuurrurDDullldddRdrU",
+    "boxes": 6,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.2103
   },
   {
     "n": 115,
-    "name": "115"
+    "name": "115",
+    "par": 29,
+    "moves": 197,
+    "solution": "dllUUUluRRRdrrruullDurrddlLulllddddrrrrUUddlllluuuurrrurrddrddLruuulullddRRllulllddddrrrrUUddlluRdllluRRluluurrrdRluurrdrDulullddrRllulllddddrrrrUUddlluRlluluurrrurrddLrurrdLululldlllddddrrrrUUdrrU",
+    "boxes": 5,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1304
   },
   {
     "n": 116,
-    "name": "116"
+    "name": "116",
+    "par": 14,
+    "moves": 67,
+    "solution": "drrrdrruUruulldRlllDurrrdddlluUluRdRlddrruUlllLdRllluRRdrUrrrddllUU",
+    "boxes": 5,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0835
   },
   {
     "n": 117,
-    "name": "117"
+    "name": "117",
+    "par": 47,
+    "moves": 330,
+    "solution": "lllllddrrrdrddlUdlluRUddrruuLuLLLdllddrRRllluurrurrrdrddlUlldllluurruuurrrrdrdrddLLrruuuulllllldddllddrrrurUdldllluurruuurrrrdrdrddlluLuLLrrdrddlUlldllluurrUdllddrrrurUdrruLdlldllluurruUluRdddllddrrrurruuLLrrddlldllluurrUrrrddlUdlddrUUdlllluurruUlDldddrrrurruuLLLdLruulDlDRurrrrdddlllllUdrrrurUruLLLuluurDldDrrrddrrrruuuullllLLulD",
+    "boxes": 5,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1828
   },
   {
     "n": 118,
-    "name": "118"
+    "name": "118",
+    "par": 44,
+    "moves": 214,
+    "solution": "rrruuuulululldRdDDDuuuRluurDrDrddddlldlluRRRlluuuuurrdLulDDDDuuurrrdddrddlUlldlluRuuuurrrddlUruLddrrddlUruulululldddddRRlluuuuurrdLulDDDDuuurrdrrddlUdrddlUUdlldlluRRRlluuuuulldRurDDDDuuurrddRdrddlUruruLddllldlluRRR",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1387
   },
   {
     "n": 119,
-    "name": "119"
+    "name": "119",
+    "par": 18,
+    "moves": 179,
+    "solution": "drddrruruuuulullldDDuuurrrdrddddldlluuruuLrddlddrruruuuulullldDrDDDuuuluurrrdrddddldlLuuuulldRurDuluurrrdrddddldllLrrruruuuulullldddrDDuuuluurrrdrddddldldlluRdllluRdrruuuulldRurDD",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0865
   },
   {
     "n": 120,
-    "name": "120"
+    "name": "120",
+    "par": 64,
+    "moves": 245,
+    "solution": "lluuRRRRRRurDDDrdLLLrruuulllllllddrUluRRRRRRurDDullllllddddldRlddrUUUUUluurrrrrrrdrddllldlldLrurruulDrrrruulDrdLLLrruuulllllllddrUluRRRRRRurDDullllllddddlddrUUUUdddrruRldlluuuluurrrrrrrdrddlllulDrrrruulDuulllllllddrUluRRRRRRurDDrddLLLrrruulDrdLL",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1695
   },
   {
     "n": 121,
-    "name": "121"
+    "name": "121",
+    "par": 47,
+    "moves": 193,
+    "solution": "lluuUruUddldddrrrRdrUllllluuuruulDurrruulllDurrrddllUddlluRdrUdlDDDldRRRRdrruLdrrruLdlluLLrdrrruLdllulLdlUUUUruulldRddddrrrdrruLrrruullDurrdddllluLLrdrrruLdllulLdlUUUUUluRdddddrrrdrruLLLLdlUUUU",
+    "boxes": 5,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.151
   },
   {
     "n": 122,
-    "name": "122"
+    "name": "122",
+    "par": 90,
+    "moves": 363,
+    "solution": "lluuuuurrDulldddRDDDDldRRRRRRullllluuuuluuurrdrdrddlULrruullDuullddRDDuuluurrdrrddlLrruullDurrdLulullddddrDDDldRRuluuuluurDDuuluurrdrddLruulDllddrDDuuluurDlddrdDrrrrrrrddlUruLLdllulldRRRRuLLrrrrddlUruLLdllllulldRRRRRRurrddlUllluLdrrruLdrrruLdlllllluuuluurDuurrdLullddrDDDldRRRRRRllllluuuuluurDlddrdddrrrrrRurDllluRdllluRdllluRluuluurDDDDldRRRRRRuRDllluRRdlllluRRR",
+    "boxes": 5,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.2438
   },
   {
     "n": 123,
-    "name": "123"
+    "name": "123",
+    "par": 101,
+    "moves": 468,
+    "solution": "ddlDDuuruulDuruulDulldRullldRurrdRurDDDlUruulldRddrrdddlluURurDDullddrRRRlluuululuullldRRurrDDDrdddlluuRurDllUruuulldRurDDDlUddddrddlUUUUUdddrrrrRuurrddLdlUUUUdddllllluuurrdDuulldddrRRRlllluuRuuuulldRurDDDlUruulldRddrrDululuurDldddddrrrrRuurrddLdlUUUluRdrruulLddrUdlddllllluuurrdDuulldddrRRRlllluuRurDulluurDDldddrrrrRuurrddLdlUUUddllllluuurrdDuulldddrRRRlllluuRurDllddrrrrRuurrddLdlUrruullluRdrrddllUdrruulLddllllluurrDullddrRRRRuurrddLdlUrruulluuRDrdddllUUddrruuuruL",
+    "boxes": 5,
+    "solved": true,
+    "optimal": false,
+    "difficulty": 0.277
   },
   {
     "n": 124,
-    "name": "124"
+    "name": "124",
+    "par": 39,
+    "moves": 363,
+    "solution": "urrDDuulldRullldRdddddrrrrrrrrrruuuuulllddllldlluRRRRdrruLuurrrdddddlllllllllluuuuuurrdLurrrdLddrrRdrUUdlllluuulldRullldRdddddrrrrrrrrrruuuuuulllldRurrdrdddddlllllllllluuuuuurrrDDuulllddddddrrrrrrrrrruuuuuullldddllldlluRuuulllddddddrrrrrrrrrruuuuuullldRurrddddddlllllllllluuuuuurrdrddRRRdrUUdlllluuullldRRurDDullldddddrrrrrrrrrruuuuuulldRullldRRlddllldlluRRRRdrUU",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1524
   },
   {
     "n": 125,
-    "name": "125"
+    "name": "125",
+    "par": 38,
+    "moves": 169,
+    "solution": "ululDDDuurrddLrrddllULLLLLullddrUrrrrrrdrruuluulldDuurrddrddlluLLLLLLrrruRdrrdrruuluulldDuurrddrddlluLulldllldlluurDrrrrurrdLLLLLLulDrrruLdrrrurruurrddLruulldDrdLLLLLulD",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1215
   },
   {
     "n": 126,
-    "name": "126"
+    "name": "126",
+    "par": 23,
+    "moves": 130,
+    "solution": "ullllllDDlUrurrrrrrdddlllluUddrrrruuulllLdddrruUddlluuRlddrrrruuulLrrdddlluURlddrruUruLdllllLLdlluRdrUdllddrrUUluRRRddrruuLrddlluU",
+    "boxes": 7,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1356
   },
   {
     "n": 127,
-    "name": "127"
+    "name": "127",
+    "par": 32,
+    "moves": 114,
+    "solution": "uRRRdrruLuulluurDrdddLLLuluuRRdRluurDrDDuurrdLulllllddDrrrdrruLuUddLLLuluurrdRulllddldRRRlllddrUrurRdrUlllulldRRRR",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1021
   },
   {
     "n": 128,
-    "name": "128"
+    "name": "128",
+    "par": 19,
+    "moves": 94,
+    "solution": "rrurruulllulldRRRRlllldlluRRurrddLDuruulldldRuurrdLLrrrrurrdLddlldlLuUrurRllulldRRdldddlluRdrU",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0822
   },
   {
     "n": 129,
-    "name": "129"
+    "name": "129",
+    "par": 22,
+    "moves": 105,
+    "solution": "rdRRurDlllulldRRRRlllldlluRRurrddLDuruulldldRuurrdLLrrrrddldlLuUrurrurrddLruulldllulldRRdldddlluRdrUrrurU",
+    "boxes": 5,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1015
   },
   {
     "n": 130,
-    "name": "130"
+    "name": "130",
+    "par": 36,
+    "moves": 156,
+    "solution": "lulluurrDRRRRllllulldRRRRRdrrruulDrdrddllluuluRRllllDLddrUUlulldRRuRRRRllllddrUluRRRddrdrrruulLrruullDurrddddllluluuRlddrdrrruulUdrddllluluurDRUrrdddlllUluR",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1163
   },
   {
     "n": 131,
-    "name": "131"
+    "name": "131",
+    "par": 31,
+    "moves": 104,
+    "solution": "ddldRDRddlUUUUUUddRlddrUrrdLullddrUluuuuluurDrdLddddrruLdlUUUUruulldRurDlddddrrruulDrdLLdlUUUUdddrruLdlU",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0988
   },
   {
     "n": 132,
-    "name": "132"
+    "name": "132",
+    "par": 37,
+    "moves": 181,
+    "solution": "DrrDDllUdrruulLddrrrruLdrrruLdllllluuulDrddrrrrruLdlllluurrDullddrRRRuLdllluurrDullddrRRlllddrrUdlluuuurrdrdLLrddlluUUdrruulLrrdrrrrddlUruLLLdllluurrDrdLLrddlluUUdrrurrrdLLLLrddlluU",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.123
   },
   {
     "n": 133,
-    "name": "133"
+    "name": "133",
+    "par": 39,
+    "moves": 173,
+    "solution": "uurrrrrdddLLulLrrdrruLdldllULUUddrdrrururuullulllldRRldddrdrruLuLrddlUlUUddrrrruruullulldRullldRdddrruLdrrruLLdllUUUluRRRdRlulldRldddrruLdlUUdlldRRurrddlUluuUluRddddrruLdlUU",
+    "boxes": 5,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1371
   },
   {
     "n": 134,
-    "name": "134"
+    "name": "134",
+    "par": 76,
+    "moves": 346,
+    "solution": "rurrdLLLrrrrruUUUruulDDDDDrdLLLuuuluuRRlldllLulldRRRRdddrrdrruuuuruulDDDDDuuuulllDDldddldlUUUUdddrrurrdLuluuururrrddddrdLLruuuuulllddlddrdLLruuuururrrdddddlLuuulullLulldRRRRdddrrdrruuuuulllDlddddldlUUUUdddrrurrdLLLrurruuLrddlluRuulDulLulldRRRRdrdddrrruuuuulllDldRdddlldlUUUUdddrruruuullLulldRRRRdrdddrrruuuuulllDlllddddrruUddlluuuurrrDDlddrruLdlU",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.207
   },
   {
     "n": 135,
-    "name": "135"
+    "name": "135",
+    "par": 36,
+    "moves": 169,
+    "solution": "ullDurrddlddRRuuluulllldddrRlluuurrrrddrddllUllluuurrdDuulldRurDllddrRlluurrDRRRRlddllUdrruurRurDDulllluulldllddrRuRRRRlddllUdrruurRdrUdldLLuuluullddRRRRlddrruUllllddRRR",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1191
   },
   {
     "n": 136,
-    "name": "136"
+    "name": "136",
+    "par": 25,
+    "moves": 170,
+    "solution": "rddLLrruullldllluRuurrrrDulllldddrruLdllddrrrUrrruuLLruulllldDuurrrrddlLLrrrrddlllUlLrrdrrruuluulllldDuurrrrddlLrruullllddlDRuuurrrrddrddlUdlluuLLrrddrruruLLLLrrruulllldD",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1062
   },
   {
     "n": 137,
-    "name": "137"
+    "name": "137",
+    "par": 46,
+    "moves": 231,
+    "solution": "rrUdlluuurRlldddrruULulDDurrdrruLdldlLLrdddlluuluurDrrrruruLLulDDurrddlLLLrruuururDldlddrrururuLLrdLLruulDrdddllllDlUruLLrdrrrrruuullDDuurrdLrddlLLrdddllllluuuluurDrrddrUrrrruuullDDurrddlLLLrrdddllUdllluuUluurDrrDrrrdddllllluuUluRR",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1453
   },
   {
     "n": 138,
-    "name": "138"
+    "name": "138",
+    "par": 54,
+    "moves": 321,
+    "solution": "rrrdddrRddrruUruLdddlllUdrrruuuullDLrurrddddllulUlUUUruLLdrdddrddrrruuuulldLrurrdLrdddllululUUUruLddddrddrrruuulLrrdddllululuuulllluurrDDrruLdrdddrddrrruuullLdlUUUdddrdrUddrruuLuLrdrddllululuuuruLddddrddrrruuullLdlUUUdddrdrUruLdlluuulUdrruLdlllluurrDullddrRRRuLdllluurrDrdrdddrruLdlUUUluRllullddrRuuurDlddRlllddrrUdlluurR",
+    "boxes": 5,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1902
   },
   {
     "n": 139,
-    "name": "139"
+    "name": "139",
+    "par": 112,
+    "moves": 558,
+    "solution": "rDrrrDrdLurRRllddrrULdlUluulllDDrddlUUddlluRdrruulUdrddlUUrRRuullLrrrddlllUlUUUUruLdddddrdrrruullLddrrrRdrruLLLLLdlUrrrrrrrruulDrdLLdlluluullluluuuLdrddrdrrrddlllUlUUUdddrdrrrrdrruLLLLLdlUrrruullLuluUllluurDrdrruLLdrddrdrrrddlllUlUUUUddddrdrrruullLddrrrrruLdrrruLdlllllluurrrDrdrruLdlLuullluluuluLulDrrdrddrdrrrddLLrruullluluulullDurrdrddrdrrrddlldlUrrruullluluuruLLdrddrdrrrddlllUlUUUUddddrdrrruullLddrrrrruLdlllluurrrDrdLLLdlUrrruullluluuruLdlLddlluuRRRRllluurDDrruLdrddrdrrrddlllUlUUUUluRdllllddrUluurRllddrUluRdrrrddddrdrrruullLdlUUUUllluurDldRRllddrUluR",
+    "boxes": 6,
+    "solved": true,
+    "optimal": false,
+    "difficulty": 0.3423
   },
   {
     "n": 140,
-    "name": "140"
+    "name": "140",
+    "par": 80,
+    "moves": 370,
+    "solution": "ddrrRuRuRuRurrdLdLdLdLLLrrrururuulDlDlDldlLulldRuuulllddddrdrrruUUUddrrurururrdLdLdLLLrrruruulDlDldlLulldRuuulllddddrdrrruUUdrrururrdLdLLLrrruulDldlLulldRuuuurrdLulDlddrrUdlluullddddrdrrruUUlluurDuurrdLulDldddrruUddrrurrdLLLLddllluluuuurrdddRluuullddddrdrrruUUdlluuururrdLLLdddrruUddlluuuLulDDurrdddrruuLullldDDuuurrrdrddlUlUdrruLuLLulDDDuurrrddlUruLLulDDurrrurrdLLLLulD",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.2167
   },
   {
     "n": 141,
-    "name": "141"
+    "name": "141",
+    "par": 52,
+    "moves": 165,
+    "solution": "luurUUddrrddrruuLrdLuLLLuuluurDrrRDDDllluUddrrrrddlUUUUUdddlllLddlluuRRRRRlluuluurDrrdrdDllluUluRRldddrrrrddllUdrUUUUddLLLLddlluuRRRRllddlUrurrRdrUUdlllldlluRRRRRdrU",
+    "boxes": 6,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1644
   },
   {
     "n": 142,
-    "name": "142"
+    "name": "142",
+    "par": 20,
+    "moves": 84,
+    "solution": "uulDrdrruLdlddrUluRlUluurDDrddlLUlldRRuUruulDrdrdLDlluRdrruululDrrddlUdrddlUruuurrdL",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0812
   },
   {
     "n": 143,
-    "name": "143"
+    "name": "143",
+    "par": 65,
+    "moves": 240,
+    "solution": "rdrruLuulLrrdddldlluurRlUUrrdDuullUUUUllluurDuluurDrrdDDDDDDDurrddlddlluuRuurrddrdLuuullddRluurrdDuulluuuuuuullDlddRRlluuurrrddDDDDDrrddllUUUUUUUUruLLrdddddddddldlluRuuRRddLruulldDldRurrrruuLrddlluUUUUUllluurDuluurDrrdDDDDDDDurrddlLLruulldD",
+    "boxes": 6,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1993
   },
   {
     "n": 144,
-    "name": "144"
+    "name": "144",
+    "par": 48,
+    "moves": 190,
+    "solution": "rurruurruLdlluuurrDDrdLuuulldlldlldddrdrrddrUluurrrddLUdLUllluullldRurrdddllUURldRuuuururrrurrddLruulldlluulDrddllluuRDuRDrrrurrdLLLLLuurDldRRlullldRRlDDDDlluRdrUUddlddrUUdRRRRdrruLLLLrrddlU",
+    "boxes": 16,
+    "solved": true,
+    "optimal": false,
+    "difficulty": 0.2981
   },
   {
     "n": 145,
-    "name": "145"
+    "name": "145",
+    "par": 18,
+    "moves": 52,
+    "solution": "dDurDlLddLDlluRuRldRdrrDRddlluUddrUUruuRUrrddlLrruLL",
+    "boxes": 12,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1794
   },
   {
     "n": 146,
-    "name": "146"
+    "name": "146",
+    "par": 14,
+    "moves": 65,
+    "solution": "drDrdLurruuuLrdddlluuRlddrruLuuuulllldldRldddrdrURRluulLDurruULrR",
+    "boxes": 12,
+    "solved": true,
+    "optimal": false,
+    "difficulty": 0.1772
   },
   {
     "n": 147,
-    "name": "147 — reduction of (Mas Sasquatch 7)"
+    "name": "147 — reduction of (Mas Sasquatch 7)",
+    "par": 50,
+    "moves": 161,
+    "solution": "lllllldddRRuLdlUUluRRRRRRdrrruullDllllllddrrrDrddlUruLLLrrdddlluUUdlUUUluRRRRRRllllldddrruLdlUUluRRRRRdrdrruLrruullDLLrrurrdddlllUluLLLLrrrrdrdrruruulldLLdrRRdrU",
+    "boxes": 3,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1208
   },
   {
     "n": 148,
-    "name": "148 — from (Original 18)"
+    "name": "148 — from (Original 18)",
+    "par": 49,
+    "moves": 262,
+    "solution": "lullllddrdrdrrrrUUddrruLdrrruLdrrruLdlluLdrrruLdllllllllululuurrdrrrRurrdLLLLullllddrdrdrrrrUUddllllululuurrrrddlUruLdrrRurrdLLLLulDrrrdddrruLdlUUddrrrruLLdllllllululuurRdrruLdrrRurrdLLLLulLdRurDrrdddllllululuuRlddrdrdrrrrrruLdlUUddllllululuurRdrruLdrrRurrdLLLLL",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1553
   },
   {
     "n": 149,
-    "name": "149 — from (Boxxle 43)"
+    "name": "149 — from (Boxxle 43)",
+    "par": 35,
+    "moves": 94,
+    "solution": "RurDDDlddrdDldRuuuluurDRRRRlllluuurrdLulDDldRRRRlllDDDlddrUUUUluRRRddddLruuuulldddlddrUUUUluRR",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1013
   },
   {
     "n": 150,
-    "name": "150 — from (Original 47)"
+    "name": "150 — from (Original 47)",
+    "par": 43,
+    "moves": 181,
+    "solution": "lldlllUUrrDullddlluRdrrRdrUluRRllullDldRRRlllllluRRRdrrruullDurrdrrRRurrddlUruLLdllllddrUluuluurDldldldRRRuRRRRurrddlUlllllddrUluRRuRldRRRdrUllllldllluururDlldllluurrRdrruulDldddrrU",
+    "boxes": 5,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1441
   },
   {
     "n": 151,
-    "name": "151 — from (Original 47)"
+    "name": "151 — from (Original 47)",
+    "par": 50,
+    "moves": 205,
+    "solution": "luuuuLrdddllURdrUUUluurDDDDDldRRRRurrddlUllllldlUlluuuruRRurDDDllDurruullDDrddrrrrrruLdllllluurDldRRluullulldddrRlluuurrdrdrdrRRRurDllllluullulldddrrRuulDrdRRluullulldddrRurrdrRuRRlldRlllulldRRRRurrDulldRR",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.144
   },
   {
     "n": 152,
-    "name": "152 — reduced (Mas Sasquatch 23)"
+    "name": "152 — reduced (Mas Sasquatch 23)",
+    "par": 35,
+    "moves": 261,
+    "solution": "lluuUrrdrrrrrdrdLLLLLLuurruurrrrdrdrddrruuululululllDurrrdrdrdrdddllLLululllllddrrrrRRRRllululllllulldddRRRRRRlllluurruuuulllldDrdrdrrrrrdrdrruulululLLrrrdrdrddllululllllddrrrrRRulullllluulluurrrdrDDuuullllddrdrdddrrrrruullLLrrrrddllllllluuUUdrrDDurrrrrddllllLL",
+    "boxes": 4,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.1384
   },
   {
     "n": 153,
-    "name": "153 — reduction of (Revenge 306)"
+    "name": "153 — reduction of (Revenge 306)",
+    "par": 336,
+    "moves": 902,
+    "solution": "lDDDDDDrdLuuurDuluurDuluurDrrddrUdlddrUdlddrUrruurUdlddrUUluuuurrddLruulldDDDrUdddlllluurDldRRRdrUUUddllluuluurDDlddrrrruulDrdLLLdlUUUddrrruuuuuurrddLruulldDDDrUdddlllluurDuuuluurDDDDlddRRRdrUUUddlllluurDulUruullllddrUdlddrUdlddrUllldRuruurUluuRRRurDDDuulllldddddrUluuuurrrrddlUruLLLulDDDDDrdLLdlUUUUUUdddddrruuuuurrrddddrUdlddrUrrruulDrdLLLdlUUUUUruLLLulDDDDDrdLLdlUUUUUddddrruuuuurrrdddddrrruuuuuurrddLruulldDDDDrdLLLdlUUUUUruLLLulDDDDDrdLLdlUUUUdddrruuuuurrrdddddrrruurUluuurrddLruulldDDDDrdLLLdlUUUUUruLLLulDDDDDrdLLdlUUUddrruuuuurrrdddddrrruuuurruLulDDDDDrdLLLdlUUUUUruLLLulDDDDDrdLLdlUUdrruuuuurrrdddrDldRRRdrUUUUluurrdLulDDDDrdLLLdlUUUUUruLLLulDDDDDrdLLdlUrruuurUluRRRdrDDDldRRRdrUUUUluurrdLulDDDDrdLLLdlUUUruuluurDDDDDldRRRdrUUUUluurrdLulDDDDrdLLLdlUruulUUruLLLulDDDDDrdLLrurUUUluRRRurDDlddrddlUUUUruLLLulDDDDuuurrrdrDDDldRRRdrUUUUluurrdLulDDDDrdLLLdlUUUUUruLLLulDDrddlDrddLruLdLruuuruulDDDDrdL",
+    "boxes": 10,
+    "solved": true,
+    "optimal": false,
+    "solver": "external",
+    "difficulty": 0.92
   },
   {
     "n": 154,
-    "name": "154 — Take the long way home."
+    "name": "154 — Take the long way home.",
+    "par": 2,
+    "moves": 429,
+    "solution": "ruuuuuuuuuuuurrrrrrrrrrrrrrrrrrrrrddddddddddllllllllllllllllluuuuuurrrrrrrrrrrrrddlllllllllllddrrrrrrrrrrrrruuuuuulllllllllllllllllddddddddddrrrrrrrrrrrrrrrrrrrrruuuuuuuuuuuuuulllllllllllllllllllllllllddddddddddddDuuuuuuuuuuuuurrrrrrrrrrrrrrrrrrrrrrrrrddddddddddddddllllllllllllllllllllluuuuuuuuuurrrrrrrrrrrrrrrrrddddddllllllllllllluurrrrrrrrrrruulllllllllllllddddddrrrrrrrrrrrrrrrrruuuuuuuuuulllllllllllllllllllllddddddddddddlL",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.0962
   },
   {
     "n": 155,
-    "name": "155 — The Dungeon"
+    "name": "155 — The Dungeon",
+    "par": 175,
+    "moves": 282,
+    "solution": "uulldRRRRRRRRdrUUUruLLLLLLLLLLLLulDDDrdLLLLLLLLLLLulllddrrUdlluurRluurrdDldRRRRRRRRRRdrUUUluRRRRRRRRRdrUUUUUUruLLLulDDDrdLLLdlUUUruLLLulDDDrdLLLLdlUUUUdrruulLLrddlluUUluRRRRRRRRRRRRRRRRRRRurDDDDDDlddrUUUUUUruLLLLLLLLLLLLLLLLLLLLulDrdLLLLLulldRurDDDDDrddlluRdrUluRRurDDDDrrddllUUUUUU",
+    "boxes": 11,
+    "solved": true,
+    "optimal": true,
+    "difficulty": 0.4035
   }
 ]
