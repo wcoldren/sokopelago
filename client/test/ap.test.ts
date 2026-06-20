@@ -2,8 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import {
   FILLER_ID,
+  HINT_ID,
   KEY_BASE,
   LOC_BASE,
+  SKIP_ID,
+  TRAP_ID_BASE,
+  UNDO_ID,
+  escapeValveForItem,
   levelForLocationId,
   locationIdForLevel,
   worldForKeyItem,
@@ -15,7 +20,7 @@ import {
   worldOfLevel,
   type SlotData,
 } from "../src/ap/slotData";
-import { resolveServerUrl } from "../src/ap/session";
+import { resolveServerUrl, Session, type SessionCallbacks } from "../src/ap/session";
 
 describe("ap/session — resolveServerUrl", () => {
   it("honors an explicit scheme", () => {
@@ -58,6 +63,27 @@ describe("ap/ids — network id arithmetic", () => {
     expect(worldForKeyItem(FILLER_ID)).toBeNull(); // KEY_BASE + 1
     expect(worldForKeyItem(KEY_BASE + 1)).toBeNull();
     expect(worldForKeyItem(KEY_BASE + 156)).toBeNull();
+  });
+});
+
+describe("ap/ids — escapeValveForItem", () => {
+  it("classifies skip / undo / hint", () => {
+    expect(escapeValveForItem(SKIP_ID)).toEqual({ kind: "skip" });
+    expect(escapeValveForItem(UNDO_ID)).toEqual({ kind: "undo" });
+    expect(escapeValveForItem(HINT_ID)).toEqual({ kind: "hint" });
+  });
+
+  it("classifies the three trap variants by offset", () => {
+    expect(escapeValveForItem(TRAP_ID_BASE)).toEqual({ kind: "trap", trap: "scramble" });
+    expect(escapeValveForItem(TRAP_ID_BASE + 1)).toEqual({ kind: "trap", trap: "decoy" });
+    expect(escapeValveForItem(TRAP_ID_BASE + 2)).toEqual({ kind: "trap", trap: "reversed" });
+  });
+
+  it("returns null for keys, filler, and locations", () => {
+    expect(escapeValveForItem(KEY_BASE + 2)).toBeNull();
+    expect(escapeValveForItem(FILLER_ID)).toBeNull();
+    expect(escapeValveForItem(LOC_BASE + 1)).toBeNull();
+    expect(escapeValveForItem(TRAP_ID_BASE + 3)).toBeNull();
   });
 });
 
@@ -127,5 +153,84 @@ describe("ap/slotData — isGoalMet", () => {
     const slot = sampleSlot({ goal: "boss_level", goal_boss_level: 17 });
     expect(isGoalMet(slot, new Set([16, 18]))).toBe(false);
     expect(isGoalMet(slot, new Set([17]))).toBe(true);
+  });
+});
+
+// The session is a thin wrapper over archipelago.js; we inject a stub client to
+// exercise inventory tallying, the skip->check routing invariant, and trap firing.
+interface SessionInternals {
+  client: unknown;
+  received: { skip: number; undo: number; hint: number };
+  syncItems(suppressTraps: boolean): void;
+}
+const peek = (s: Session): SessionInternals => s as unknown as SessionInternals;
+
+function mockSession(onTrap: (v: string) => void = () => {}) {
+  const checked: number[] = [];
+  const callbacks: SessionCallbacks = {
+    onConnected: () => {},
+    onUpdate: () => {},
+    onGoal: () => {},
+    onMessage: () => {},
+    onTrap: (variant) => onTrap(variant),
+    onDisconnect: () => {},
+  };
+  const s = new Session(callbacks);
+  const client = {
+    authenticated: true,
+    check: (id: number) => checked.push(id),
+    goal: () => {},
+    items: { received: [] as Array<{ id: number }> },
+    storage: { prepare: () => ({ add: () => ({ commit: () => undefined }) }) },
+  };
+  peek(s).client = client;
+  return { s, client, checked };
+}
+
+describe("ap/session — escape valves", () => {
+  it("tallies received valve items and unlocks worlds from the backlog", () => {
+    const { s, client } = mockSession();
+    client.items.received = [
+      { id: SKIP_ID },
+      { id: SKIP_ID },
+      { id: UNDO_ID },
+      { id: HINT_ID },
+      { id: KEY_BASE + 2 },
+    ];
+    peek(s).syncItems(true);
+    expect(s.available).toEqual({ skip: 2, undo: 1, hint: 1 });
+    expect(s.unlockedWorlds.has(2)).toBe(true);
+  });
+
+  it("skip consumes a token and routes to a real location check (no permanent stall)", () => {
+    const { s, checked } = mockSession();
+    peek(s).received.skip = 1;
+    expect(s.useSkip(7)).toBe(true);
+    expect(checked).toEqual([locationIdForLevel(7)]);
+    expect(s.isLevelSolved(7)).toBe(true);
+    expect(s.available.skip).toBe(0);
+    expect(s.useSkip(7)).toBe(false); // already solved
+    expect(s.useSkip(8)).toBe(false); // no tokens left
+  });
+
+  it("fires traps only for newly received items, not the suppressed connect backlog", () => {
+    const traps: string[] = [];
+    const { s, client } = mockSession((v) => traps.push(v));
+    client.items.received = [{ id: TRAP_ID_BASE }];
+    peek(s).syncItems(true); // connect-time backlog: suppressed
+    expect(traps).toEqual([]);
+    client.items.received.push({ id: TRAP_ID_BASE + 2 });
+    peek(s).syncItems(false); // live: fire only the new one
+    expect(traps).toEqual(["reversed"]);
+  });
+
+  it("useUndo / useHint consume their tokens", () => {
+    const { s } = mockSession();
+    peek(s).received.undo = 1;
+    peek(s).received.hint = 1;
+    expect(s.useUndo()).toBe(true);
+    expect(s.useUndo()).toBe(false);
+    expect(s.useHint()).toBe(true);
+    expect(s.useHint()).toBe(false);
   });
 });

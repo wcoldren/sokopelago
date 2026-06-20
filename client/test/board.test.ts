@@ -74,6 +74,44 @@ describe("Game — restart", () => {
   });
 });
 
+describe("Game — undo", () => {
+  it("reports nothing to undo at the start", () => {
+    const g = load(["#####", "#@  #", "#####"].join("\n"));
+    expect(g.canUndo()).toBe(false);
+    expect(g.undo()).toBe(false);
+  });
+
+  it("undoes a plain move and restores the counter", () => {
+    const g = load(["#####", "#@  #", "#####"].join("\n"));
+    g.move("right");
+    expect(g.player).toEqual({ x: 2, y: 1 });
+    expect(g.canUndo()).toBe(true);
+    expect(g.undo()).toBe(true);
+    expect(g.player).toEqual({ x: 1, y: 1 });
+    expect(g.moves).toBe(0);
+    expect(g.canUndo()).toBe(false);
+  });
+
+  it("undoes a push, moving the box back and restoring the counter", () => {
+    const g = load(["######", "#@$  #", "######"].join("\n"));
+    g.move("right"); // push box (2,1) -> (3,1)
+    expect(g.boxAt(3, 1)).toBe(true);
+    expect(g.pushes).toBe(1);
+    expect(g.undo()).toBe(true);
+    expect(g.player).toEqual({ x: 1, y: 1 });
+    expect(g.boxAt(2, 1)).toBe(true);
+    expect(g.boxAt(3, 1)).toBe(false);
+    expect(g.pushes).toBe(0);
+  });
+
+  it("restart clears undo history", () => {
+    const g = load(["######", "#@$  #", "######"].join("\n"));
+    g.move("right");
+    g.restart();
+    expect(g.canUndo()).toBe(false);
+  });
+});
+
 describe("Game — real corpus level is playable", () => {
   it("loads Microban #1 with one player and equal boxes/goals", () => {
     const microban = parseXsb(

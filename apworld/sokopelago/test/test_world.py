@@ -29,3 +29,13 @@ class TestBossLevelDefaultsToLast(SokopelagoTestBase):
 class TestSolveCountAllLevels(SokopelagoTestBase):
     # Target == level_count: needs every keyed world reachable.
     options = {"goal": "solve_count", "level_count": 30, "levels_per_region": 10, "goal_solve_count": 30}
+
+
+class TestDifficultyOrderingOn(SokopelagoTestBase):
+    # Difficulty-balanced world assignment must still generate a beatable seed.
+    options = {"goal": "beat_final_region", "level_count": 30, "levels_per_region": 10, "difficulty_ordering": 1}
+
+
+class TestDifficultyOrderingOff(SokopelagoTestBase):
+    # Native corpus order (the chunk_levels path).
+    options = {"goal": "beat_final_region", "level_count": 30, "levels_per_region": 10, "difficulty_ordering": 0}

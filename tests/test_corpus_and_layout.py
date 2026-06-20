@@ -195,3 +195,56 @@ class TestClamp:
         assert layout.clamp(5, 1, 10) == 5
         assert layout.clamp(-3, 1, 10) == 1
         assert layout.clamp(99, 1, 10) == 10
+
+
+class TestEscapeValveCounts:
+    def test_all_fit_when_budget_is_ample(self):
+        counts = layout.escape_valve_counts(20, {"skip": 3, "hint": 3, "undo": 5, "trap": 2})
+        assert counts == {"skip": 3, "hint": 3, "undo": 5, "trap": 2}
+
+    def test_priority_drops_traps_then_undo_then_hint(self):
+        # budget 4, requests 2 each: skip and hint fill first (priority), then undo.
+        counts = layout.escape_valve_counts(4, {"skip": 2, "hint": 2, "undo": 2, "trap": 2})
+        assert counts == {"skip": 2, "hint": 2, "undo": 0, "trap": 0}
+        assert sum(counts.values()) == 4
+
+    def test_skip_survives_a_budget_of_one(self):
+        counts = layout.escape_valve_counts(1, {"skip": 3, "hint": 3, "undo": 3, "trap": 3})
+        assert counts == {"skip": 1, "hint": 0, "undo": 0, "trap": 0}
+
+    def test_zero_budget_yields_nothing(self):
+        counts = layout.escape_valve_counts(0, {"skip": 3, "hint": 3, "undo": 3, "trap": 3})
+        assert counts == {"skip": 0, "hint": 0, "undo": 0, "trap": 0}
+
+
+class TestAssignLevelsByDifficulty:
+    def _difficulty(self, n):
+        # monotonic ramp: level k is harder than level k-1.
+        return {k: k / 100 for k in range(1, n + 1)}
+
+    def test_matches_chunk_shape(self):
+        levels = list(range(1, 31))
+        worlds = layout.assign_levels_by_difficulty(levels, self._difficulty(30), 10)
+        assert [len(w) for w in worlds] == [len(w) for w in layout.chunk_levels(30, 10)]
+
+    def test_every_level_placed_exactly_once(self):
+        levels = list(range(1, 26))
+        worlds = layout.assign_levels_by_difficulty(levels, self._difficulty(25), 10)
+        flat = [n for w in worlds for n in w]
+        assert sorted(flat) == levels
+
+    def test_balances_difficulty_across_worlds(self):
+        # A monotonic ramp chunked sequentially puts all the hard levels in the last
+        # world; balancing should spread them so per-world means are close together.
+        levels = list(range(1, 31))
+        diff = self._difficulty(30)
+        worlds = layout.assign_levels_by_difficulty(levels, diff, 10)
+        means = [sum(diff[n] for n in w) / len(w) for w in worlds]
+        assert max(means) - min(means) < 0.05
+
+    def test_each_world_is_easiest_first(self):
+        levels = list(range(1, 31))
+        diff = self._difficulty(30)
+        worlds = layout.assign_levels_by_difficulty(levels, diff, 10)
+        for w in worlds:
+            assert w == sorted(w, key=lambda n: diff[n])
