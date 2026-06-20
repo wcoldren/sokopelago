@@ -6,6 +6,10 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 // par/difficulty/solution fields), so the browser fetches /data/<corpus>.json (the seed
 // picks the corpus). The canonical authoring sources stay levels/*.xsb (the build input).
 export default defineConfig({
+  // Relative base so the built site works wherever it's served: "/" locally, under a
+  // project-site subpath on GitHub Pages (user.github.io/sokopelago/), and inside an
+  // itch.io zip. Asset URLs and import.meta.env.BASE_URL resolve against the document.
+  base: "./",
   plugins: [
     viteStaticCopy({
       targets: [{ src: "../apworld/sokopelago/data/*.json", dest: "data" }],

@@ -16,7 +16,9 @@ import type { TrapVariant } from "./ap/ids";
 import { parseSolution, replaySolutionPrefix } from "./solution";
 
 const DEFAULT_CORPUS = "microban";
-const manifestUrl = (corpus: string): string => `/data/${corpus}.json`;
+// Base-relative so the fetch resolves under whatever path the site is served from
+// (root locally, /sokopelago/ on GitHub Pages). BASE_URL is the Vite `base` ("./").
+const manifestUrl = (corpus: string): string => `${import.meta.env.BASE_URL}data/${corpus}.json`;
 
 /** One level entry in a bundled corpus manifest (data/<corpus>.json). */
 interface ManifestEntry {
