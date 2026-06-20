@@ -6,10 +6,12 @@ import {
   KEY_BASE,
   LOC_BASE,
   PAR_LOC_BASE,
+  PULL_ID,
   SKIP_ID,
   TRAP_ID_BASE,
   UNDO_ID,
   escapeValveForItem,
+  isPullItem,
   levelForLocationId,
   levelForParLocationId,
   locationIdForLevel,
@@ -21,6 +23,7 @@ import {
   isGoalMet,
   levelsInWorld,
   parForLevel,
+  requiresPull,
   solvedInSeed,
   worldOfLevel,
   type SlotData,
@@ -101,6 +104,15 @@ describe("ap/ids — escapeValveForItem", () => {
     expect(escapeValveForItem(FILLER_ID)).toBeNull();
     expect(escapeValveForItem(LOC_BASE + 1)).toBeNull();
     expect(escapeValveForItem(TRAP_ID_BASE + 3)).toBeNull();
+    expect(escapeValveForItem(PULL_ID)).toBeNull(); // the ability is not an escape valve
+  });
+});
+
+describe("ap/ids — isPullItem", () => {
+  it("recognizes only the Pull ability id", () => {
+    expect(isPullItem(PULL_ID)).toBe(true);
+    expect(isPullItem(SKIP_ID)).toBe(false);
+    expect(isPullItem(KEY_BASE + 2)).toBe(false);
   });
 });
 
@@ -201,6 +213,15 @@ describe("ap/slotData — difficultyForLevel", () => {
   });
 });
 
+describe("ap/slotData — requiresPull", () => {
+  it("is true only for levels flagged in requires_pull", () => {
+    const slot = sampleSlot({ expert_logic: true, requires_pull: { "21": true } });
+    expect(requiresPull(slot, 21)).toBe(true);
+    expect(requiresPull(slot, 22)).toBe(false);
+    expect(requiresPull(sampleSlot(), 21)).toBe(false); // no map at all
+  });
+});
+
 // The session is a thin wrapper over archipelago.js; we inject a stub client to
 // exercise inventory tallying, the skip->check routing invariant, and trap firing.
 interface SessionInternals {
@@ -278,6 +299,26 @@ describe("ap/session — escape valves", () => {
     expect(s.useUndo()).toBe(false);
     expect(s.useHint()).toBe(true);
     expect(s.useHint()).toBe(false);
+  });
+});
+
+describe("ap/session — Pull ability (expert logic)", () => {
+  it("gates pulling until the Pull item is received", () => {
+    const { s, client } = mockSession();
+    peek(s).slot = sampleSlot({ expert_logic: true, requires_pull: { "21": true } });
+    expect(s.canPull).toBe(false);
+    expect(s.needsPull(21)).toBe(true);
+    expect(s.needsPull(22)).toBe(false);
+    client.items.received = [{ id: PULL_ID }];
+    peek(s).syncItems(true);
+    expect(s.canPull).toBe(true);
+  });
+
+  it("pulling is always available without expert logic", () => {
+    const { s } = mockSession();
+    peek(s).slot = sampleSlot({ expert_logic: false });
+    expect(s.canPull).toBe(true);
+    expect(s.needsPull(21)).toBe(false);
   });
 });
 

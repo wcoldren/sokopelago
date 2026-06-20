@@ -113,6 +113,39 @@ describe("Game — undo", () => {
   });
 });
 
+describe("Game — pull (expert mechanic)", () => {
+  it("pulls a box directly behind the player into the vacated cell", () => {
+    // box (1,1), player (2,1), free (3,1). Pull right: player->(3,1), box->(2,1).
+    const g = load(["#####", "#$@ #", "#####"].join("\n"));
+    expect(g.pull("right")).toBe(true);
+    expect(g.player).toEqual({ x: 3, y: 1 });
+    expect(g.boxAt(2, 1)).toBe(true);
+    expect(g.boxAt(1, 1)).toBe(false);
+    expect(g.pushes).toBe(1); // a pull counts as a box-move
+  });
+
+  it("refuses to pull when there is no box behind", () => {
+    const g = load(["#####", "#@  #", "#####"].join("\n"));
+    expect(g.pull("right")).toBe(false);
+  });
+
+  it("refuses to pull when the cell ahead is blocked", () => {
+    // box (1,1), player (2,1), wall (3,1) — nowhere to step forward.
+    const g = load(["####", "#$@#", "####"].join("\n"));
+    expect(g.pull("right")).toBe(false);
+  });
+
+  it("undo reverses a pull", () => {
+    const g = load(["#####", "#$@ #", "#####"].join("\n"));
+    g.pull("right");
+    expect(g.undo()).toBe(true);
+    expect(g.player).toEqual({ x: 2, y: 1 });
+    expect(g.boxAt(1, 1)).toBe(true);
+    expect(g.boxAt(2, 1)).toBe(false);
+    expect(g.pushes).toBe(0);
+  });
+});
+
 describe("effectiveDir — reversed-controls trap", () => {
   it("passes the direction through when controls are not reversed", () => {
     expect(effectiveDir("up", false)).toBe("up");

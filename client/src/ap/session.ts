@@ -9,6 +9,7 @@ import { Client, itemsHandlingFlags } from "archipelago.js";
 
 import {
   escapeValveForItem,
+  isPullItem,
   levelForLocationId,
   levelForParLocationId,
   locationIdForLevel,
@@ -16,7 +17,7 @@ import {
   worldForKeyItem,
   type TrapVariant,
 } from "./ids";
-import { isGoalMet, parForLevel, worldOfLevel, type SlotData } from "./slotData";
+import { isGoalMet, parForLevel, requiresPull, worldOfLevel, type SlotData } from "./slotData";
 
 /** UI hooks the play loop subscribes to. */
 export interface SessionCallbacks {
@@ -109,6 +110,8 @@ export class Session {
 
   private worldOf = new Map<number, number>();
   private goaled = false;
+  /** Whether the Pull ability item has been received (expert logic). */
+  private pullReceived = false;
 
   // Escape-valve inventory. `received` is recomputed from the full item backlog
   // (idempotent across reconnects); `consumed` is persisted to DataStorage because
@@ -173,6 +176,22 @@ export class Session {
   isLevelUnlocked(n: number): boolean {
     const w = this.worldOf.get(n);
     return w !== undefined && this.unlockedWorlds.has(w);
+  }
+
+  /** Whether the pull mechanic is available: always, unless expert logic gates it behind
+   * the (not-yet-received) Pull ability. */
+  get canPull(): boolean {
+    return !this.slot?.expert_logic || this.pullReceived;
+  }
+
+  /** Whether level `n` needs the Pull ability under this seed's expert logic. */
+  needsPull(n: number): boolean {
+    return Boolean(this.slot?.expert_logic) && this.slot !== null && requiresPull(this.slot, n);
+  }
+
+  /** Playable = the world key is held AND (no pull gate, or Pull has been received). */
+  isLevelPlayable(n: number): boolean {
+    return this.isLevelUnlocked(n) && (this.canPull || !this.needsPull(n));
   }
 
   isLevelSolved(n: number): boolean {
@@ -254,6 +273,10 @@ export class Session {
       const w = worldForKeyItem(item.id);
       if (w !== null) {
         this.unlockedWorlds.add(w);
+        continue;
+      }
+      if (isPullItem(item.id)) {
+        this.pullReceived = true;
         continue;
       }
       const valve = escapeValveForItem(item.id);

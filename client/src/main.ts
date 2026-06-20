@@ -15,9 +15,10 @@ import { parForLevel, difficultyForLevel, type SlotData } from "./ap/slotData";
 import type { TrapVariant } from "./ap/ids";
 import { parseSolution, replaySolutionPrefix } from "./solution";
 
-const MANIFEST_URL = "/data/microban.json";
+const DEFAULT_CORPUS = "microban";
+const manifestUrl = (corpus: string): string => `/data/${corpus}.json`;
 
-/** One level entry in the bundled manifest (data/microban.json). */
+/** One level entry in a bundled corpus manifest (data/<corpus>.json). */
 interface ManifestEntry {
   n: number;
   name: string;
@@ -37,6 +38,7 @@ const restartBtn = $<HTMLButtonElement>("restart-btn");
 const undoBtn = $<HTMLButtonElement>("undo-btn");
 const hintBtn = $<HTMLButtonElement>("hint-btn");
 const skipBtn = $<HTMLButtonElement>("skip-btn");
+const pullBtn = $<HTMLButtonElement>("pull-btn");
 const statusEl = $<HTMLDivElement>("status");
 const hostInput = $<HTMLInputElement>("ap-host");
 const slotInput = $<HTMLInputElement>("ap-slot");
@@ -48,11 +50,13 @@ const renderer = new Renderer(canvas);
 
 let levels: Level[] = [];
 let solutions = new Map<number, string>(); // Microban number -> LURD solution string
+let loadedCorpus = DEFAULT_CORPUS; // which corpus manifest is currently loaded
 let game: Game | null = null;
 let current = 0;
 let locked = false; // briefly true between solving and auto-advancing
 let hintIndex = 0; // solution moves revealed on the current level
 let reversedControls = false; // set by a Reversed-Controls trap; cleared on level change
+let pullMode = false; // when on, plain direction input pulls instead of pushing
 
 let session: Session | null = null;
 let slot: SlotData | null = null; // non-null once connected (AP mode)
@@ -108,6 +112,9 @@ function optionLabel(lvl: Level): string {
   if (!session.isLevelUnlocked(n)) {
     return `🔒 ${base} — World ${session.worldForLevel(n)} (locked)`;
   }
+  if (session.needsPull(n) && !session.canPull) {
+    return `🔒 ${base} — needs Pull`;
+  }
   return base;
 }
 
@@ -117,7 +124,7 @@ function rebuildSelector(): void {
     const opt = document.createElement("option");
     opt.value = String(lvl.index);
     opt.textContent = optionLabel(lvl);
-    if (slot && session && !session.isLevelUnlocked(levelNumber(lvl))) {
+    if (slot && session && !session.isLevelPlayable(levelNumber(lvl))) {
       opt.disabled = true;
     }
     select.appendChild(opt);
@@ -130,7 +137,7 @@ function rebuildSelector(): void {
 function nextPlayable(afterN: number): Level | null {
   if (!slot || !session) return null;
   const playable = shownLevels().filter(
-    (l) => session!.isLevelUnlocked(levelNumber(l)) && !session!.isLevelSolved(levelNumber(l)),
+    (l) => session!.isLevelPlayable(levelNumber(l)) && !session!.isLevelSolved(levelNumber(l)),
   );
   if (playable.length === 0) return null;
   return playable.find((l) => levelNumber(l) > afterN) ?? playable[0];
@@ -141,12 +148,13 @@ function nextPlayable(afterN: number): Level | null {
 function loadLevel(i: number): void {
   const target = levels[i];
   if (!target) return;
-  if (slot && session && !session.isLevelUnlocked(levelNumber(target))) {
-    setStatus(
-      `Level ${levelNumber(target)} is locked — needs the World ${session.worldForLevel(
-        levelNumber(target),
-      )} Key.`,
-    );
+  if (slot && session && !session.isLevelPlayable(levelNumber(target))) {
+    const n = levelNumber(target);
+    if (!session.isLevelUnlocked(n)) {
+      setStatus(`Level ${n} is locked — needs the World ${session.worldForLevel(n)} Key.`);
+    } else {
+      setStatus(`Level ${n} needs the Pull ability — find it in the multiworld.`);
+    }
     select.value = String(current);
     return;
   }
@@ -211,9 +219,32 @@ function onSolved(): void {
   if (hasNext) window.setTimeout(() => loadLevel(current + 1), 1100);
 }
 
+/** Whether the pull mechanic is usable now: always offline; gated by the Pull ability
+ * in an AP seed with expert logic. */
+function canPullNow(): boolean {
+  return !session || session.canPull;
+}
+
 function move(dir: Dir): void {
   if (!game || locked) return;
+  if (pullMode) {
+    pull(dir);
+    return;
+  }
   if (!game.move(effectiveDir(dir, reversedControls))) return;
+  renderer.draw(game);
+  if (game.isWin()) onSolved();
+  else refreshStatus();
+}
+
+/** Pull a box that's directly behind the player (the expert mechanic). */
+function pull(dir: Dir): void {
+  if (!game || locked) return;
+  if (!canPullNow()) {
+    setStatus("The Pull ability is needed here — find it in the multiworld.");
+    return;
+  }
+  if (!game.pull(effectiveDir(dir, reversedControls))) return;
   renderer.draw(game);
   if (game.isWin()) onSolved();
   else refreshStatus();
@@ -295,11 +326,34 @@ function triggerTrap(variant: TrapVariant): void {
   setStatus(variant === "scramble" ? "⚡ Trap: Scramble!" : "⚡ Trap: Decoy Box!");
 }
 
+/** Toggle sticky pull mode (plain arrows pull). Shift+arrow always pulls regardless. */
+function togglePull(): void {
+  if (!canPullNow()) {
+    setStatus("The Pull ability is needed here — find it in the multiworld.");
+    return;
+  }
+  pullMode = !pullMode;
+  setStatus(pullMode ? "Pull mode ON — arrows pull (Shift+arrow always pulls)." : "Pull mode off.");
+  updateValveButtons();
+}
+
 /** Sync the valve buttons' labels/counts and enabled state with the session. */
 function updateValveButtons(): void {
   const ap = Boolean(slot && session);
   hintBtn.hidden = !ap;
   skipBtn.hidden = !ap;
+
+  // Pull is relevant on a non-Microban corpus (whose levels can need it) or any expert
+  // seed. It's usable immediately unless expert logic gates it behind the Pull item.
+  const pullRelevant = loadedCorpus !== DEFAULT_CORPUS || Boolean(slot?.expert_logic);
+  pullBtn.hidden = !pullRelevant;
+  if (pullRelevant) {
+    const usable = canPullNow();
+    if (!usable) pullMode = false;
+    pullBtn.disabled = !usable || locked;
+    pullBtn.textContent = usable ? `Pull: ${pullMode ? "on" : "off"}` : "Pull (find it)";
+  }
+
   const canUndo = Boolean(game?.canUndo()) && !locked;
   if (ap && session) {
     const a = session.available;
@@ -321,11 +375,38 @@ function updateValveButtons(): void {
 function handleDisconnect(): void {
   session = null;
   slot = null;
+  pullMode = false;
   connectBtn.textContent = "Connect";
   connectBtn.disabled = false;
   setConnStatus("Disconnected — free play (all levels).");
+  void reloadDefaultCorpus();
+}
+
+/** Back to the default corpus for offline free play after a disconnect. */
+async function reloadDefaultCorpus(): Promise<void> {
+  if (loadedCorpus !== DEFAULT_CORPUS) {
+    try {
+      await loadCorpus(DEFAULT_CORPUS);
+    } catch {
+      /* keep whatever is loaded */
+    }
+  }
   rebuildSelector();
   loadLevel(0);
+}
+
+/** After auth, load the seed's corpus (if different) then show its first playable level. */
+async function onConnectedReady(s: SlotData): Promise<void> {
+  if (s.corpus && s.corpus !== loadedCorpus) {
+    try {
+      await loadCorpus(s.corpus);
+    } catch (e) {
+      setConnStatus(`Connected, but couldn't load corpus "${s.corpus}": ${msg(e)}`, "err");
+    }
+  }
+  rebuildSelector();
+  const first = nextPlayable(0);
+  if (first) loadLevel(first.index);
 }
 
 async function connect(): Promise<void> {
@@ -348,9 +429,7 @@ async function connect(): Promise<void> {
         `Connected as ${s.player_name} — ${s.level_count} levels, goal: ${s.goal}.`,
         "ok",
       );
-      rebuildSelector();
-      const first = nextPlayable(0);
-      if (first) loadLevel(first.index);
+      void onConnectedReady(s);
     },
     onUpdate: () => rebuildSelector(),
     onGoal: () => setConnStatus(`Goal complete! 🏆 (${slot?.goal})`, "ok"),
@@ -379,18 +458,20 @@ function onConnectClick(): void {
 
 // --- Bootstrap -------------------------------------------------------------
 
-/** Fetch the single bundled manifest: boards (rendered) + solutions (hints). */
-async function loadCorpus(): Promise<void> {
-  const res = await fetch(MANIFEST_URL);
-  if (!res.ok) throw new Error(`failed to load ${MANIFEST_URL}: ${res.status}`);
+/** Fetch a corpus manifest by name: boards (rendered) + solutions (hints). */
+async function loadCorpus(corpus: string): Promise<void> {
+  const url = manifestUrl(corpus);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`failed to load ${url}: ${res.status}`);
   const entries = (await res.json()) as ManifestEntry[];
   levels = entries.map((e) => levelFromBoard(e.board, e.n - 1, e.name));
   solutions = new Map(entries.filter((e) => e.solution).map((e) => [e.n, e.solution as string]));
+  loadedCorpus = corpus;
 }
 
 async function main(): Promise<void> {
   setStatus("Loading levels…");
-  await loadCorpus();
+  await loadCorpus(DEFAULT_CORPUS);
 
   const prefs = loadPrefs();
   if (prefs) {
@@ -404,8 +485,16 @@ async function main(): Promise<void> {
   undoBtn.addEventListener("click", undo);
   hintBtn.addEventListener("click", useHint);
   skipBtn.addEventListener("click", useSkip);
+  pullBtn.addEventListener("click", togglePull);
   connectBtn.addEventListener("click", onConnectClick);
-  attachInput({ onMove: move, onRestart: restart, onUndo: undo, onHint: useHint, onSkip: useSkip });
+  attachInput({
+    onMove: move,
+    onRestart: restart,
+    onUndo: undo,
+    onHint: useHint,
+    onSkip: useSkip,
+    onPull: pull,
+  });
 
   loadLevel(0);
 }

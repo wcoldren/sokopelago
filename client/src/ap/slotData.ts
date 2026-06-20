@@ -25,6 +25,10 @@ export interface SlotData {
   difficulty?: Record<string, number>;
   /** When true, the seed has par-location checks; solving within par sends a second check. */
   par_checks?: boolean;
+  /** Expert Logic: when true, requires_pull levels are gated behind the Pull item. */
+  expert_logic?: boolean;
+  /** Level numbers (string keys) that need the Pull ability to be solved. */
+  requires_pull?: Record<string, boolean>;
   seed_name: string;
   player_name: string;
   player_id: number;
@@ -55,6 +59,11 @@ export function parForLevel(slot: SlotData, n: number): number | null {
 export function difficultyForLevel(slot: SlotData, n: number): number | null {
   const d = slot.difficulty?.[String(n)];
   return typeof d === "number" && d >= 0 ? d : null;
+}
+
+/** Whether level `n` needs the Pull ability (only meaningful under expert logic). */
+export function requiresPull(slot: SlotData, n: number): boolean {
+  return slot.requires_pull?.[String(n)] === true;
 }
 
 /** How many of this seed's levels are in `solved`. */

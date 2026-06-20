@@ -1,6 +1,6 @@
-// Core Sokoban game model — pure logic, no DOM. Base rules only (Phase 0):
-// walk onto floor/goal, push exactly one box, win when every box is on a goal.
-// Abilities (pull, push-two, …) are out of scope until the expert tier.
+// Core Sokoban game model — pure logic, no DOM. Base rules: walk onto floor/goal, push
+// exactly one box, win when every box is on a goal. The expert tier (Phase 5) adds a
+// pull: step away from a box directly behind you and it follows into your old cell.
 
 import { DELTA, Tile, type Dir, type Level, type Vec } from "./types";
 
@@ -11,7 +11,9 @@ interface MoveRecord {
   /** Player position before the move. */
   player: Vec;
   pushed: boolean;
-  /** Box origin / destination (only when `pushed`). */
+  /** True when the step pulled a box (the expert mechanic). */
+  pulled?: boolean;
+  /** Box origin / destination (present when `pushed` or `pulled`). */
   boxFrom?: Vec;
   boxTo?: Vec;
 }
@@ -91,16 +93,45 @@ export class Game {
     return true;
   }
 
+  /**
+   * Attempt a pull in `dir` (the expert mechanic): the player steps one cell in `dir`,
+   * and a box directly *behind* the player (opposite `dir`) follows into the vacated
+   * cell. Returns true iff there was such a box and the cell ahead was free.
+   */
+  pull(dir: Dir): boolean {
+    const d = DELTA[dir];
+    const ax = this.player.x + d.x;
+    const ay = this.player.y + d.y;
+    // The player must be able to step forward into a free cell.
+    if (!this.walkable(ax, ay) || this.boxAt(ax, ay)) return false;
+    const bx = this.player.x - d.x;
+    const by = this.player.y - d.y;
+    if (!this.boxAt(bx, by)) return false; // nothing behind to pull
+
+    const record: MoveRecord = {
+      player: { ...this.player },
+      pushed: false,
+      pulled: true,
+      boxFrom: { x: bx, y: by },
+      boxTo: { ...this.player },
+    };
+    this.moveBox(bx, by, this.player.x, this.player.y); // box follows into the old cell
+    this.pushes++; // a pull is a box-move, counted like a push (par parity)
+    this.player = { x: ax, y: ay };
+    this.history.push(record);
+    return true;
+  }
+
   /** True if there is at least one move to undo. */
   canUndo(): boolean {
     return this.history.length > 0;
   }
 
-  /** Reverse the most recent move (and its push, if any). Returns false if none. */
+  /** Reverse the most recent move (push or pull included). Returns false if none. */
   undo(): boolean {
     const record = this.history.pop();
     if (!record) return false;
-    if (record.pushed && record.boxFrom && record.boxTo) {
+    if (record.boxFrom && record.boxTo) {
       this.moveBox(record.boxTo.x, record.boxTo.y, record.boxFrom.x, record.boxFrom.y);
       this.pushes--;
     } else {

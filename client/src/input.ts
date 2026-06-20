@@ -8,6 +8,8 @@ export interface InputHandlers {
   onUndo?: () => void;
   onHint?: () => void;
   onSkip?: () => void;
+  /** Pull in `dir` (the expert mechanic) — bound to Shift + direction. */
+  onPull?: (dir: Dir) => void;
 }
 
 const KEY_TO_DIR: Record<string, Dir> = {
@@ -46,7 +48,8 @@ export function attachInput(handlers: InputHandlers): () => void {
     const dir = KEY_TO_DIR[e.key];
     if (dir) {
       e.preventDefault();
-      handlers.onMove(dir);
+      if (e.shiftKey && handlers.onPull) handlers.onPull(dir);
+      else handlers.onMove(dir);
       return;
     }
     const action: Record<string, (() => void) | undefined> = {

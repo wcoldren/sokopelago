@@ -29,6 +29,15 @@ export const TRAP_ID_BASE = 9_750_300;
 export const TRAP_VARIANTS = ["scramble", "decoy", "reversed"] as const;
 export type TrapVariant = (typeof TRAP_VARIANTS)[number];
 
+// Ability items (band 9_750_400+) — progression, fixed by apworld/sokopelago/Items.py.
+export const ABILITY_BASE = 9_750_400;
+export const PULL_ID = 9_750_400;
+
+/** True if the received item id is the Pull ability (Phase 5 expert tier). */
+export function isPullItem(id: number): boolean {
+  return id === PULL_ID;
+}
+
 export type ValveKind = "skip" | "undo" | "hint" | "trap";
 export interface ValveItem {
   kind: ValveKind;

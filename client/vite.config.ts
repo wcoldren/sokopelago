@@ -1,14 +1,14 @@
 import { defineConfig } from "vitest/config";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
-// The client renders from a single bundled manifest: tools/build_corpus.py bakes the
-// board geometry into apworld/sokopelago/data/microban.json (alongside the solver's
-// par/difficulty/solution fields), so the browser fetches only /data/microban.json.
-// The canonical authoring source stays levels/microban.xsb (the build input).
+// The client renders from bundled per-corpus manifests: tools/build_corpus.py bakes the
+// board geometry into apworld/sokopelago/data/<corpus>.json (alongside the solver's
+// par/difficulty/solution fields), so the browser fetches /data/<corpus>.json (the seed
+// picks the corpus). The canonical authoring sources stay levels/*.xsb (the build input).
 export default defineConfig({
   plugins: [
     viteStaticCopy({
-      targets: [{ src: "../apworld/sokopelago/data/microban.json", dest: "data" }],
+      targets: [{ src: "../apworld/sokopelago/data/*.json", dest: "data" }],
     }),
   ],
   test: {
