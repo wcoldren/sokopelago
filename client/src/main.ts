@@ -44,6 +44,7 @@ const hintBtn = $<HTMLButtonElement>("hint-btn");
 const skipBtn = $<HTMLButtonElement>("skip-btn");
 const pullBtn = $<HTMLButtonElement>("pull-btn");
 const statusEl = $<HTMLDivElement>("status");
+const statsEl = $<HTMLDivElement>("stats");
 const noticeEl = $<HTMLDivElement>("notice");
 const hostInput = $<HTMLInputElement>("ap-host");
 const slotInput = $<HTMLInputElement>("ap-slot");
@@ -72,6 +73,7 @@ let reversedControls = false; // set by a Reversed-Controls trap; cleared on lev
 let pullMode = false; // when on, plain direction input pulls instead of pushing
 let lastUnlockedCount = 0; // # of unlocked worlds last seen — detects a newly-opened world
 const solvedOffline = new Set<number>(); // levels solved this session in free play (no session)
+const solvedOptimalOffline = new Set<number>(); // of those, the ones solved in optimal (par) pushes
 
 const BIG_HINT_PUSHES = 3; // how many extra pushes a "big" hint (Shift+Hint) reveals/animates
 
@@ -117,6 +119,42 @@ function setStatus(text: string, win = false): void {
   statusEl.classList.toggle("win", win);
 }
 
+/** The level title line shown in #status: name + difficulty badge/tier. */
+function levelTitle(target: Level): string {
+  const n = levelNumber(target);
+  const badge = difficultyBadge(n);
+  const tier = difficultyTier(n);
+  return `Level ${target.name}${badge ? `  ${badge}` : ""}${tier ? `  ${tier}` : ""}`;
+}
+
+/** A single labeled metric chip (label + value). */
+function chip(label: string, value: string, cls = ""): HTMLSpanElement {
+  const el = document.createElement("span");
+  el.className = cls ? `chip ${cls}` : "chip";
+  const l = document.createElement("span");
+  l.className = "label";
+  l.textContent = label;
+  el.append(l, document.createTextNode(value));
+  return el;
+}
+
+/** Render the per-move metric chips (moves / pushes / par / eff) for the current level,
+ * so the numbers are scannable instead of crammed into one status line. */
+function renderStats(): void {
+  statsEl.replaceChildren();
+  if (!game) return;
+  const n = levelNumber(game.level);
+  const par = parTarget(n);
+  const eff = effTarget(n);
+  statsEl.append(chip("moves", String(game.moves)));
+  const pushesText = par !== null ? `${game.pushes} / par ${par}` : String(game.pushes);
+  const pushesCls = par !== null && game.pushes <= par ? "par-hit" : "";
+  statsEl.append(chip("pushes", pushesText, pushesCls));
+  if (eff !== null && par !== null && eff > par) {
+    statsEl.append(chip("eff", `≤ ${eff}`));
+  }
+}
+
 let noticeTimer: number | undefined;
 
 /**
@@ -160,8 +198,9 @@ function optionLabel(lvl: Level): string {
   const badge = difficultyBadge(n);
   const base = `${n}. ${lvl.name}${badge ? `  ${badge}` : ""}`;
   if (!slot || !session) {
-    // Solo free-play: still reflect levels solved this session.
-    return solvedOffline.has(n) ? `✓ ${base}` : base;
+    // Solo free-play: reflect solves this session (★ when done in optimal pushes).
+    if (!solvedOffline.has(n)) return base;
+    return `${solvedOptimalOffline.has(n) ? "★" : "✓"} ${base}`;
   }
   if (session.isLevelSolved(n)) return `${solvedMarker(n)} ${base}`;
   // The world's lock state is shown by the <optgroup> label, so options just flag the gate.
@@ -263,23 +302,14 @@ function loadLevel(i: number): void {
   hintBoxMoves = 0;
   reversedControls = false; // a trap's curse lasts only for the level it hit
   renderer.draw(game);
-  const par = parTarget(levelNumber(target));
-  const eff = effTarget(levelNumber(target));
-  const parSuffix =
-    par !== null ? ` — par ${par} pushes${eff !== null && eff > par ? ` (eff ≤${eff})` : ""}` : "";
-  const tier = difficultyTier(levelNumber(target));
-  const diffSuffix = tier ? ` — ${tier}` : "";
-  setStatus(`Level ${game.level.name} — ${game.boxes.length} boxes${parSuffix}${diffSuffix}`);
+  setStatus(levelTitle(target));
+  renderStats();
   updateValveButtons();
 }
 
 function refreshStatus(): void {
   if (!game) return;
-  const par = parTarget(levelNumber(game.level));
-  const eff = effTarget(levelNumber(game.level));
-  const parSuffix =
-    par !== null ? ` / par ${par}${eff !== null && eff > par ? ` (eff ≤${eff})` : ""}` : "";
-  setStatus(`Level ${game.level.name} — moves ${game.moves}, pushes ${game.pushes}${parSuffix}`);
+  renderStats();
   updateValveButtons();
 }
 
@@ -332,8 +362,9 @@ function onSolved(): void {
   }
 
   solvedOffline.add(n);
-  rebuildSelector(); // reflect the ✓ in the dropdown for solo play
   const par = parTarget(n);
+  if (par !== null && game.pushes <= par) solvedOptimalOffline.add(n);
+  rebuildSelector(); // reflect ✓/★ in the dropdown for solo play
   const parNote =
     par !== null ? (game.pushes <= par ? ` ★ optimal (${par} pushes)!` : ` (par ${par})`) : "";
   const hasNext = current < levels.length - 1;

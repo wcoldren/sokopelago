@@ -82,6 +82,32 @@
       #status.win {
         color: #6ee787;
       }
+      /* Per-move metrics as discrete chips, so par/pushes aren't buried in one line. */
+      .stats {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        min-height: 1.8rem;
+      }
+      .chip {
+        background: #20202a;
+        border: 1px solid #33333f;
+        border-radius: 6px;
+        padding: 0.2rem 0.55rem;
+        font-size: 0.9rem;
+        font-variant-numeric: tabular-nums;
+      }
+      .chip .label {
+        opacity: 0.55;
+        margin-right: 0.35rem;
+        font-size: 0.8rem;
+      }
+      /* pushes chip turns green once you're at or under par. */
+      .chip.par-hit {
+        color: #6ee787;
+        border-color: #2f6b3f;
+      }
       #conn-status {
         font-size: 0.85rem;
         opacity: 0.85;
@@ -168,6 +194,7 @@
     <canvas id="board" width="640" height="480"></canvas>
 
     <div id="status"></div>
+    <div id="stats" class="stats"></div>
     <div id="notice"></div>
     <div class="hint">
       Move: arrow keys or WASD &nbsp;·&nbsp; Pull: Shift + direction &nbsp;·&nbsp; Restart: R
