@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { nextMove, parseSolution, replaySolutionPrefix } from "../src/solution";
+import { nextMove, parseSolution, replaySolutionPrefix, revealCount } from "../src/solution";
 import { parseXsb } from "../src/xsb";
 import { Game } from "../src/board";
 
@@ -95,5 +95,25 @@ describe("solution — replaySolutionPrefix", () => {
     expect(replaySolutionPrefix(pullLevel, parseSolution("PR"), 1)).toBe(1);
     expect(pullLevel.boxAt(2, 1)).toBe(true); // pulled onto the goal
     expect(pullLevel.isWin()).toBe(true);
+  });
+});
+
+describe("solution — revealCount", () => {
+  it("adds the tier's moves to the current index", () => {
+    expect(revealCount(0, 1, 10)).toBe(1); // small hint: one more move
+    expect(revealCount(2, 3, 10)).toBe(5); // big hint: three more
+  });
+
+  it("never reveals the final (winning) move — caps at solutionLen - 1", () => {
+    expect(revealCount(0, 3, 4)).toBe(3); // 4-move solution caps at 3
+    expect(revealCount(3, 3, 4)).toBe(3); // already at the cap → no change
+  });
+
+  it("clamps cleanly on tiny solutions (the old off-by-one cases)", () => {
+    // 1-move solution: nothing to reveal but the winning move → stays at 0.
+    expect(revealCount(0, 1, 1)).toBe(0);
+    // 2-move solution: can reveal the first move, never the second (winning) one.
+    expect(revealCount(0, 1, 2)).toBe(1);
+    expect(revealCount(1, 1, 2)).toBe(1);
   });
 });

@@ -13,7 +13,12 @@ import { effectiveDir, type Dir, type Level } from "./types";
 import { Session, loadPrefs, type SessionCallbacks } from "./ap/session";
 import { parForLevel, difficultyForLevel, type SlotData } from "./ap/slotData";
 import type { TrapVariant } from "./ap/ids";
-import { parseSolution, replaySolutionPrefix } from "./solution";
+import {
+  parseSolution,
+  revealCount,
+  animateSolutionPrefix,
+  type AnimationHandle,
+} from "./solution";
 
 const DEFAULT_CORPUS = "microban";
 // Base-relative so the fetch resolves under whatever path the site is served from
@@ -58,8 +63,14 @@ let game: Game | null = null;
 let current = 0;
 let locked = false; // briefly true between solving and auto-advancing
 let hintIndex = 0; // solution moves revealed on the current level
+let hintAnim: AnimationHandle | null = null; // in-flight hint playback (cancelled on level change)
+let animating = false; // input blocked during a hint animation; never persists past it
 let reversedControls = false; // set by a Reversed-Controls trap; cleared on level change
 let pullMode = false; // when on, plain direction input pulls instead of pushing
+let lastUnlockedCount = 0; // # of unlocked worlds last seen — detects a newly-opened world
+const solvedOffline = new Set<number>(); // levels solved this session in free play (no session)
+
+const BIG_HINT_MOVES = 3; // how many extra moves a "big" hint (Shift+Hint) reveals/animates
 
 let session: Session | null = null;
 let slot: SlotData | null = null; // non-null once connected (AP mode)
@@ -122,31 +133,48 @@ function shownLevels(): Level[] {
   return slot.levels.map((n) => levels[n - 1]).filter((l): l is Level => Boolean(l));
 }
 
+// Option markers — see the legend under the board: ★ par, ✓ solved, 🔒 locked, ◆ difficulty.
 function optionLabel(lvl: Level): string {
   const n = levelNumber(lvl);
   const badge = difficultyBadge(n);
   const base = `${n}. ${lvl.name}${badge ? `  ${badge}` : ""}`;
   if (!slot || !session) return base;
   if (session.isLevelSolved(n)) return `${session.isLevelPar(n) ? "★" : "✓"} ${base}`;
-  if (!session.isLevelUnlocked(n)) {
-    return `🔒 ${base} — World ${session.worldForLevel(n)} (locked)`;
-  }
-  if (session.needsPull(n) && !session.canPull) {
-    return `🔒 ${base} — needs Pull`;
-  }
+  // The world's lock state is shown by the <optgroup> label, so options just flag the gate.
+  if (!session.isLevelUnlocked(n)) return `🔒 ${base}`;
+  if (session.needsPull(n) && !session.canPull) return `🔒 ${base} (needs Pull)`;
   return base;
+}
+
+function makeOption(lvl: Level): HTMLOptionElement {
+  const opt = document.createElement("option");
+  opt.value = String(lvl.index);
+  opt.textContent = optionLabel(lvl);
+  if (slot && session && !session.isLevelPlayable(levelNumber(lvl))) opt.disabled = true;
+  return opt;
 }
 
 function rebuildSelector(): void {
   select.innerHTML = "";
-  for (const lvl of shownLevels()) {
-    const opt = document.createElement("option");
-    opt.value = String(lvl.index);
-    opt.textContent = optionLabel(lvl);
-    if (slot && session && !session.isLevelPlayable(levelNumber(lvl))) {
-      opt.disabled = true;
+  const shown = shownLevels();
+  if (slot && session) {
+    // Group levels by world so the key/world structure is obvious at a glance.
+    const byWorld = new Map<number, Level[]>();
+    for (const lvl of shown) {
+      const w = session.worldForLevel(levelNumber(lvl)) ?? 0;
+      const arr = byWorld.get(w);
+      if (arr) arr.push(lvl);
+      else byWorld.set(w, [lvl]);
     }
-    select.appendChild(opt);
+    for (const w of [...byWorld.keys()].sort((a, b) => a - b)) {
+      const group = document.createElement("optgroup");
+      const open = session.unlockedWorlds.has(w);
+      group.label = `World ${w}${open ? "" : " — 🔒 key needed"}`;
+      for (const lvl of byWorld.get(w)!) group.appendChild(makeOption(lvl));
+      select.appendChild(group);
+    }
+  } else {
+    for (const lvl of shown) select.appendChild(makeOption(lvl));
   }
   if (game) select.value = String(current);
   updateValveButtons();
@@ -160,6 +188,30 @@ function nextPlayable(afterN: number): Level | null {
   );
   if (playable.length === 0) return null;
   return playable.find((l) => levelNumber(l) > afterN) ?? playable[0];
+}
+
+/**
+ * Session state changed (item received, token consumed, etc.). Rebuild the selector, and
+ * if a *new world just unlocked* while the player is parked on a solved level (the
+ * dead-end case the freeze fix leaves interactive), pull them into the newly-open world so
+ * they can keep going without hunting through the dropdown.
+ */
+function onSessionUpdate(): void {
+  rebuildSelector();
+  if (!slot || !session || !game) {
+    lastUnlockedCount = session?.unlockedWorlds.size ?? 0;
+    return;
+  }
+  const unlocked = session.unlockedWorlds.size;
+  const newlyOpened = unlocked > lastUnlockedCount;
+  lastUnlockedCount = unlocked;
+  if (newlyOpened && !locked && !animating && session.isLevelSolved(levelNumber(game.level))) {
+    const next = nextPlayable(levelNumber(game.level));
+    if (next) {
+      notice(`A new world is open — jumping to level ${levelNumber(next)}.`, { win: true });
+      loadLevel(next.index);
+    }
+  }
 }
 
 // --- Play loop -------------------------------------------------------------
@@ -177,6 +229,9 @@ function loadLevel(i: number): void {
     select.value = String(current);
     return;
   }
+  hintAnim?.cancel(); // stop any in-flight hint playback from mutating the new board
+  hintAnim = null;
+  animating = false;
   current = i;
   select.value = String(current);
   game = new Game(target);
@@ -200,14 +255,18 @@ function refreshStatus(): void {
   updateValveButtons();
 }
 
+/** Whether level `n` is already marked solved (AP session, or this session's free play). */
+function alreadySolved(n: number): boolean {
+  return slot && session ? session.isLevelSolved(n) : solvedOffline.has(n);
+}
+
 function onSolved(): void {
   if (!game) return;
-  locked = true;
   const lvl = game.level;
   const solved = lvl.name;
+  const n = levelNumber(lvl);
 
   if (slot && session) {
-    const n = levelNumber(lvl);
     session.reportSolved(n, game.pushes);
     rebuildSelector(); // mark the just-solved option
     const par = parTarget(n);
@@ -221,13 +280,22 @@ function onSolved(): void {
     notice(
       next
         ? `Solved ${solved}! (${game.moves} moves, ${game.pushes} pushes)${parNote} → next…`
-        : `Solved ${solved}! (${game.pushes} pushes)${parNote} No more playable levels right now — open a world or check your goal.`,
+        : `Solved ${solved}! (${game.pushes} pushes)${parNote} No more playable levels right now — open a world (or wait for a key) and you can keep going.`,
       { win: true },
     );
-    if (next) window.setTimeout(() => loadLevel(next.index), 1100);
+    // Only hold the board locked during the brief auto-advance beat. With no next level,
+    // leave it interactive so the player isn't trapped on a solved board (a later World
+    // Key, the selector, or Restart all still work).
+    if (next) {
+      locked = true;
+      window.setTimeout(() => loadLevel(next.index), 1100);
+    } else {
+      locked = false;
+    }
     return;
   }
 
+  solvedOffline.add(n);
   const hasNext = current < levels.length - 1;
   notice(
     hasNext
@@ -235,7 +303,12 @@ function onSolved(): void {
       : `Solved ${solved}! That's the last level. 🎉`,
     { win: true },
   );
-  if (hasNext) window.setTimeout(() => loadLevel(current + 1), 1100);
+  if (hasNext) {
+    locked = true;
+    window.setTimeout(() => loadLevel(current + 1), 1100);
+  } else {
+    locked = false;
+  }
 }
 
 /** Whether the pull mechanic is usable now: always offline; gated by the Pull ability
@@ -245,32 +318,37 @@ function canPullNow(): boolean {
 }
 
 function move(dir: Dir): void {
-  if (!game || locked) return;
+  if (!game || locked || animating) return;
   if (pullMode) {
     pull(dir);
     return;
   }
   if (!game.move(effectiveDir(dir, reversedControls))) return;
   renderer.draw(game);
-  if (game.isWin()) onSolved();
+  // Don't re-fire the solve flow if this level is already solved (e.g. nudging a box off
+  // and back onto a goal on a dead-end board) — that would re-spam notices / re-lock.
+  if (game.isWin() && !alreadySolved(levelNumber(game.level))) onSolved();
   else refreshStatus();
 }
 
 /** Pull a box that's directly behind the player (the expert mechanic). */
 function pull(dir: Dir): void {
-  if (!game || locked) return;
+  if (!game || locked || animating) return;
   if (!canPullNow()) {
     notice("The Pull ability is needed here — find it in the multiworld.");
     return;
   }
   if (!game.pull(effectiveDir(dir, reversedControls))) return;
   renderer.draw(game);
-  if (game.isWin()) onSolved();
+  if (game.isWin() && !alreadySolved(levelNumber(game.level))) onSolved();
   else refreshStatus();
 }
 
 function restart(): void {
   if (!game) return;
+  hintAnim?.cancel(); // a manual restart cancels any hint playback
+  hintAnim = null;
+  animating = false;
   game.restart();
   locked = false;
   renderer.draw(game);
@@ -281,7 +359,7 @@ function restart(): void {
 
 /** Undo the last move. Free offline; consumes an Undo Charge when connected. */
 function undo(): void {
-  if (!game || locked || !game.canUndo()) return;
+  if (!game || locked || animating || !game.canUndo()) return;
   if (slot && session && !session.useUndo()) {
     notice("No Undo Charges available.");
     return;
@@ -292,10 +370,24 @@ function undo(): void {
   }
 }
 
-/** Reveal the next solution move by replaying a restart-aligned prefix. Free in solo
- * play; consumes a Hint Token when connected (mirrors Undo). */
+/** Small hint: reveal one more solution move (the Hint button / H). */
 function useHint(): void {
-  if (!game || locked) return;
+  runHint(1);
+}
+
+/** Big hint: reveal several more moves at once (Shift+Hint / Shift+H), costing more tokens. */
+function useBigHint(): void {
+  runHint(BIG_HINT_MOVES);
+}
+
+/**
+ * Reveal `tierMoves` more solution moves by restarting the board and *animating* the
+ * optimal line from the start, one move at a time. Free in solo play; consumes one Hint
+ * Token per move revealed when connected (so a bigger hint costs more). Never plays the
+ * final winning move — the player finishes it themselves.
+ */
+function runHint(tierMoves: number): void {
+  if (!game || locked || animating) return;
   const n = levelNumber(game.level);
   const solution = solutions.get(n);
   if (!solution) {
@@ -303,24 +395,42 @@ function useHint(): void {
     return;
   }
   const moves = parseSolution(solution);
-  if (hintIndex >= moves.length - 1) {
+  const target = revealCount(hintIndex, tierMoves, moves.length);
+  if (target <= hintIndex) {
     notice("Hint: you're at the final step — finish it yourself! 🙂");
     return;
   }
-  if (slot && session && !session.useHint()) {
-    notice("No Hint Tokens available.");
-    return;
+  const cost = target - hintIndex; // one token per newly-revealed move (AP mode)
+  if (slot && session) {
+    if (session.available.hint < cost) {
+      notice(`Not enough Hint Tokens — need ${cost}, have ${session.available.hint}.`);
+      return;
+    }
+    for (let i = 0; i < cost; i++) session.useHint();
   }
-  hintIndex += 1;
-  replaySolutionPrefix(game, moves, hintIndex); // realign to the solution line, replay the prefix
-  renderer.draw(game);
-  setStatus(`Hint: replayed ${hintIndex}/${moves.length} solution moves.`);
-  updateValveButtons();
+  hintIndex = target;
+  const total = moves.length;
+  animating = true;
+  updateValveButtons(); // reflect the spent tokens + disable controls during playback
+  const g = game;
+  hintAnim = animateSolutionPrefix(g, moves, hintIndex, {
+    stepMs: 280,
+    onStep: () => {
+      renderer.draw(g);
+      setStatus(`Hint: replaying ${hintIndex} of ${total} solution moves…`);
+    },
+    onDone: () => {
+      animating = false;
+      hintAnim = null;
+      setStatus(`Hint: showing the first ${hintIndex} of ${total} solution moves. Your move!`);
+      updateValveButtons();
+    },
+  });
 }
 
 /** Consume a Skip Token to clear the current level (sends its check), then advance. */
 function useSkip(): void {
-  if (!game || !slot || !session) return;
+  if (!game || animating || !slot || !session) return;
   const n = levelNumber(game.level);
   if (!session.useSkip(n)) {
     notice("No Skip Tokens available (or already solved).");
@@ -370,25 +480,27 @@ function updateValveButtons(): void {
   if (pullRelevant) {
     const usable = canPullNow();
     if (!usable) pullMode = false;
-    pullBtn.disabled = !usable || locked;
+    pullBtn.disabled = !usable || locked || animating;
     pullBtn.textContent = usable ? `Pull: ${pullMode ? "on" : "off"}` : "Pull (find it)";
   }
 
-  const canUndo = Boolean(game?.canUndo()) && !locked;
+  const busy = locked || animating;
+  const canUndo = Boolean(game?.canUndo()) && !busy;
+  const hasHint = Boolean(game && solutions.has(levelNumber(game.level)));
   if (ap && session) {
     const a = session.available;
     undoBtn.textContent = `Undo (${a.undo})`;
     undoBtn.disabled = !canUndo || a.undo <= 0;
     hintBtn.textContent = `Hint (${a.hint})`;
-    hintBtn.disabled = a.hint <= 0 || locked;
+    hintBtn.disabled = a.hint <= 0 || busy || !hasHint;
     skipBtn.textContent = `Skip (${a.skip})`;
     skipBtn.disabled =
-      a.skip <= 0 || locked || (game ? session.isLevelSolved(levelNumber(game.level)) : true);
+      a.skip <= 0 || busy || (game ? session.isLevelSolved(levelNumber(game.level)) : true);
   } else {
     undoBtn.textContent = "Undo";
     undoBtn.disabled = !canUndo;
     hintBtn.textContent = "Hint";
-    hintBtn.disabled = locked || !game || !solutions.has(levelNumber(game.level));
+    hintBtn.disabled = busy || !hasHint;
   }
 }
 
@@ -398,6 +510,7 @@ function handleDisconnect(): void {
   session = null;
   slot = null;
   pullMode = false;
+  lastUnlockedCount = 0;
   connectBtn.textContent = "Connect";
   connectBtn.disabled = false;
   setConnStatus("Disconnected — free play (all levels).");
@@ -426,6 +539,7 @@ async function onConnectedReady(s: SlotData): Promise<void> {
       setConnStatus(`Connected, but couldn't load corpus "${s.corpus}": ${msg(e)}`, "err");
     }
   }
+  lastUnlockedCount = session?.unlockedWorlds.size ?? 0; // baseline so connect doesn't auto-jump
   rebuildSelector();
   const first = nextPlayable(0);
   if (first) loadLevel(first.index);
@@ -453,7 +567,7 @@ async function connect(): Promise<void> {
       );
       void onConnectedReady(s);
     },
-    onUpdate: () => rebuildSelector(),
+    onUpdate: onSessionUpdate,
     onGoal: () => setConnStatus(`Goal complete! 🏆 (${slot?.goal})`, "ok"),
     onMessage: (text) => notice(text),
     onTrap: (variant) => triggerTrap(variant),
@@ -505,7 +619,8 @@ async function main(): Promise<void> {
   select.addEventListener("change", () => loadLevel(Number(select.value)));
   restartBtn.addEventListener("click", restart);
   undoBtn.addEventListener("click", undo);
-  hintBtn.addEventListener("click", useHint);
+  // Shift-click (or Shift+H) is a bigger hint: more moves animated for more tokens.
+  hintBtn.addEventListener("click", (e) => runHint(e.shiftKey ? BIG_HINT_MOVES : 1));
   skipBtn.addEventListener("click", useSkip);
   pullBtn.addEventListener("click", togglePull);
   connectBtn.addEventListener("click", onConnectClick);
@@ -514,6 +629,7 @@ async function main(): Promise<void> {
     onRestart: restart,
     onUndo: undo,
     onHint: useHint,
+    onBigHint: useBigHint,
     onSkip: useSkip,
     onPull: pull,
   });

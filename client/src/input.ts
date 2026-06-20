@@ -1,4 +1,5 @@
-// Keyboard input: arrow keys / WASD to move, R restart, U undo, H hint, K skip.
+// Keyboard input: arrow keys / WASD to move, R restart, U undo, H hint (Shift+H = bigger
+// hint), K skip.
 
 import type { Dir } from "./types";
 
@@ -7,6 +8,8 @@ export interface InputHandlers {
   onRestart: () => void;
   onUndo?: () => void;
   onHint?: () => void;
+  /** Bigger hint (more moves) — bound to Shift + H. */
+  onBigHint?: () => void;
   onSkip?: () => void;
   /** Pull in `dir` (the expert mechanic) — bound to Shift + direction. */
   onPull?: (dir: Dir) => void;
@@ -52,10 +55,16 @@ export function attachInput(handlers: InputHandlers): () => void {
       else handlers.onMove(dir);
       return;
     }
+    // Hint is Shift-sensitive: Shift+H asks for a bigger hint.
+    if (e.key.toLowerCase() === "h") {
+      e.preventDefault();
+      if (e.shiftKey && handlers.onBigHint) handlers.onBigHint();
+      else handlers.onHint?.();
+      return;
+    }
     const action: Record<string, (() => void) | undefined> = {
       r: handlers.onRestart,
       u: handlers.onUndo,
-      h: handlers.onHint,
       k: handlers.onSkip,
     };
     const handler = action[e.key.toLowerCase()];

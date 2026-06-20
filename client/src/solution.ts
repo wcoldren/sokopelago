@@ -59,3 +59,62 @@ export function replaySolutionPrefix(game: Game, moves: Move[], count: number): 
   }
   return applied;
 }
+
+/**
+ * How many solution moves a Hint should have revealed after adding `tierMoves` more,
+ * starting from `currentIndex`. Clamped so a Hint never plays the final *winning* move
+ * (which would auto-solve the level and send its check) — the cap is `solutionLen - 1`.
+ * Returns a count in `[currentIndex, max(0, solutionLen - 1)]`; a result equal to
+ * `currentIndex` means there is nothing new to reveal (you're at the final step).
+ */
+export function revealCount(currentIndex: number, tierMoves: number, solutionLen: number): number {
+  const cap = Math.max(0, solutionLen - 1);
+  return Math.min(cap, Math.max(currentIndex, currentIndex + tierMoves));
+}
+
+/** Cancel handle for an in-flight {@link animateSolutionPrefix} playback. */
+export interface AnimationHandle {
+  cancel: () => void;
+}
+
+/**
+ * Realign the board to the solution line (restart) and animate its first `count` moves,
+ * one per `stepMs`, calling `onStep` after the reset and after each applied move (the
+ * caller redraws there). Returns a handle whose `cancel()` stops further steps — call it
+ * when the level changes so a stale animation can't keep mutating a new board. `onDone`
+ * fires after the final step (not on cancel).
+ */
+export function animateSolutionPrefix(
+  game: Game,
+  moves: Move[],
+  count: number,
+  opts: { onStep: () => void; onDone?: () => void; stepMs?: number },
+): AnimationHandle {
+  const stepMs = opts.stepMs ?? 280;
+  const applied = Math.max(0, Math.min(count, moves.length));
+  game.restart();
+  opts.onStep(); // draw the reset board before the first move
+  let i = 0;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let cancelled = false;
+  const tick = (): void => {
+    if (cancelled) return;
+    if (i >= applied) {
+      opts.onDone?.();
+      return;
+    }
+    const m = moves[i];
+    if (m.pull) game.pull(m.dir);
+    else game.move(m.dir);
+    i += 1;
+    opts.onStep();
+    timer = setTimeout(tick, stepMs);
+  };
+  timer = setTimeout(tick, stepMs);
+  return {
+    cancel: () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    },
+  };
+}
