@@ -46,12 +46,14 @@ fi
 if [ -f client/package.json ]; then
   if [ -d client/node_modules ]; then
     section "client: lint / format:check / typecheck / depcruise"
+    # --if-present skips a script a given branch doesn't define yet (e.g. depcruise predates the
+    # POTD branch), so the same hook works on every branch without false failures.
     (
       cd client &&
-        npm run --silent lint &&
-        npm run --silent format:check &&
-        npm run --silent typecheck &&
-        npm run --silent depcruise
+        npm run --silent --if-present lint &&
+        npm run --silent --if-present format:check &&
+        npm run --silent --if-present typecheck &&
+        npm run --silent --if-present depcruise
     ) || {
       echo "  ✗ client checks — fix formatting with: (cd client && npm run format)"
       fail=1
@@ -64,7 +66,7 @@ fi
 # --- Worker (typecheck) ----------------------------------------------------
 if [ -f server/potd-worker/package.json ] && [ -d server/potd-worker/node_modules ]; then
   section "worker: typecheck"
-  (cd server/potd-worker && npm run --silent typecheck) || fail=1
+  (cd server/potd-worker && npm run --silent --if-present typecheck) || fail=1
 fi
 
 if [ "$fail" -ne 0 ]; then
