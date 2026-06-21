@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sokopelago — Puzzle of the Day</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        background: #1a1a1f;
+        color: #e6e6ea;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem;
+      }
+      header {
+        text-align: center;
+      }
+      h1 {
+        margin: 0 0 0.25rem;
+        font-size: 1.4rem;
+      }
+      .toolbar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .panel {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
+        background: #20202a;
+        border: 1px solid #33333f;
+        border-radius: 8px;
+        padding: 0.6rem 0.8rem;
+        width: min(640px, 100%);
+        box-sizing: border-box;
+      }
+      button,
+      input {
+        font: inherit;
+        background: #2a2a33;
+        color: inherit;
+        border: 1px solid #44444f;
+        border-radius: 6px;
+        padding: 0.35rem 0.6rem;
+      }
+      input {
+        width: 12rem;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      #board {
+        background: #111;
+        border-radius: 8px;
+        image-rendering: pixelated;
+      }
+      #puzzle-title {
+        font-weight: 600;
+        opacity: 0.9;
+      }
+      #status {
+        min-height: 1.4rem;
+        font-weight: 600;
+      }
+      #status.win {
+        color: #6ee787;
+      }
+      .stats {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        min-height: 1.8rem;
+      }
+      .chip {
+        background: #20202a;
+        border: 1px solid #33333f;
+        border-radius: 6px;
+        padding: 0.2rem 0.55rem;
+        font-size: 0.9rem;
+        font-variant-numeric: tabular-nums;
+      }
+      .chip .label {
+        opacity: 0.55;
+        margin-right: 0.35rem;
+        font-size: 0.8rem;
+      }
+      #notice {
+        min-height: 1.3rem;
+        font-size: 0.95rem;
+        color: #ffd479;
+        transition: opacity 0.4s;
+      }
+      #notice.fading {
+        opacity: 0;
+      }
+      .hint {
+        opacity: 0.6;
+        font-size: 0.85rem;
+      }
+      /* Rating panel: two 1–5 scales (fun, difficulty). */
+      #rate-panel {
+        flex-direction: column;
+        gap: 0.6rem;
+        align-items: stretch;
+      }
+      .scale {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        justify-content: space-between;
+      }
+      .scale-label {
+        font-size: 0.9rem;
+      }
+      .scale-group {
+        display: flex;
+        gap: 0.35rem;
+      }
+      .scale-btn {
+        min-width: 2.2rem;
+        font-variant-numeric: tabular-nums;
+      }
+      .scale-btn.picked {
+        border-color: #6e8bff;
+        background: #2f3550;
+        font-weight: 600;
+      }
+      #rate-status {
+        font-size: 0.85rem;
+        opacity: 0.85;
+        min-height: 1.1rem;
+      }
+      /* Results histogram. */
+      .hist {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        margin-top: 0.4rem;
+      }
+      .bar-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-variant-numeric: tabular-nums;
+        font-size: 0.85rem;
+      }
+      .bar-label {
+        width: 2.5rem;
+        text-align: right;
+        opacity: 0.7;
+      }
+      .bar {
+        height: 0.8rem;
+        background: #6e8bff;
+        border-radius: 3px;
+        min-width: 2px;
+      }
+      .bar-count {
+        opacity: 0.7;
+      }
+      .disclaimer {
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+        color: #e8c479;
+        border: 1px solid #5a4a1f;
+        background: #2a2410;
+        border-radius: 6px;
+        padding: 0.4rem 0.6rem;
+        width: min(640px, 100%);
+        box-sizing: border-box;
+        text-align: center;
+      }
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Sokopelago — Puzzle of the Day</h1>
+      <div class="hint">
+        One Microban puzzle a day, the same for everyone. Rate it when you're done.
+      </div>
+      <div id="puzzle-title"></div>
+    </header>
+
+    <div class="panel">
+      <label for="handle-input" class="hint">Handle</label>
+      <input id="handle-input" type="text" maxlength="32" placeholder="a name (no personal info)" />
+      <button id="handle-save">Save</button>
+      <span class="hint">Used to label your rating — self-chosen, no accounts.</span>
+    </div>
+
+    <canvas id="board" width="640" height="480"></canvas>
+
+    <div id="status"></div>
+    <div id="stats" class="stats"></div>
+    <div id="notice"></div>
+
+    <div class="toolbar">
+      <button id="restart-btn" title="Restart (R)">Restart</button>
+      <button id="undo-btn" title="Undo (U)">Undo</button>
+      <button id="hint-btn" title="Hint (H)">Hint</button>
+      <button id="giveup-btn" title="Give up and rate">Give up</button>
+    </div>
+
+    <div id="rate-panel" class="panel" hidden>
+      <div class="scale">
+        <span class="scale-label">How <strong>fun</strong> was it?</span>
+        <div id="fun-group" class="scale-group"></div>
+      </div>
+      <div class="scale">
+        <span class="scale-label">How <strong>hard</strong> was it?</span>
+        <div id="diff-group" class="scale-group"></div>
+      </div>
+      <button id="rate-submit" disabled>Submit rating</button>
+      <div id="rate-status"></div>
+    </div>
+
+    <div class="panel">
+      <div style="width: 100%">
+        <div class="scale-label" style="margin-bottom: 0.4rem">Today's results</div>
+        <div id="results" class="hint">Loading…</div>
+      </div>
+    </div>
+
+    <div class="hint">
+      Move: arrow keys or WASD &nbsp;·&nbsp; Restart: R &nbsp;·&nbsp; Undo: U &nbsp;·&nbsp; Hint: H
+    </div>
+
+    <div class="disclaimer">
+      ⚠ <strong>Alpha.</strong> Ratings feed a future fun/difficulty model. No accounts, no personal
+      data — just the self-chosen handle above.
+    </div>
+
+    <footer class="hint">
+      Levels: <strong>Microban</strong> by David W. Skinner, used with credit per his
+      free-distribution terms.
+    </footer>
+
+    <script type="module" src="/src/potd.ts"></script>
+  </body>
+</html>
