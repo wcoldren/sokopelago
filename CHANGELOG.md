@@ -23,10 +23,9 @@ out of order. The project label moves from beta to **alpha** to match. No new lo
   appears. New **`Chain Group`** option tunes the steepness (lower = steeper; a large value
   flattens back to the classic single-key star). The effective chain depth is bounded for fill
   robustness (a pure `effective_floor_schedule` in `layout.py`).
-- **Pull-item late placement** (expert tier): when Pull Logic gates levels, the **Pull item** is
-  restricted to a late, non-pull-gated sphere so it can't trivialise early push puzzles. Implemented
-  with a no-eligible-host fallback that can never make a seed unfillable; dormant with the current
-  10-level pullban corpus (see `docs/DESIGN-pull-corpus.md`, a planned `0.7.1` follow-up).
+- **Expanded `pullban` expert corpus**: 10 → **30 levels** (pull-gated fraction 60% → 30%), all
+  offline-solver-verified. The extra push-solvable hosts make expert (Pull Logic) seeds fill
+  reliably (was 5–100% failures at small region sizes → now ~0). See `docs/DESIGN-pull-corpus.md`.
 - **`tools/preview_layout.py`**: prints a seed's world layout + per-world key-count floors for a
   given option set (a pure tuning aid).
 - `slot_data` now ships `chain_floors` (resolved per-world floors) and `boss_all_keys`; the browser

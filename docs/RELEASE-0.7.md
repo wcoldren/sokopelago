@@ -107,16 +107,14 @@ These refine the spec above; where they differ, **these win** (the code follows 
    regression in those goals. This is the conservative reading of "keep solve_count /
    boss_level experimental."
 
-3. **Pull-item floor is conservative with a fallback.** `pull_floor = max(1,
-   (region_count-1)//2)`. A solve location is Pull-eligible iff it is in a body world at or
-   above that floor, is **not** the boss world, and is **not** itself pull-gated. If no
-   eligible host exists, the floor is **disabled** (Pull places anywhere reachable, as in
-   0.6) rather than risk an unfillable seed. "requires_pull" (a level-access gate) is
-   decoupled in code/comments from the Pull-item placement floor. **Note:** with the shipped
-   10-level pullban corpus (60% pull-gated) the floor stays in its disabled fallback (no
-   eligible late host) — it is implemented and safe but **dormant** until the corpus is
-   augmented. See `docs/DESIGN-pull-corpus.md` (planned `0.7.1` follow-up) for the corpus fix
-   that activates it and makes pull seeds robustly fillable at all region sizes.
+3. **Pull-item late placement — built, then REMOVED (superseded).** A floor restricting where
+   the Pull item could land was implemented, but expanding the pullban corpus (the
+   `docs/DESIGN-pull-corpus.md` follow-up, done same day) revealed that *any* filler-based
+   restriction on Pull leaves a fill-failure tail (1–42%). The actual fix for the original
+   concern (fragile pull seeds) turned out to be the **bigger, host-heavier corpus**, which fills
+   at ~0% on its own. So the gate was dropped: **Pull is a normal shuffleable progression item**
+   again (still required to win, still gates `requires_pull` levels). A genuine "acquire Pull
+   late" guarantee is deferred to a future fill-safe mechanism — see `docs/DESIGN-pull-corpus.md`.
 
 4. **`tools/preview_layout.py` will be built** (minimal, pure, no AP imports) for the
    section-4 tuning — it does not exist yet.

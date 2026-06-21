@@ -17,7 +17,6 @@ from typing import Any
 from BaseClasses import LocationProgressType, Region
 from Options import OptionError
 from worlds.AutoWorld import WebWorld, World
-from worlds.generic.Rules import add_item_rule
 
 from .corpus import CorpusData, load_corpus_data
 from .Items import (
@@ -84,8 +83,6 @@ class SokopelagoWorld(World):
     boss_level: int
     pull_logic: bool
     pull_levels: set[int]  # seed levels hard-gated behind the Pull ability (pull-logic only)
-    _pull_floor: int  # min keys held before a location may host the Pull *item*
-    _pull_item_floor_active: bool  # whether the Pull *item* late-placement floor is applied
 
     def generate_early(self) -> None:
         self.corpus_data = load_corpus_data(self.options.corpus.current_key)
@@ -148,7 +145,6 @@ class SokopelagoWorld(World):
         # Pull Logic: hard-gate the seed's pull-required levels behind the Pull item.
         self.pull_logic = bool(self.options.pull_logic.value)
         self.pull_levels = {n for n in levels if n in self.corpus_data.requires_pull} if self.pull_logic else set()
-        self._pull_item_floor_active = False  # resolved in create_regions once floors are known
 
     def create_regions(self) -> None:
         menu = Region("Menu", self.player, self.multiworld)
@@ -165,25 +161,12 @@ class SokopelagoWorld(World):
         all_keys = tuple(world_key_name(n) for n in range(2, self.region_count + 1))
         floors = self._effective_floors()
 
-        # Pull *item* late-placement floor (decoupled from any level's requires_pull access
-        # gate): the Pull item may only land in a deep, non-pull-gated body world, so it is
-        # acquired in a late sphere. The floor is the deepest body-world key-count (so it tracks
-        # the actual chain depth, which the depth cap keeps modest) — Pull then sits in the
-        # deepest reachable non-boss tier. Disabled when chaining is off or no eligible host
-        # exists, so the constraint can never make a seed unfillable.
-        body_floors = floors[1:-1]  # worlds 2..N-1 (exclude free World 1 and the boss)
-        self._pull_floor = max(1, max(body_floors, default=0))
-        self._pull_item_floor_active = bool(
-            self.pull_logic and self.pull_levels and chained and self._has_pull_item_host(floors)
-        )
-
         for i, level_ns in enumerate(self.worlds, start=1):
             region = Region(f"World {i}", self.player, self.multiworld)
             for n in level_ns:
                 loc_name = solve_location_name(n)
                 loc = SokopelagoLocation(self.player, loc_name, location_table[loc_name], region)
                 self._apply_pull_gate(loc, n)
-                self._apply_pull_item_floor(loc, i, n, floors)
                 region.locations.append(loc)
                 if par_checks:
                     # The par/efficiency locations share the region's key gate, but are
@@ -241,32 +224,6 @@ class SokopelagoWorld(World):
         """Gate a pull-required level's location behind the Pull item (expert logic)."""
         if n in self.pull_levels:
             loc.access_rule = lambda state, p=self.player: state.has(PULL_NAME, p)
-
-    def _pull_item_host_eligible(self, world_index: int, n: int, floors: list[int]) -> bool:
-        """Whether a solve location may host the Pull *item*: a deep-enough body world
-        (key-count floor >= ``_pull_floor``), not the all-keys boss world, and not itself a
-        pull-gated level (which would self-gate the item). Independent of the level's own
-        difficulty/requires_pull — this is purely a placement-depth constraint."""
-        return (
-            floors[world_index - 1] >= self._pull_floor
-            and world_index != self.region_count
-            and n not in self.pull_levels
-        )
-
-    def _has_pull_item_host(self, floors: list[int]) -> bool:
-        """Whether at least one Pull-item-eligible solve location exists. When none does, the
-        late-placement floor is disabled rather than risk an unfillable seed."""
-        return any(
-            self._pull_item_host_eligible(i, n, floors)
-            for i, level_ns in enumerate(self.worlds, start=1)
-            for n in level_ns
-        )
-
-    def _apply_pull_item_floor(self, loc: SokopelagoLocation, world_index: int, n: int, floors: list[int]) -> None:
-        """Forbid the Pull *item* from this location unless it is an eligible late host, so
-        Pull is acquired only in a deep sphere. No-op unless the floor is active."""
-        if self._pull_item_floor_active and not self._pull_item_host_eligible(world_index, n, floors):
-            add_item_rule(loc, lambda item: item.name != PULL_NAME)
 
     def _add_excluded_check(self, region: Region, name: str, table: dict[str, int], n: int) -> None:
         """Attach a filler-only (EXCLUDED) skill check (par/efficiency) for level ``n``,

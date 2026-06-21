@@ -266,6 +266,14 @@ class TestPullbanManifest:
         assert pull, "no pull-gated levels"
         assert hosts, "no push-solvable host levels (Pull item would be unplaceable)"
 
+    def test_corpus_is_host_heavy_for_fillability(self):
+        # The 0.7.1 expansion keeps the pull-gated fraction well under half so pull seeds have
+        # plenty of host locations and fill reliably (a high pull ratio starves the filler).
+        data = json.loads(self.PULLBAN.read_text())
+        assert len(data) >= 24, "expanded pull corpus should be sizable"
+        pull_fraction = sum(bool(e.get("requires_pull")) for e in data) / len(data)
+        assert pull_fraction < 0.5, f"pull-gated fraction {pull_fraction:.2f} too high for robust fills"
+
     def test_solutions_replay(self):
         data = {e["n"]: e for e in json.loads(self.PULLBAN.read_text())}
         for n, lvl in self._levels().items():

@@ -1,10 +1,22 @@
 # Design: augment the pullban corpus (Pull-tier robustness)
 
-Status: **proposal / follow-up to 0.7.** Documents a fill-robustness problem in the expert Pull
-tier and the corpus change that fixes it. No code logic change is required — this is offline
-data work (level authoring + the pull-aware solver) plus a manifest regen. Recommended bump:
-**PATCH (`0.7.1`)** — see [Versioning](#versioning) (it changes generated output but breaks no
-contract: no new datapackage IDs, no `slot_data` schema change, no option change).
+Status: **DONE (2026-06-21).** pullban expanded **10 → 30 levels** (pull-gated **60% → 30%**), all
+solver-verified, and the speculative Pull-item late-placement gate was **removed** (it caused
+6–42% fill failures once a bigger corpus made it engage). Net result: pull seeds now fill **0/150
+across `levels_per_region` 5/3/2** (was 5–100%). PATCH-class (changes generated output but breaks no
+contract — no new datapackage IDs, no `slot_data`/option change); lands on `dev`, version decided at
+release (fold into untagged 0.7.0 or tag 0.7.1).
+
+> **Regen order matters:** `solve_corpus.py --corpus pullban` (enriches: par/solution/requires_pull/
+> difficulty) **then** `build_corpus.py --corpus pullban` (restores the `board` field, preserving
+> solver fields). solve-only drops boards.
+
+> **Late-Pull, revisited.** The "acquire Pull late" intent is deferred: every filler-based
+> restriction on the Pull item (deep-sphere or even just excluding World 1) leaves a fill-failure
+> tail (1–42%), so it was dropped in favour of robustness. Pull is again a normal shuffleable
+> progression item (still required to win, still gates `requires_pull` levels). A future fill-safe
+> mechanism (e.g. deterministic pre-placement, accepting local Pull) could bring back a real late
+> guarantee. The original problem analysis below is kept for that follow-up.
 
 ## The problem
 

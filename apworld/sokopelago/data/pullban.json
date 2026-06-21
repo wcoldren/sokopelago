@@ -27,7 +27,7 @@
     "solved": true,
     "optimal": true,
     "requires_pull": false,
-    "difficulty": 0.0836,
+    "difficulty": 0.0405,
     "search_nodes": 3,
     "board": [
       "####",
@@ -67,7 +67,7 @@
     "solved": true,
     "optimal": true,
     "requires_pull": false,
-    "difficulty": 0.7807,
+    "difficulty": 0.4808,
     "search_nodes": 9,
     "board": [
       "######",
@@ -86,7 +86,7 @@
     "solved": true,
     "optimal": true,
     "requires_pull": true,
-    "difficulty": 0.4592,
+    "difficulty": 0.2898,
     "search_nodes": 3,
     "board": [
       "#####",
@@ -105,7 +105,7 @@
     "solved": true,
     "optimal": true,
     "requires_pull": true,
-    "difficulty": 0.4592,
+    "difficulty": 0.2898,
     "search_nodes": 3,
     "board": [
       "#####",
@@ -124,7 +124,7 @@
     "solved": true,
     "optimal": true,
     "requires_pull": true,
-    "difficulty": 0.5241,
+    "difficulty": 0.3212,
     "search_nodes": 4,
     "board": [
       "######",
@@ -145,7 +145,7 @@
     "solved": true,
     "optimal": true,
     "requires_pull": true,
-    "difficulty": 0.5045,
+    "difficulty": 0.3046,
     "search_nodes": 4,
     "board": [
       "#####",
@@ -165,7 +165,7 @@
     "solved": true,
     "optimal": true,
     "requires_pull": true,
-    "difficulty": 0.6985,
+    "difficulty": 0.4202,
     "search_nodes": 4,
     "board": [
       "######",
@@ -184,13 +184,406 @@
     "solved": true,
     "optimal": true,
     "requires_pull": true,
-    "difficulty": 0.6985,
+    "difficulty": 0.4202,
     "search_nodes": 4,
     "board": [
       "######",
       "#.  $#",
       "#   @#",
       "######"
+    ]
+  },
+  {
+    "n": 11,
+    "name": "11",
+    "par": 1,
+    "moves": 3,
+    "solution": "rrR",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.0921,
+    "search_nodes": 3,
+    "board": [
+      "#######",
+      "#@  $.#",
+      "#######"
+    ]
+  },
+  {
+    "n": 12,
+    "name": "12",
+    "par": 1,
+    "moves": 3,
+    "solution": "llL",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.0516,
+    "search_nodes": 2,
+    "board": [
+      "#######",
+      "#.$  @#",
+      "#######"
+    ]
+  },
+  {
+    "n": 13,
+    "name": "13",
+    "par": 1,
+    "moves": 2,
+    "solution": "dD",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.0707,
+    "search_nodes": 3,
+    "board": [
+      "####",
+      "#@ #",
+      "#  #",
+      "#$ #",
+      "#. #",
+      "####"
+    ]
+  },
+  {
+    "n": 14,
+    "name": "14",
+    "par": 1,
+    "moves": 2,
+    "solution": "uU",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.0302,
+    "search_nodes": 2,
+    "board": [
+      "####",
+      "#. #",
+      "#$ #",
+      "#  #",
+      "#@ #",
+      "####"
+    ]
+  },
+  {
+    "n": 15,
+    "name": "15",
+    "par": 1,
+    "moves": 4,
+    "solution": "rrrR",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.1087,
+    "search_nodes": 3,
+    "board": [
+      "########",
+      "#@   $.#",
+      "########"
+    ]
+  },
+  {
+    "n": 16,
+    "name": "16",
+    "par": 1,
+    "moves": 4,
+    "solution": "lllL",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.0682,
+    "search_nodes": 2,
+    "board": [
+      "########",
+      "#.$   @#",
+      "########"
+    ]
+  },
+  {
+    "n": 17,
+    "name": "17",
+    "par": 2,
+    "moves": 2,
+    "solution": "DD",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.2316,
+    "search_nodes": 4,
+    "board": [
+      "####",
+      "#@ #",
+      "#$ #",
+      "#  #",
+      "#. #",
+      "####"
+    ]
+  },
+  {
+    "n": 18,
+    "name": "18",
+    "par": 2,
+    "moves": 2,
+    "solution": "UU",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.2316,
+    "search_nodes": 4,
+    "board": [
+      "####",
+      "#. #",
+      "#  #",
+      "#$ #",
+      "#@ #",
+      "####"
+    ]
+  },
+  {
+    "n": 19,
+    "name": "19",
+    "par": 4,
+    "moves": 9,
+    "solution": "RldRuRldR",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.7294,
+    "search_nodes": 13,
+    "board": [
+      "######",
+      "#@$ .#",
+      "# $ .#",
+      "######"
+    ]
+  },
+  {
+    "n": 20,
+    "name": "20",
+    "par": 6,
+    "moves": 14,
+    "solution": "RldRuRldRuRldR",
+    "boxes": 2,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 1.0,
+    "search_nodes": 35,
+    "board": [
+      "#######",
+      "#@$  .#",
+      "# $  .#",
+      "#######"
+    ]
+  },
+  {
+    "n": 21,
+    "name": "21",
+    "par": 1,
+    "moves": 1,
+    "solution": "R",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.0976,
+    "search_nodes": 5,
+    "board": [
+      "#####",
+      "#   #",
+      "#@$.#",
+      "#   #",
+      "#####"
+    ]
+  },
+  {
+    "n": 22,
+    "name": "22",
+    "par": 1,
+    "moves": 2,
+    "solution": "dR",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.1278,
+    "search_nodes": 5,
+    "board": [
+      "#####",
+      "#@  #",
+      "# $.#",
+      "#   #",
+      "#####"
+    ]
+  },
+  {
+    "n": 23,
+    "name": "23",
+    "par": 2,
+    "moves": 2,
+    "solution": "DD",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.279,
+    "search_nodes": 6,
+    "board": [
+      "#####",
+      "#@  #",
+      "#$  #",
+      "#   #",
+      "#.  #",
+      "#####"
+    ]
+  },
+  {
+    "n": 24,
+    "name": "24",
+    "par": 2,
+    "moves": 2,
+    "solution": "UU",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.2573,
+    "search_nodes": 5,
+    "board": [
+      "#####",
+      "#.  #",
+      "#   #",
+      "#$  #",
+      "#@  #",
+      "#####"
+    ]
+  },
+  {
+    "n": 25,
+    "name": "25",
+    "par": 2,
+    "moves": 2,
+    "solution": "RR",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.3427,
+    "search_nodes": 10,
+    "board": [
+      "######",
+      "#    #",
+      "#@$ .#",
+      "#    #",
+      "######"
+    ]
+  },
+  {
+    "n": 26,
+    "name": "26",
+    "par": 1,
+    "moves": 1,
+    "solution": "R",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.0405,
+    "search_nodes": 3,
+    "board": [
+      "#######",
+      "#  @$.#",
+      "#######"
+    ]
+  },
+  {
+    "n": 27,
+    "name": "27",
+    "par": 1,
+    "moves": 1,
+    "solution": "D",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": false,
+    "difficulty": 0.0405,
+    "search_nodes": 3,
+    "board": [
+      "#####",
+      "#@  #",
+      "#$  #",
+      "#.  #",
+      "#####"
+    ]
+  },
+  {
+    "n": 28,
+    "name": "28",
+    "par": 4,
+    "moves": 11,
+    "solution": "ruPRdlluRRR",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": true,
+    "difficulty": 0.5236,
+    "search_nodes": 5,
+    "board": [
+      "#######",
+      "#$   .#",
+      "#@    #",
+      "#######"
+    ]
+  },
+  {
+    "n": 29,
+    "name": "29",
+    "par": 4,
+    "moves": 11,
+    "solution": "luPLdrruLLL",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": true,
+    "difficulty": 0.5236,
+    "search_nodes": 5,
+    "board": [
+      "#######",
+      "#.   $#",
+      "#    @#",
+      "#######"
+    ]
+  },
+  {
+    "n": 30,
+    "name": "30",
+    "par": 3,
+    "moves": 8,
+    "solution": "PUrddlUU",
+    "boxes": 1,
+    "solved": true,
+    "optimal": true,
+    "requires_pull": true,
+    "difficulty": 0.4714,
+    "search_nodes": 7,
+    "board": [
+      "#####",
+      "#.  #",
+      "#   #",
+      "#@  #",
+      "#$  #",
+      "#####"
     ]
   }
 ]

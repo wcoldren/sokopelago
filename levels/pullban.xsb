@@ -4,6 +4,11 @@
 ; a box pinned against a wall you cannot get behind to push, but can pull free.
 ; The offline solver (tools/solve_corpus.py --corpus pullban) proves which is which.
 ; Freely distributable with attribution, same terms as the bundled Microban set.
+;
+; 30 levels (≈70% push hosts / ≈30% pull-required): host-heavy so Pull-Logic seeds have
+; plenty of reachable homes for the Pull item and fill reliably. Levels 11+ were added in
+; the 0.7.1 expansion (machine-authored, every board solver-verified). Regenerate the
+; manifest with: solve_corpus.py --corpus pullban  THEN  build_corpus.py --corpus pullban.
 
 ; 1
 #####
@@ -68,3 +73,136 @@
 #.  $#
 #   @#
 ######
+
+; 11
+#######
+#@  $.#
+#######
+
+; 12
+#######
+#.$  @#
+#######
+
+; 13
+####
+#@ #
+#  #
+#$ #
+#. #
+####
+
+; 14
+####
+#. #
+#$ #
+#  #
+#@ #
+####
+
+; 15
+########
+#@   $.#
+########
+
+; 16
+########
+#.$   @#
+########
+
+; 17
+####
+#@ #
+#$ #
+#  #
+#. #
+####
+
+; 18
+####
+#. #
+#  #
+#$ #
+#@ #
+####
+
+; 19
+######
+#@$ .#
+# $ .#
+######
+
+; 20
+#######
+#@$  .#
+# $  .#
+#######
+
+; 21
+#####
+#   #
+#@$.#
+#   #
+#####
+
+; 22
+#####
+#@  #
+# $.#
+#   #
+#####
+
+; 23
+#####
+#@  #
+#$  #
+#   #
+#.  #
+#####
+
+; 24
+#####
+#.  #
+#   #
+#$  #
+#@  #
+#####
+
+; 25
+######
+#    #
+#@$ .#
+#    #
+######
+
+; 26
+#######
+#  @$.#
+#######
+
+; 27
+#####
+#@  #
+#$  #
+#.  #
+#####
+
+; 28
+#######
+#$   .#
+#@    #
+#######
+
+; 29
+#######
+#.   $#
+#    @#
+#######
+
+; 30
+#####
+#.  #
+#   #
+#@  #
+#$  #
+#####

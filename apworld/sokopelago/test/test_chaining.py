@@ -1,9 +1,9 @@
-"""0.7 "accurate logic": the boss-zone all-keys gate, count-floor body chaining, and the
-Pull-item late-placement floor (all scoped to the beat_final_region goal).
+"""0.7 "accurate logic": the boss-zone all-keys gate and count-floor body chaining (both scoped
+to the beat_final_region goal).
 
 The inherited WorldTestBase fill/reachability battery proves the chained seeds stay beatable
 across world counts and steepness settings; the explicit tests pin the boss gate (no early win,
-no self-referential key placement), the effective-floor scoping, and the Pull-item floor logic.
+no self-referential key placement) and the effective-floor scoping.
 """
 
 from BaseClasses import CollectionState
@@ -96,44 +96,3 @@ class TestEffectiveFloorsZeroSlack(SokopelagoTestBase):
         floors = self.world._effective_floors()
         self.assertTrue(all(f == 0 for f in floors[:-1]), "zero-slack layout must flatten body floors")
         self.assertEqual(floors[-1], self.world.region_count - 1, "boss entry stays informational all-keys")
-
-
-# --- Pull-item late-placement floor logic (decoupled from a level's requires_pull gate) ---
-
-
-class TestPullItemFloorLogic(SokopelagoTestBase):
-    # Use a real pull-logic world for the bound methods, but skip the inherited battery: the
-    # 10-level pullban corpus can't form a reliably-fillable seed at the depths where this floor
-    # engages (a known pre-existing limitation of the tiny corpus, not of this logic), so we
-    # exercise the floor logic deterministically via its predicates instead.
-    run_default_tests = False
-    options = {"corpus": "pullban", "pull_logic": 1, "level_count": 10, "levels_per_region": 5}
-
-    def test_eligibility_predicate(self) -> None:
-        w = self.world
-        # Synthetic chain: 6 worlds, Pull floor 2, level 99 is pull-gated.
-        w.region_count = 6
-        w._pull_floor = 2
-        w.pull_levels = {99}
-        floors = [0, 0, 0, 2, 2, 5]
-        self.assertTrue(w._pull_item_host_eligible(4, 10, floors), "deep non-pull body world is a valid host")
-        self.assertFalse(w._pull_item_host_eligible(6, 10, floors), "boss world must never host Pull")
-        self.assertFalse(w._pull_item_host_eligible(3, 10, floors), "worlds below the floor are not hosts")
-        self.assertFalse(w._pull_item_host_eligible(4, 99, floors), "a pull-gated level would self-gate Pull")
-
-    def test_has_host_and_fallback(self) -> None:
-        w = self.world
-        w.region_count = 6
-        w._pull_floor = 2
-        w.worlds = [[1], [2], [3], [10], [11], [12]]
-        floors = [0, 0, 0, 2, 2, 5]
-        w.pull_levels = set()
-        self.assertTrue(w._has_pull_item_host(floors), "world 4 (floor 2, non-pull) is an eligible host")
-        w.pull_levels = {10, 11}  # both deep body levels become pull-gated
-        self.assertFalse(w._has_pull_item_host(floors), "no eligible host -> floor disabled (fallback)")
-
-    def test_active_implies_a_host_exists(self) -> None:
-        # Whatever the shipped corpus produces, the floor is only active when a host exists, so
-        # it can never strand the Pull item / make the seed unfillable.
-        if self.world._pull_item_floor_active:
-            self.assertTrue(self.world._has_pull_item_host(self.world._effective_floors()))
