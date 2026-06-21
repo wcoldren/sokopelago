@@ -127,6 +127,14 @@ class SokopelagoWorld(World):
             self.worlds = gentle_first_world(levels, diff, EASY_MAX, self.levels_per_region, reassign)
         else:
             self.worlds = reassign(levels)
+        # World 1 is sphere 1 (no key gate), and every layout path orders it easiest-first,
+        # so its slot-0 level is the globally-easiest drawn level — identical across seeds
+        # with the same options. Shuffle World 1's internal order so the opening puzzle
+        # varies per seed. Downstream logic reads World 1 by membership/size, not order
+        # (key counting, boss_world_index, pull_levels, goal/solve-count, slot_data), so
+        # this is safe; the client renders in slot_data order, so the picker follows.
+        if len(self.worlds[0]) > 1:
+            self.multiworld.random.shuffle(self.worlds[0])
         self.region_count = len(self.worlds)
         # Count-floor chaining steepness; clamped to the world count (a value >= the world
         # count flattens the body floors back to the classic single-key star).

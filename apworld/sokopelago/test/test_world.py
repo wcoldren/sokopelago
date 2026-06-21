@@ -107,7 +107,10 @@ class TestDifficultyOrderingOff(SokopelagoTestBase):
 
     def test_layout_is_native_chunk_order(self) -> None:
         native = chunk_levels(self.world.level_count, self.world.levels_per_region)
-        assert self.world.worlds == native
+        # World 1's internal order is intentionally shuffled per seed (the opener), so it is
+        # compared by membership; the body worlds must still be the native chunk order verbatim.
+        assert self.world.worlds[1:] == native[1:]
+        assert sorted(self.world.worlds[0]) == native[0]
 
 
 class TestMaxDifficultyEasy(SokopelagoTestBase):
