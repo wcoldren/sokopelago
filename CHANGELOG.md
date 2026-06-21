@@ -32,11 +32,21 @@ world/datapackage-affecting changes, not roadmap phase numbers.
   AP-connected (DataStorage) play and shown in the HUD. **Export/Import** buttons serialize the
   stats as JSON for offline cross-player analysis. See [`docs/DESIGN-statistics.md`](docs/DESIGN-statistics.md).
 - **`examples/Sokopelago-Easy.yaml`** — the easy-first single-player config (mirrors the default).
+- **In-client goal line** — the win condition is shown in plain language (e.g. "solve every level
+  in the final world") instead of only a raw enum in the connection status.
+- **Beta disclaimer** in the client and README: solo + basic multiworlds work, but it's not yet
+  recommended for real syncs/asyncs while sphere ordering is refined.
+- **`docs/DESIGN-boss-zone.md`** (deferred): the final world's key can currently be found first;
+  documents gating the boss zone behind all other keys. `beat_final_region` is the tested goal for
+  0.6; `solve_count`/`boss_level` are experimental.
 
 ### Fixed
 - The perfect (★) vs efficient (✦) HUD message now spells out how far over optimal an efficient
   solve was, so ✦ isn't mistaken for ★. Replaying a solved level in fewer pushes now **upgrades**
   its tier (sends the newly-earned par/efficiency check) instead of being ignored.
+- **★/✦ "doing well" markers now show in multiworld**, derived client-side from your best pushes
+  vs the level's optimal (plus a default margin), so they appear in solo and AP alike even when the
+  seed has no par checks. The AP par/efficiency reward checks remain opt-in.
 
 ## [0.5.0] — Seed-varied selection + tiered par
 

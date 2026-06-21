@@ -165,6 +165,10 @@ class SokopelagoWorld(World):
             if i == 1:
                 menu.connect(region, f"Menu -> World {i}")
             else:
+                # Each keyed world gates on its single key. NOTE: keys are placed freely by
+                # fill, so the *final* world's key can be found first and the seed beaten before
+                # the middle worlds (the boss-zone sphere-ordering problem). Deferred — see
+                # docs/DESIGN-boss-zone.md.
                 key = world_key_name(i)
                 menu.connect(
                     region,

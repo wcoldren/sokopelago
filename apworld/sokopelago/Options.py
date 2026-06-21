@@ -90,7 +90,10 @@ class Goal(Choice):
     """The win condition.
     beat_final_region: reach the last world (hold its key).
     solve_count: solve a target number of levels (Goal Solve Count).
-    boss_level: reach the world containing a designated boss level (Goal Boss Level)."""
+    boss_level: reach the world containing a designated boss level (Goal Boss Level).
+    For the 0.6 easy-first beta, beat_final_region (the default) is the supported, tested goal;
+    solve_count and boss_level are experimental and interact with the still-deferred boss-zone
+    sphere ordering (see docs/DESIGN-boss-zone.md)."""
 
     display_name = "Goal"
     option_beat_final_region = 0

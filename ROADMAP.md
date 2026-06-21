@@ -95,6 +95,11 @@ Treat these as required for v1, not polish.
   can't gate anything). Opt-in via the `expert_logic` option; the solver proves each gate.
   Push-Two / diagonal / teleport remain future passes.
 
+### Boss-zone sphere ordering (deferred from 0.6)
+- The final world's key is placed freely, so it can be found first and the seed beaten before the
+  middle worlds. Gate the final ("boss") world behind **all** other keys (server + client). Its
+  own logic release. See [`docs/DESIGN-boss-zone.md`](docs/DESIGN-boss-zone.md).
+
 ### Phase 6 — Polish
 - Tracker support (PopTracker).
 - Broader options, multiple corpora, settings/UX.
