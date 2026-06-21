@@ -20,6 +20,7 @@ import {
   type TrapVariant,
 } from "./ids";
 import {
+  chainFloor,
   efficientThresholdForLevel,
   isGoalMet,
   parForLevel,
@@ -112,7 +113,10 @@ export class Session {
   private readonly cb: SessionCallbacks;
 
   slot: SlotData | null = null;
-  /** World 1 is always free; keyed worlds are added as their keys arrive. */
+  /** Worlds the player may currently enter. Recomputed from the held-key count on every
+   * item sync (see recomputeUnlocks) so it mirrors the server's 0.7 accurate-logic gate
+   * exactly: World 1 is always free; a body world needs its own key AND total keys >= its
+   * floor; the boss world needs ALL keys when boss_all_keys is set. */
   readonly unlockedWorlds = new Set<number>([1]);
   readonly solvedLevels = new Set<number>();
   /** Levels solved within par (the par-location check was sent). For the UI / restore. */
@@ -303,10 +307,11 @@ export class Session {
     let skip = 0;
     let undo = 0;
     let hint = 0;
+    const heldKeys = new Set<number>();
     for (const item of received) {
       const w = worldForKeyItem(item.id);
       if (w !== null) {
-        this.unlockedWorlds.add(w);
+        heldKeys.add(w);
         continue;
       }
       if (isPullItem(item.id)) {
@@ -321,6 +326,7 @@ export class Session {
     this.received.skip = skip;
     this.received.undo = undo;
     this.received.hint = hint;
+    this.recomputeUnlocks(heldKeys);
 
     if (!suppressTraps) {
       for (let i = this.seenItemCount; i < received.length; i++) {
@@ -330,6 +336,40 @@ export class Session {
     }
     this.seenItemCount = received.length;
     this.cb.onUpdate();
+  }
+
+  /**
+   * Rebuild `unlockedWorlds` from the set of held world keys, mirroring the server's 0.7
+   * accurate-logic gate exactly (apworld create_regions). Recomputed from scratch on every
+   * sync (idempotent): World 1 is always free; the boss world (`final_world`) unlocks only
+   * when ALL keys are held if `boss_all_keys` is set; every other world unlocks when its own
+   * key is held AND the total keys held reach its `chain_floors` floor. With no chain_floors /
+   * boss_all_keys (pre-0.7 seeds, or non-beat_final_region goals) every floor is 0 and the boss
+   * flag is unset, so this reduces to the old "unlock a world the moment its key arrives".
+   */
+  private recomputeUnlocks(heldKeys: ReadonlySet<number>): void {
+    this.unlockedWorlds.clear();
+    this.unlockedWorlds.add(1); // World 1 is always free
+    const slot = this.slot;
+    if (!slot) return;
+    const total = heldKeys.size;
+    const boss = slot.final_world;
+    for (let w = 2; w <= boss; w++) {
+      if (w === boss && slot.boss_all_keys) {
+        // Boss zone: every key (2..boss) must be held — always the deepest sphere.
+        let allHeld = true;
+        for (let k = 2; k <= boss; k++) {
+          if (!heldKeys.has(k)) {
+            allHeld = false;
+            break;
+          }
+        }
+        if (allHeld) this.unlockedWorlds.add(w);
+      } else if (heldKeys.has(w) && total >= chainFloor(slot, w)) {
+        // Body world (and the boss when not all-keys gated): own key + the count-floor.
+        this.unlockedWorlds.add(w);
+      }
+    }
   }
 
   private storageKey(kind: keyof ValveCounts): string {

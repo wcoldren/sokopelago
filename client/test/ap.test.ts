@@ -22,6 +22,7 @@ import {
   worldForKeyItem,
 } from "../src/ap/ids";
 import {
+  chainFloor,
   difficultyForLevel,
   efficientThresholdForLevel,
   isGoalMet,
@@ -227,11 +228,99 @@ describe("ap/slotData — requiresPull", () => {
   });
 });
 
+describe("ap/slotData — chainFloor", () => {
+  it("returns the shipped per-world floor", () => {
+    const slot = sampleSlot({ chain_floors: { "1": 0, "2": 0, "3": 2 } });
+    expect(chainFloor(slot, 1)).toBe(0);
+    expect(chainFloor(slot, 3)).toBe(2);
+  });
+
+  it("defaults to 0 when absent, missing, or negative (back-compat / flat unlock)", () => {
+    expect(chainFloor(sampleSlot(), 2)).toBe(0); // no chain_floors map at all (pre-0.7)
+    expect(chainFloor(sampleSlot({ chain_floors: { "2": 1 } }), 9)).toBe(0); // world not in map
+    expect(chainFloor(sampleSlot({ chain_floors: { "2": -1 } }), 2)).toBe(0); // guard negatives
+  });
+});
+
+// A 6-world seed exercising the 0.7 count-floor chain + the all-keys boss gate.
+function chainSlot(overrides: Partial<SlotData> = {}): SlotData {
+  return sampleSlot({
+    level_count: 12,
+    levels_per_region: 2,
+    levels: Array.from({ length: 12 }, (_, i) => i + 1),
+    region_map: {
+      "1": [1, 2],
+      "2": [3, 4],
+      "3": [5, 6],
+      "4": [7, 8],
+      "5": [9, 10],
+      "6": [11, 12],
+    },
+    final_world: 6,
+    chain_floors: { "1": 0, "2": 0, "3": 0, "4": 1, "5": 2, "6": 5 },
+    boss_all_keys: true,
+    ...overrides,
+  });
+}
+
+describe("ap/session — chained unlocks (0.7 accurate logic)", () => {
+  it("unlocks a body world only when its own key AND the count-floor are met", () => {
+    const { s, client } = mockSession();
+    const slot = chainSlot();
+    peek(s).slot = slot;
+    peek(s).worldOf = worldOfLevel(slot);
+    // World 5 has floor 2: its own key alone (1 key total) is not enough.
+    client.items.received = [{ id: KEY_BASE + 5 }];
+    peek(s).syncItems(true);
+    expect(s.unlockedWorlds.has(5)).toBe(false);
+    expect(s.isLevelUnlocked(9)).toBe(false); // a level in world 5
+    // A second key reaches the floor (2 keys total) -> world 5 unlocks.
+    client.items.received = [{ id: KEY_BASE + 5 }, { id: KEY_BASE + 2 }];
+    peek(s).syncItems(false);
+    expect(s.unlockedWorlds.has(5)).toBe(true);
+    expect(s.isLevelUnlocked(9)).toBe(true);
+  });
+
+  it("does not unlock a world whose own key is missing even with enough total keys", () => {
+    const { s, client } = mockSession();
+    peek(s).slot = chainSlot();
+    // Three keys held (floor 2 for world 5 satisfied) but NOT world 5's own key.
+    client.items.received = [{ id: KEY_BASE + 2 }, { id: KEY_BASE + 3 }, { id: KEY_BASE + 4 }];
+    peek(s).syncItems(true);
+    expect(s.unlockedWorlds.has(5)).toBe(false);
+  });
+
+  it("unlocks the boss world only once every key is held", () => {
+    const { s, client } = mockSession();
+    const slot = chainSlot();
+    peek(s).slot = slot;
+    peek(s).worldOf = worldOfLevel(slot);
+    client.items.received = [2, 3, 4, 5].map((w) => ({ id: KEY_BASE + w })); // all but key 6
+    peek(s).syncItems(true);
+    expect(s.unlockedWorlds.has(6)).toBe(false);
+    expect(s.isLevelUnlocked(11)).toBe(false); // a level in the boss world
+    client.items.received = [2, 3, 4, 5, 6].map((w) => ({ id: KEY_BASE + w }));
+    peek(s).syncItems(false);
+    expect(s.unlockedWorlds.has(6)).toBe(true);
+    expect(s.isLevelUnlocked(11)).toBe(true);
+  });
+
+  it("back-compat: with no chain_floors / boss_all_keys, a world unlocks on its own key", () => {
+    const { s, client } = mockSession();
+    // sampleSlot has no chain_floors and no boss_all_keys (pre-0.7 / flat).
+    peek(s).slot = sampleSlot();
+    client.items.received = [{ id: KEY_BASE + 3 }]; // world 3 is the final world here
+    peek(s).syncItems(true);
+    expect(s.unlockedWorlds.has(3)).toBe(true); // unset boss flag -> normal single-key unlock
+  });
+});
+
 // The session is a thin wrapper over archipelago.js; we inject a stub client to
 // exercise inventory tallying, the skip->check routing invariant, and trap firing.
 interface SessionInternals {
   client: unknown;
   slot: SlotData | null;
+  worldOf: Map<number, number>;
   received: { skip: number; undo: number; hint: number };
   syncItems(suppressTraps: boolean): void;
 }
@@ -262,6 +351,7 @@ function mockSession(onTrap: (v: string) => void = () => {}) {
 describe("ap/session — escape valves", () => {
   it("tallies received valve items and unlocks worlds from the backlog", () => {
     const { s, client } = mockSession();
+    peek(s).slot = sampleSlot(); // unlocks are recomputed against the seed's worlds
     client.items.received = [
       { id: SKIP_ID },
       { id: SKIP_ID },
@@ -271,7 +361,7 @@ describe("ap/session — escape valves", () => {
     ];
     peek(s).syncItems(true);
     expect(s.available).toEqual({ skip: 2, undo: 1, hint: 1 });
-    expect(s.unlockedWorlds.has(2)).toBe(true);
+    expect(s.unlockedWorlds.has(2)).toBe(true); // floor 0 by default -> own key suffices
   });
 
   it("skip consumes a token and routes to a real location check (no permanent stall)", () => {

@@ -19,6 +19,14 @@ export interface SlotData {
   goal_boss_level: number;
   /** Index of the final/highest world (= region count). */
   final_world: number;
+  /** 0.7 accurate logic: per-world key-count floor (world index as a string key). A world
+   * unlocks when its own key is held AND the total number of keys held is >= this floor.
+   * All-zero (flat single-key unlock) for non-beat_final_region goals; absent on pre-0.7
+   * seeds (then treated as 0). */
+  chain_floors?: Record<string, number>;
+  /** 0.7 accurate logic: when true, the final_world (boss zone) unlocks only once ALL keys
+   * are held. Set only for beat_final_region seeds with more than one world. */
+  boss_all_keys?: boolean;
   /** Push-par per seed level (Microban number as a string key). */
   par?: Record<string, number>;
   /** Normalized 0..1 difficulty per seed level (Microban number as a string key). */
@@ -52,6 +60,16 @@ export function worldOfLevel(slot: SlotData): Map<number, number> {
 /** Microban level numbers in a given world (empty if the world is unknown). */
 export function levelsInWorld(slot: SlotData, world: number): number[] {
   return slot.region_map[String(world)] ?? [];
+}
+
+/**
+ * Key-count floor for a world: a world unlocks when its own key is held AND the total
+ * number of keys held is >= this floor. Defaults to 0 (flat single-key unlock) when no
+ * floor was shipped, so pre-0.7 seeds and non-chained goals behave exactly as before.
+ */
+export function chainFloor(slot: SlotData, world: number): number {
+  const f = slot.chain_floors?.[String(world)];
+  return typeof f === "number" && f >= 0 ? f : 0;
 }
 
 /** Push-par for a level, or `null` if unknown (no par data shipped for it). */
