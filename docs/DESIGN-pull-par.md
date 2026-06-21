@@ -1,7 +1,7 @@
 # Design spec: Pull as an earned ability + par-after-Pull (+ pull limits)
 
-Status: **proposal, not yet built.** Captures the playtest direction from 2026-06-20 so it
-can be implemented in a later round. No code changes accompany this doc. Build behind new
+Status: **proposal, not yet built.** Captures the intended Pull-as-earned-ability direction
+for a later round. No code changes accompany this doc. Build behind new
 options and bump the world version when shipped (new options/items touch the datapackage —
 see [VERSIONING.md](../VERSIONING.md)).
 
@@ -41,7 +41,7 @@ Three linked ideas, in increasing scope:
 - **Shipped (this round):** Pull is now **solo-only god-mode** — always usable in solo free
   play (`dev.sh`), but in AP it's gated to pull-capable/expert seeds (`main.ts pullInSeed`/
   `canPullNow`), so `Shift+arrow` no longer pulls on a vanilla Microban AP seed. Full AP
-  gating (Options A/B below) is still TODO.
+  gating (Options A/B below) is not yet implemented.
 
 ## Proposed design
 

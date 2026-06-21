@@ -1,7 +1,7 @@
 # Design: boss zone — make the final world reachable last
 
-Status: **proposal, not yet built.** Captures the progression/sphere-ordering problem found
-during 0.6 playtesting. No code changes accompany this doc beyond a pointer comment at the
+Status: **proposal, not yet built.** Documents the progression/sphere-ordering problem
+surfaced during the 0.6 beta. No code changes accompany this doc beyond a pointer comment at the
 key-gating site. Build behind the existing options and bump `world_version` when shipped (it
 changes logic + slot_data + the client gate — see [VERSIONING.md](../VERSIONING.md)).
 
