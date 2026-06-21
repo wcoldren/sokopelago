@@ -19,7 +19,12 @@ import {
   type SolveEvent,
   type StatsExport,
 } from "./stats";
-import { levelsInWorld, type SlotData } from "./ap/slotData";
+import {
+  levelsInWorld,
+  nextLevelInWorldOrder,
+  seedPositionInWorld,
+  type SlotData,
+} from "./ap/slotData";
 import type { TrapVariant } from "./ap/ids";
 import { parseSolution, planHint, animateSolutionPrefix, type AnimationHandle } from "./solution";
 
@@ -45,7 +50,7 @@ const $ = <T extends HTMLElement>(id: string): T => {
 };
 
 const canvas = $<HTMLCanvasElement>("board");
-const select = $<HTMLSelectElement>("level-select");
+const levelGrid = $<HTMLDivElement>("level-grid");
 const restartBtn = $<HTMLButtonElement>("restart-btn");
 const undoBtn = $<HTMLButtonElement>("undo-btn");
 const hintBtn = $<HTMLButtonElement>("hint-btn");
@@ -141,12 +146,20 @@ function setStatus(text: string, win = false): void {
   statusEl.classList.toggle("win", win);
 }
 
-/** The level title line shown in #status: name + difficulty badge/tier. */
+/** The level title line shown in #status. In AP mode it's the seed-relative "World N · L{pos}"
+ * (with the Microban corpus number as the detail); solo play shows the plain corpus level. */
 function levelTitle(target: Level): string {
   const n = levelNumber(target);
   const badge = difficultyBadge(n);
   const tier = difficultyTier(n);
-  return `Level ${target.name}${badge ? `  ${badge}` : ""}${tier ? `  ${tier}` : ""}`;
+  const suffix = `${badge ? `  ${badge}` : ""}${tier ? `  ${tier}` : ""}`;
+  if (slot && session) {
+    const w = session.worldForLevel(n);
+    const pos = seedPositionInWorld(slot, n);
+    if (w !== undefined && pos > 0)
+      return `World ${w} · L${pos} — Microban ${target.name}${suffix}`;
+  }
+  return `Level ${target.name}${suffix}`;
 }
 
 /** A single labeled metric chip (label + value). */
@@ -223,7 +236,8 @@ function goalDescription(s: SlotData): string {
     case "beat_final_region":
     default: {
       const k = levelsInWorld(s, s.final_world).length;
-      return `Goal: solve every level in the final world (World ${s.final_world}${k ? ` — ${k} levels` : ""}).`;
+      const note = s.boss_all_keys ? " It opens only once you hold every world key." : "";
+      return `Goal: solve every level in the final world (World ${s.final_world}${k ? ` — ${k} levels` : ""}).${note}`;
     }
   }
 }
@@ -280,74 +294,135 @@ function performanceNote(n: number, pushes: number): string {
   return ` (optimal ${par})`;
 }
 
-function optionLabel(lvl: Level): string {
+/** Difficulty-range pips for a world ("◆◇◇–◆◆◇", a single badge, or "" when unscored). */
+function worldDifficulty(ns: number[]): string {
+  const pips = (f: number): string => "◆".repeat(f) + "◇".repeat(3 - f);
+  const fills = ns
+    .map((n) => {
+      const t = difficultyTier(n);
+      return t === "hard" ? 3 : t === "medium" ? 2 : t === "easy" ? 1 : 0;
+    })
+    .filter((f) => f > 0);
+  if (fills.length === 0) return "";
+  const lo = Math.min(...fills);
+  const hi = Math.max(...fills);
+  return lo === hi ? pips(lo) : `${pips(lo)}–${pips(hi)}`;
+}
+
+/** A clickable level "pill": per-world number + state marker (★/✦/✓ solved, 🔒 gated). The
+ * corpus number stays in the tooltip — it's the internal identity, not the player-facing label. */
+function makePill(lvl: Level, posInWorld: number): HTMLButtonElement {
   const n = levelNumber(lvl);
-  const badge = difficultyBadge(n);
-  const base = `${n}. ${lvl.name}${badge ? `  ${badge}` : ""}`;
-  if (!slot || !session) {
-    // Solo free-play: reflect solves this session (★ optimal / ✦ efficient from your pushes).
-    if (!solvedOffline.has(n)) return base;
-    return `${solvedMarker(n)} ${base}`;
+  const btn = document.createElement("button");
+  btn.className = "pill";
+  btn.title = `Microban ${lvl.name}`;
+  const solved = slot && session ? session.isLevelSolved(n) : solvedOffline.has(n);
+  const playable = !slot || !session || session.isLevelPlayable(n);
+  let mark = "";
+  if (solved) {
+    mark = solvedMarker(n);
+    btn.classList.add("solved");
+  } else if (slot && session && !playable) {
+    mark = "🔒";
+    btn.classList.add("locked");
+    btn.disabled = true;
+    if (session.needsPull(n) && !session.canPull) btn.title += " — needs the Pull ability";
   }
-  if (session.isLevelSolved(n)) return `${solvedMarker(n)} ${base}`;
-  // The world's lock state is shown by the <optgroup> label, so options just flag the gate.
-  if (!session.isLevelUnlocked(n)) return `🔒 ${base}`;
-  if (session.needsPull(n) && !session.canPull) return `🔒 ${base} (needs Pull)`;
-  return base;
+  const label = posInWorld > 0 ? String(posInWorld) : String(n);
+  btn.textContent = mark ? `${mark} ${label}` : label;
+  if (lvl.index === current) btn.classList.add("current");
+  btn.addEventListener("click", () => loadLevel(lvl.index));
+  return btn;
 }
 
-function makeOption(lvl: Level): HTMLOptionElement {
-  const opt = document.createElement("option");
-  opt.value = String(lvl.index);
-  opt.textContent = optionLabel(lvl);
-  if (slot && session && !session.isLevelPlayable(levelNumber(lvl))) opt.disabled = true;
-  return opt;
+/** Append a world's header — name, difficulty range, and key/lock state — to `head`. The boss
+ * world (all-keys gate) spells out "needs ALL keys (held/total)" so the gate isn't a mystery. */
+function buildWorldHead(head: HTMLElement, w: number): void {
+  const s = slot!;
+  const isBoss = Boolean(s.boss_all_keys) && w === s.final_world;
+  const name = document.createElement("span");
+  name.className = "world-name";
+  name.textContent = isBoss ? `Boss · World ${w}` : `World ${w}`;
+  head.append(name);
+  const diff = worldDifficulty(levelsInWorld(s, w));
+  if (diff) {
+    const d = document.createElement("span");
+    d.className = "world-diff";
+    d.textContent = diff;
+    head.append(d);
+  }
+  const state = document.createElement("span");
+  state.className = "world-state";
+  if (session!.unlockedWorlds.has(w)) {
+    state.textContent = w === 1 ? "open" : "key ✓";
+    state.classList.add("open");
+  } else if (isBoss) {
+    state.textContent = `🔒 needs ALL keys (${session!.keysHeld}/${session!.keysTotal})`;
+  } else {
+    state.textContent = `🔒 needs World ${w} Key`;
+  }
+  head.append(state);
 }
 
-function rebuildSelector(): void {
-  select.innerHTML = "";
-  const shown = shownLevels();
+/** Rebuild the world-grouped level grid: the seed's worlds (each a card of level pills) in AP
+ * mode, a single flat list of the corpus in solo free-play. */
+function rebuildLevelGrid(): void {
+  levelGrid.replaceChildren();
   if (slot && session) {
-    // Group levels by world so the key/world structure is obvious at a glance.
-    const byWorld = new Map<number, Level[]>();
-    for (const lvl of shown) {
-      const w = session.worldForLevel(levelNumber(lvl)) ?? 0;
-      const arr = byWorld.get(w);
-      if (arr) arr.push(lvl);
-      else byWorld.set(w, [lvl]);
-    }
-    for (const w of [...byWorld.keys()].sort((a, b) => a - b)) {
-      const group = document.createElement("optgroup");
-      const open = session.unlockedWorlds.has(w);
-      group.label = `World ${w}${open ? "" : " — 🔒 key needed"}`;
-      for (const lvl of byWorld.get(w)!) group.appendChild(makeOption(lvl));
-      select.appendChild(group);
+    const currentWorld = game ? session.worldForLevel(levelNumber(game.level)) : undefined;
+    const worlds = Object.keys(slot.region_map)
+      .map(Number)
+      .sort((a, b) => a - b);
+    for (const w of worlds) {
+      const lvls = levelsInWorld(slot, w)
+        .map((n) => levels[n - 1])
+        .filter((l): l is Level => Boolean(l));
+      if (lvls.length === 0) continue;
+      const section = document.createElement("div");
+      section.className = "world";
+      if (!session.unlockedWorlds.has(w)) section.classList.add("world-locked");
+      if (w === currentWorld) section.classList.add("current-world");
+      const head = document.createElement("div");
+      head.className = "world-head";
+      buildWorldHead(head, w);
+      section.append(head);
+      const pills = document.createElement("div");
+      pills.className = "pills";
+      lvls.forEach((lvl, i) => pills.append(makePill(lvl, i + 1)));
+      section.append(pills);
+      levelGrid.append(section);
     }
   } else {
-    for (const lvl of shown) select.appendChild(makeOption(lvl));
+    const pills = document.createElement("div");
+    pills.className = "pills";
+    for (const lvl of shownLevels()) pills.append(makePill(lvl, 0));
+    levelGrid.append(pills);
   }
-  if (game) select.value = String(current);
   updateValveButtons();
 }
 
-/** Next unlocked, unsolved seed level — preferring ones after `afterN`. */
+/** Next level to auto-advance to after solving `afterN`, in world-first order: the rest of the
+ * current world, then forward worlds, then wrapping back (see nextLevelInWorldOrder). */
 function nextPlayable(afterN: number): Level | null {
   if (!slot || !session) return null;
-  const playable = shownLevels().filter(
-    (l) => session!.isLevelPlayable(levelNumber(l)) && !session!.isLevelSolved(levelNumber(l)),
+  const s = session;
+  const n = nextLevelInWorldOrder(
+    slot,
+    afterN,
+    (x) => s.isLevelSolved(x),
+    (x) => s.isLevelPlayable(x),
   );
-  if (playable.length === 0) return null;
-  return playable.find((l) => levelNumber(l) > afterN) ?? playable[0];
+  return n === null ? null : (levels[n - 1] ?? null);
 }
 
 /**
  * Session state changed (item received, token consumed, etc.). Rebuild the selector, and
  * if a *new world just unlocked* while the player is parked on a solved level (the
  * dead-end case the freeze fix leaves interactive), pull them into the newly-open world so
- * they can keep going without hunting through the dropdown.
+ * they can keep going without hunting through the level grid.
  */
 function onSessionUpdate(): void {
-  rebuildSelector();
+  rebuildLevelGrid();
   if (!slot || !session || !game) {
     lastUnlockedCount = session?.unlockedWorlds.size ?? 0;
     return;
@@ -376,14 +451,12 @@ function loadLevel(i: number): void {
     } else {
       notice(`Level ${n} needs the Pull ability — find it in the multiworld.`);
     }
-    select.value = String(current);
     return;
   }
   hintAnim?.cancel(); // stop any in-flight hint playback from mutating the new board
   hintAnim = null;
   animating = false;
   current = i;
-  select.value = String(current);
   game = new Game(target);
   beginAttempt();
   recordVisit(levelNumber(target));
@@ -393,7 +466,7 @@ function loadLevel(i: number): void {
   renderer.draw(game);
   setStatus(levelTitle(target));
   renderStats();
-  updateValveButtons();
+  rebuildLevelGrid(); // refresh the grid so the current level's pill is highlighted
 }
 
 function refreshStatus(): void {
@@ -504,7 +577,7 @@ function onSolved(): void {
 
   if (slot && session) {
     session.reportSolved(n, game.pushes);
-    rebuildSelector(); // mark the just-solved option
+    rebuildLevelGrid(); // mark the just-solved level's pill
     // Performance feedback is manifest-par based, so ★/✦ show even when the seed has no par
     // checks. (The AP par/efficiency reward checks, if on, were just sent by reportSolved.)
     const parNote = performanceNote(n, game.pushes);
@@ -530,7 +603,7 @@ function onSolved(): void {
   solvedOffline.add(n);
   const par = parTarget(n);
   if (par !== null && game.pushes <= par) solvedOptimalOffline.add(n);
-  rebuildSelector(); // reflect ✓/★/✦ in the dropdown for solo play
+  rebuildLevelGrid(); // reflect ✓/★/✦ on the pills for solo play
   const parNote = performanceNote(n, game.pushes);
   const hasNext = current < levels.length - 1;
   notice(
@@ -579,10 +652,10 @@ function maybeUpgradeSolve(n: number): void {
       session.reportSolved(n, game.pushes);
       const par = parTarget(n);
       if (session.isLevelPar(n)) {
-        rebuildSelector();
+        rebuildLevelGrid();
         notice(`★ Upgraded ${game.level.name} to perfect — optimal ${par} pushes!`, { win: true });
       } else if (session.isLevelEfficient(n) && !wasEfficient) {
-        rebuildSelector();
+        rebuildLevelGrid();
         notice(`✦ Upgraded ${game.level.name} to efficient (≤${effTarget(n)}, par ${par})!`, {
           win: true,
         });
@@ -595,7 +668,7 @@ function maybeUpgradeSolve(n: number): void {
   const par = parTarget(n);
   if (par !== null && game.pushes <= par && !solvedOptimalOffline.has(n)) {
     solvedOptimalOffline.add(n);
-    rebuildSelector();
+    rebuildLevelGrid();
     notice(`★ Upgraded ${game.level.name} to optimal (${par} pushes)!`, { win: true });
   }
   refreshStatus();
@@ -750,7 +823,7 @@ function useSkip(): void {
   }
   locked = true;
   notice(`Skipped level ${n} — check sent.`, { win: true });
-  rebuildSelector();
+  rebuildLevelGrid();
   const next = nextPlayable(n);
   if (next) window.setTimeout(() => loadLevel(next.index), 900);
 }
@@ -839,7 +912,7 @@ async function reloadDefaultCorpus(): Promise<void> {
       /* keep whatever is loaded */
     }
   }
-  rebuildSelector();
+  rebuildLevelGrid();
   loadLevel(0);
 }
 
@@ -853,7 +926,7 @@ async function onConnectedReady(s: SlotData): Promise<void> {
     }
   }
   lastUnlockedCount = session?.unlockedWorlds.size ?? 0; // baseline so connect doesn't auto-jump
-  rebuildSelector();
+  rebuildLevelGrid();
   const first = nextPlayable(0);
   if (first) loadLevel(first.index);
 }
@@ -934,8 +1007,7 @@ async function main(): Promise<void> {
     slotInput.value = prefs.slot;
   }
 
-  rebuildSelector();
-  select.addEventListener("change", () => loadLevel(Number(select.value)));
+  rebuildLevelGrid();
   restartBtn.addEventListener("click", restart);
   undoBtn.addEventListener("click", undo);
   // Shift-click (or Shift+H) is a bigger hint: more moves animated for more tokens.

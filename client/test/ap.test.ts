@@ -27,8 +27,10 @@ import {
   efficientThresholdForLevel,
   isGoalMet,
   levelsInWorld,
+  nextLevelInWorldOrder,
   parForLevel,
   requiresPull,
+  seedPositionInWorld,
   solvedInSeed,
   worldOfLevel,
   type SlotData,
@@ -312,6 +314,59 @@ describe("ap/session — chained unlocks (0.7 accurate logic)", () => {
     client.items.received = [{ id: KEY_BASE + 3 }]; // world 3 is the final world here
     peek(s).syncItems(true);
     expect(s.unlockedWorlds.has(3)).toBe(true); // unset boss flag -> normal single-key unlock
+  });
+
+  it("tracks held keys + total for the boss-zone display", () => {
+    const { s, client } = mockSession();
+    peek(s).slot = chainSlot(); // 6 worlds -> 5 keys (worlds 2..6)
+    client.items.received = [{ id: KEY_BASE + 2 }, { id: KEY_BASE + 5 }];
+    peek(s).syncItems(true);
+    expect(s.keysHeld).toBe(2);
+    expect(s.keysTotal).toBe(5);
+  });
+});
+
+describe("ap/slotData — seedPositionInWorld", () => {
+  it("numbers levels by position within their world (region order)", () => {
+    const s = chainSlot(); // worlds: 1=[1,2] 2=[3,4] 3=[5,6] 4=[7,8] 5=[9,10] 6=[11,12]
+    expect(seedPositionInWorld(s, 1)).toBe(1);
+    expect(seedPositionInWorld(s, 4)).toBe(2); // 2nd level of world 2
+    expect(seedPositionInWorld(s, 11)).toBe(1); // 1st level of the boss world
+  });
+
+  it("returns 0 for a level not in the seed", () => {
+    expect(seedPositionInWorld(chainSlot(), 999)).toBe(0);
+  });
+});
+
+describe("ap/slotData — nextLevelInWorldOrder", () => {
+  const s = chainSlot();
+  const all = (): boolean => true;
+  const none = (): boolean => false;
+
+  it("advances within the current world first", () => {
+    expect(nextLevelInWorldOrder(s, 3, none, all)).toBe(4); // world 2: 3 -> 4
+  });
+
+  it("rolls to the next world once the current world is cleared", () => {
+    const solved = (n: number): boolean => n === 3 || n === 4; // world 2 done
+    expect(nextLevelInWorldOrder(s, 4, solved, all)).toBe(5); // -> world 3
+  });
+
+  it("skips unplayable (locked) worlds", () => {
+    const onlyW1 = (n: number): boolean => n <= 2; // only world 1 playable
+    expect(nextLevelInWorldOrder(s, 1, none, onlyW1)).toBe(2); // stay in world 1
+    const w1Done = (n: number): boolean => n === 1 || n === 2;
+    expect(nextLevelInWorldOrder(s, 1, w1Done, onlyW1)).toBeNull(); // nothing else playable
+  });
+
+  it("wraps back to earlier worlds only as a last resort", () => {
+    const allButOne = (n: number): boolean => n !== 1; // only level 1 remains
+    expect(nextLevelInWorldOrder(s, 11, allButOne, all)).toBe(1); // from the last world, wrap to 1
+  });
+
+  it("returns null when nothing is left", () => {
+    expect(nextLevelInWorldOrder(s, 6, all, all)).toBeNull();
   });
 });
 

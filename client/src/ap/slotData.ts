@@ -63,6 +63,57 @@ export function levelsInWorld(slot: SlotData, world: number): number[] {
 }
 
 /**
+ * 1-based position of level `n` within its world's region order (the order the picker shows),
+ * or 0 if it isn't in any world. Lets the UI label levels per world ("World 2 · L3") instead
+ * of by raw Microban corpus number, which jumps around under shuffled selection.
+ */
+export function seedPositionInWorld(slot: SlotData, n: number): number {
+  for (const levels of Object.values(slot.region_map)) {
+    const i = levels.indexOf(n);
+    if (i >= 0) return i + 1;
+  }
+  return 0;
+}
+
+/**
+ * The next level to auto-advance to after solving `afterN`, in world-first order: the rest of
+ * the current world, then forward (higher-index) worlds, then wrapping back to earlier worlds
+ * (and finally earlier levels of the current world). The first candidate that is playable and
+ * unsolved wins; `null` when nothing remains. Pure — the caller passes `isSolved`/`isPlayable`
+ * predicates (so it stays unit-testable without a live Session).
+ */
+export function nextLevelInWorldOrder(
+  slot: SlotData,
+  afterN: number,
+  isSolved: (n: number) => boolean,
+  isPlayable: (n: number) => boolean,
+): number | null {
+  const worlds = Object.keys(slot.region_map)
+    .map(Number)
+    .sort((a, b) => a - b);
+  if (worlds.length === 0) return null;
+  // Locate the current level's world + position (fall back to "before the first world").
+  let w0 = worlds[0];
+  let p0 = -1;
+  for (const w of worlds) {
+    const i = levelsInWorld(slot, w).indexOf(afterN);
+    if (i >= 0) {
+      w0 = w;
+      p0 = i;
+      break;
+    }
+  }
+  const cur = levelsInWorld(slot, w0);
+  const ordered: number[] = [
+    ...cur.slice(p0 + 1), // rest of the current world
+    ...worlds.filter((w) => w > w0).flatMap((w) => levelsInWorld(slot, w)), // forward worlds
+    ...worlds.filter((w) => w < w0).flatMap((w) => levelsInWorld(slot, w)), // wrap to earlier worlds
+    ...cur.slice(0, p0 + 1), // wrap within the current world (afterN itself is skipped: it's solved)
+  ];
+  return ordered.find((n) => isPlayable(n) && !isSolved(n)) ?? null;
+}
+
+/**
  * Key-count floor for a world: a world unlocks when its own key is held AND the total
  * number of keys held is >= this floor. Defaults to 0 (flat single-key unlock) when no
  * floor was shipped, so pre-0.7 seeds and non-chained goals behave exactly as before.

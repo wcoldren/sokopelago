@@ -108,6 +108,75 @@
         color: #6ee787;
         border-color: #2f6b3f;
       }
+      /* World-grouped level picker: one card per world, a wrap of level "pills" inside. */
+      .level-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        width: min(640px, 100%);
+      }
+      .world {
+        background: #20202a;
+        border: 1px solid #33333f;
+        border-radius: 8px;
+        padding: 0.5rem 0.6rem;
+      }
+      .world.world-locked {
+        opacity: 0.6;
+      }
+      .world.current-world {
+        border-color: #6e8bff;
+      }
+      .world-head {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        margin-bottom: 0.4rem;
+      }
+      .world-name {
+        font-weight: 600;
+      }
+      .world-diff {
+        opacity: 0.55;
+        font-size: 0.8rem;
+      }
+      .world-state {
+        margin-left: auto;
+        opacity: 0.8;
+        font-size: 0.8rem;
+      }
+      .world-state.open {
+        color: #6ee787;
+      }
+      .pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+      }
+      .pill {
+        min-width: 2.4rem;
+        padding: 0.3rem 0.5rem;
+        font-size: 0.9rem;
+        font-variant-numeric: tabular-nums;
+        cursor: pointer;
+      }
+      .pill:hover:not(:disabled) {
+        border-color: #6e8bff;
+      }
+      .pill.current {
+        border-color: #6e8bff;
+        background: #2f3550;
+        font-weight: 600;
+      }
+      .pill.solved {
+        color: #6ee787;
+      }
+      .pill.locked,
+      .pill:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
       #conn-status {
         font-size: 0.85rem;
         opacity: 0.85;
@@ -208,11 +277,9 @@
       <span id="stats-status" class="hint"></span>
     </div>
 
+    <div id="level-grid" class="level-grid"></div>
+
     <div class="toolbar">
-      <label
-        >Level:
-        <select id="level-select"></select
-      ></label>
       <button id="restart-btn" title="Restart (R)">Restart</button>
       <button id="undo-btn" title="Undo (U)">Undo</button>
       <button id="hint-btn" title="Hint (H) — Shift for a bigger hint" hidden>Hint</button>

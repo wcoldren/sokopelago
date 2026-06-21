@@ -118,6 +118,9 @@ export class Session {
    * exactly: World 1 is always free; a body world needs its own key AND total keys >= its
    * floor; the boss world needs ALL keys when boss_all_keys is set. */
   readonly unlockedWorlds = new Set<number>([1]);
+  /** World keys currently held (world index), recomputed each sync. Drives the boss-zone
+   * "X/Y keys held" display. */
+  readonly heldKeys = new Set<number>();
   readonly solvedLevels = new Set<number>();
   /** Levels solved within par (the par-location check was sent). For the UI / restore. */
   readonly parLevels = new Set<number>();
@@ -234,6 +237,16 @@ export class Session {
     return this.worldOf.get(n);
   }
 
+  /** Number of world keys currently held (for the boss-zone "X/Y keys" display). */
+  get keysHeld(): number {
+    return this.heldKeys.size;
+  }
+
+  /** Total world keys in the seed (worlds 2..final_world each have one); 0 if single-world. */
+  get keysTotal(): number {
+    return this.slot ? Math.max(0, this.slot.final_world - 1) : 0;
+  }
+
   /**
    * Report a solved level: send its location check and re-check the goal. When the
    * seed has Par Checks and `pushCount` is within the level's push-par, also send the
@@ -348,6 +361,8 @@ export class Session {
    * flag is unset, so this reduces to the old "unlock a world the moment its key arrives".
    */
   private recomputeUnlocks(heldKeys: ReadonlySet<number>): void {
+    this.heldKeys.clear();
+    for (const k of heldKeys) this.heldKeys.add(k);
     this.unlockedWorlds.clear();
     this.unlockedWorlds.add(1); // World 1 is always free
     const slot = this.slot;
