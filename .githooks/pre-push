@@ -41,24 +41,28 @@ else
 fi
 
 # --- Client (eslint / prettier / tsc / dependency-cruiser) -----------------
-if [ -d client/node_modules ]; then
-  section "client: lint / format:check / typecheck / depcruise"
-  (
-    cd client &&
-      npm run --silent lint &&
-      npm run --silent format:check &&
-      npm run --silent typecheck &&
-      npm run --silent depcruise
-  ) || {
-    echo "  ✗ client checks — fix formatting with: (cd client && npm run format)"
-    fail=1
-  }
-else
-  echo "⚠ client/node_modules missing — run 'cd client && npm ci' to enable client checks"
+# Gate on the tracked package.json (present on the branch), not node_modules — a gitignored
+# node_modules can linger in the working tree after switching to a branch that lacks the package.
+if [ -f client/package.json ]; then
+  if [ -d client/node_modules ]; then
+    section "client: lint / format:check / typecheck / depcruise"
+    (
+      cd client &&
+        npm run --silent lint &&
+        npm run --silent format:check &&
+        npm run --silent typecheck &&
+        npm run --silent depcruise
+    ) || {
+      echo "  ✗ client checks — fix formatting with: (cd client && npm run format)"
+      fail=1
+    }
+  else
+    echo "⚠ client/node_modules missing — run 'cd client && npm ci' to enable client checks"
+  fi
 fi
 
 # --- Worker (typecheck) ----------------------------------------------------
-if [ -d server/potd-worker/node_modules ]; then
+if [ -f server/potd-worker/package.json ] && [ -d server/potd-worker/node_modules ]; then
   section "worker: typecheck"
   (cd server/potd-worker && npm run --silent typecheck) || fail=1
 fi
