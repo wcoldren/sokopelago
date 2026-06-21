@@ -112,7 +112,11 @@ These refine the spec above; where they differ, **these win** (the code follows 
    above that floor, is **not** the boss world, and is **not** itself pull-gated. If no
    eligible host exists, the floor is **disabled** (Pull places anywhere reachable, as in
    0.6) rather than risk an unfillable seed. "requires_pull" (a level-access gate) is
-   decoupled in code/comments from the Pull-item placement floor.
+   decoupled in code/comments from the Pull-item placement floor. **Note:** with the shipped
+   10-level pullban corpus (60% pull-gated) the floor stays in its disabled fallback (no
+   eligible late host) — it is implemented and safe but **dormant** until the corpus is
+   augmented. See `docs/DESIGN-pull-corpus.md` (planned `0.8.0` follow-up) for the corpus fix
+   that activates it and makes pull seeds robustly fillable at all region sizes.
 
 4. **`tools/preview_layout.py` will be built** (minimal, pure, no AP imports) for the
    section-4 tuning — it does not exist yet.
