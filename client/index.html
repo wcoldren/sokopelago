@@ -121,11 +121,30 @@
         border-radius: 8px;
         padding: 0.5rem 0.6rem;
       }
-      .world.world-locked {
-        opacity: 0.6;
+      /* World tabs: one row, switch which world's pills show (AP mode). */
+      .world-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
       }
-      .world.current-world {
+      .world-tab {
+        padding: 0.25rem 0.55rem;
+        font-size: 0.85rem;
+        cursor: pointer;
+      }
+      .world-tab:hover {
         border-color: #6e8bff;
+      }
+      .world-tab.active {
+        border-color: #6e8bff;
+        background: #2f3550;
+        font-weight: 600;
+      }
+      .world-tab.locked {
+        opacity: 0.55;
+      }
+      .world-tab.solved {
+        color: #6ee787;
       }
       .world-head {
         display: flex;

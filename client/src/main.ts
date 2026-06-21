@@ -91,6 +91,7 @@ let reversedControls = false; // set by a Reversed-Controls trap; cleared on lev
 let pullMode = false; // when on, plain direction input pulls instead of pushing
 let soloPullNoticed = false; // one-time "pull is a sandbox aid" heads-up shown in solo microban
 let lastUnlockedCount = 0; // # of unlocked worlds last seen — detects a newly-opened world
+let activeWorldTab: number | null = null; // AP mode: which world's tab is showing (null -> current)
 const solvedOffline = new Set<number>(); // levels solved this session in free play (no session)
 const solvedOptimalOffline = new Set<number>(); // of those, the ones solved in optimal (par) pushes
 
@@ -365,39 +366,80 @@ function buildWorldHead(head: HTMLElement, w: number): void {
   head.append(state);
 }
 
-/** Rebuild the world-grouped level grid: the seed's worlds (each a card of level pills) in AP
- * mode, a single flat list of the corpus in solo free-play. */
+/** A world tab button: short label + lock/solved state; clicking switches the shown world. */
+function makeWorldTab(w: number, levelsInW: Level[], active: boolean): HTMLButtonElement {
+  const s = slot!;
+  const isBoss = Boolean(s.boss_all_keys) && w === s.final_world;
+  const tab = document.createElement("button");
+  tab.className = "world-tab";
+  tab.textContent = isBoss ? "Boss" : `W${w}`;
+  if (active) tab.classList.add("active");
+  if (!session!.unlockedWorlds.has(w)) {
+    tab.classList.add("locked");
+    tab.textContent += " 🔒";
+  } else if (levelsInW.every((l) => session!.isLevelSolved(levelNumber(l)))) {
+    tab.classList.add("solved");
+  }
+  tab.addEventListener("click", () => {
+    activeWorldTab = w;
+    rebuildLevelGrid();
+  });
+  return tab;
+}
+
+/** Rebuild the level picker: in AP mode a tab row of worlds with the *active* world's header +
+ * pills shown (one world at a time); in solo free-play a single dropdown of the whole corpus. */
 function rebuildLevelGrid(): void {
   levelGrid.replaceChildren();
   if (slot && session) {
-    const currentWorld = game ? session.worldForLevel(levelNumber(game.level)) : undefined;
     const worlds = Object.keys(slot.region_map)
       .map(Number)
       .sort((a, b) => a - b);
-    for (const w of worlds) {
-      const lvls = levelsInWorld(slot, w)
+    const levelsOf = (w: number): Level[] =>
+      levelsInWorld(slot!, w)
         .map((n) => levels[n - 1])
         .filter((l): l is Level => Boolean(l));
-      if (lvls.length === 0) continue;
+    // Show the explicitly-picked tab when still valid, else the current level's world, else first.
+    const currentWorld = game ? session.worldForLevel(levelNumber(game.level)) : undefined;
+    let active = activeWorldTab;
+    if (active === null || !worlds.includes(active)) active = currentWorld ?? worlds[0];
+
+    const tabs = document.createElement("div");
+    tabs.className = "world-tabs";
+    for (const w of worlds) tabs.append(makeWorldTab(w, levelsOf(w), w === active));
+    levelGrid.append(tabs);
+
+    if (active !== undefined) {
       const section = document.createElement("div");
       section.className = "world";
-      if (!session.unlockedWorlds.has(w)) section.classList.add("world-locked");
-      if (w === currentWorld) section.classList.add("current-world");
       const head = document.createElement("div");
       head.className = "world-head";
-      buildWorldHead(head, w);
+      buildWorldHead(head, active);
       section.append(head);
       const pills = document.createElement("div");
       pills.className = "pills";
-      lvls.forEach((lvl, i) => pills.append(makePill(lvl, i + 1)));
+      levelsOf(active).forEach((lvl, i) => pills.append(makePill(lvl, i + 1)));
       section.append(pills);
       levelGrid.append(section);
     }
   } else {
-    const pills = document.createElement("div");
-    pills.className = "pills";
-    for (const lvl of shownLevels()) pills.append(makePill(lvl, 0));
-    levelGrid.append(pills);
+    // Solo free-play: the whole corpus is one flat list — a dropdown, not 155 buttons.
+    const label = document.createElement("label");
+    label.append(document.createTextNode("Level: "));
+    const select = document.createElement("select");
+    for (const lvl of shownLevels()) {
+      const n = levelNumber(lvl);
+      const opt = document.createElement("option");
+      opt.value = String(lvl.index);
+      const badge = difficultyBadge(n);
+      const mark = solvedOffline.has(n) ? `  ${solvedMarker(n)}` : "";
+      opt.textContent = `${lvl.name}${badge ? `  ${badge}` : ""}${mark}`;
+      select.append(opt);
+    }
+    if (game) select.value = String(current);
+    select.addEventListener("change", () => loadLevel(Number(select.value)));
+    label.append(select);
+    levelGrid.append(label);
   }
   updateValveButtons();
 }
@@ -458,6 +500,9 @@ function loadLevel(i: number): void {
   hintAnim = null;
   animating = false;
   current = i;
+  // Keep the visible world tab on the level being played (so auto-advance follows along).
+  if (slot && session)
+    activeWorldTab = session.worldForLevel(levelNumber(target)) ?? activeWorldTab;
   game = new Game(target);
   beginAttempt();
   recordVisit(levelNumber(target));
@@ -936,6 +981,7 @@ async function onConnectedReady(s: SlotData): Promise<void> {
     }
   }
   lastUnlockedCount = session?.unlockedWorlds.size ?? 0; // baseline so connect doesn't auto-jump
+  activeWorldTab = null; // fresh connection: default the tab to the current/first world
   rebuildLevelGrid();
   const first = nextPlayable(0);
   if (first) loadLevel(first.index);

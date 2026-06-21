@@ -30,9 +30,11 @@ out of order. The project label moves from beta to **alpha** to match. No new lo
   given option set (a pure tuning aid).
 - `slot_data` now ships `chain_floors` (resolved per-world floors) and `boss_all_keys`; the browser
   client mirrors the gate exactly so the unlock UI matches server logic for every goal.
-- **World-grouped level picker** (client): the dropdown is replaced by a grid of world cards with
-  level "pills". Each world header shows its difficulty range and key/lock state, and the **boss
-  world spells out "needs ALL keys (held/total)"** so the gate is explicit.
+- **Reworked level picker** (client): connected play uses **world tabs** — a compact tab row with
+  one world's level "pills" shown at a time; each world header gives its difficulty range and
+  key/lock state, and the **boss tab spells out "needs ALL keys (held/total)"** so the gate is
+  explicit. Solo free-play uses a **dropdown** of the corpus (with difficulty + solved markers)
+  rather than a wall of buttons.
 
 ### Changed
 - **Default `Levels Per Region` is now 5** (was 10), so a default seed has more worlds and the
