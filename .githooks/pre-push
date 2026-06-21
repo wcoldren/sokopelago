@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# Pre-push gate: run the same fast lint/format/typecheck checks CI gates on, so a formatting
+# slip (e.g. an un-ruff-formatted file) is caught here instead of failing CI after the push.
+#
+# Enable once per clone:  git config core.hooksPath .githooks
+# Bypass in a pinch:       git push --no-verify
+#
+# Mirrors the cheap, deterministic CI checks only (ruff + client eslint/prettier/tsc/depcruise +
+# worker tsc). The slower test suites stay in CI. Missing tools are warned-about, not fatal —
+# CI still runs them — so a fresh clone without deps can't get wedged.
+set -uo pipefail
+
+root="$(git rev-parse --show-toplevel)"
+cd "$root"
+fail=0
+section() { printf '\n\033[1m▶ %s\033[0m\n' "$1"; }
+
+# --- Python (ruff): the check that has bitten us ---------------------------
+# Prefer a real ruff, then a repo venv, then uvx (zero-install, cached), then a module.
+if command -v ruff >/dev/null 2>&1; then
+  RUFF="ruff"
+elif [ -x .venv/bin/ruff ]; then
+  RUFF=".venv/bin/ruff"
+elif command -v uvx >/dev/null 2>&1; then
+  RUFF="uvx ruff"
+elif python3 -m ruff --version >/dev/null 2>&1; then
+  RUFF="python3 -m ruff"
+else
+  RUFF=""
+fi
+if [ -n "$RUFF" ]; then
+  section "ruff format --check ."
+  $RUFF format --check . || {
+    echo "  ✗ formatting — fix with: $RUFF format ."
+    fail=1
+  }
+  section "ruff check ."
+  $RUFF check . || fail=1
+else
+  echo "⚠ ruff not found — skipping Python checks (CI still runs them). Install: pip install ruff"
+fi
+
+# --- Client (eslint / prettier / tsc / dependency-cruiser) -----------------
+if [ -d client/node_modules ]; then
+  section "client: lint / format:check / typecheck / depcruise"
+  (
+    cd client &&
+      npm run --silent lint &&
+      npm run --silent format:check &&
+      npm run --silent typecheck &&
+      npm run --silent depcruise
+  ) || {
+    echo "  ✗ client checks — fix formatting with: (cd client && npm run format)"
+    fail=1
+  }
+else
+  echo "⚠ client/node_modules missing — run 'cd client && npm ci' to enable client checks"
+fi
+
+# --- Worker (typecheck) ----------------------------------------------------
+if [ -d server/potd-worker/node_modules ]; then
+  section "worker: typecheck"
+  (cd server/potd-worker && npm run --silent typecheck) || fail=1
+fi
+
+if [ "$fail" -ne 0 ]; then
+  printf '\n\033[31m✗ pre-push checks failed.\033[0m Fix the above, or bypass with: git push --no-verify\n'
+  exit 1
+fi
+printf '\n\033[32m✓ pre-push checks passed\033[0m\n'
