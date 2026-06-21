@@ -24,3 +24,6 @@ coverage.xml
 # Local Claude Code session state
 .claude/
 sokopelago.apworld
+
+# Local scratch / playtest notes (convention: scratch lives here, git-excluded)
+notes/local/
