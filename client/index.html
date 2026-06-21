@@ -179,6 +179,15 @@
     </div>
     <div id="conn-status">Not connected — free play (all levels).</div>
 
+    <div class="toolbar stats-toolbar">
+      <button id="stats-export" title="Download your play stats (visits, moves, pushes, time) as JSON">
+        Export stats
+      </button>
+      <button id="stats-import" title="Merge a stats JSON file into your local stats">Import stats…</button>
+      <input id="stats-import-file" type="file" accept="application/json,.json" hidden />
+      <span id="stats-status" class="hint"></span>
+    </div>
+
     <div class="toolbar">
       <label
         >Level:
@@ -201,8 +210,9 @@
       &nbsp;·&nbsp; Undo: U &nbsp;·&nbsp; Hint: H (Shift = bigger) &nbsp;·&nbsp; Skip: K
     </div>
     <div class="hint legend">
-      Level list: <strong>★</strong> solved perfectly (optimal) &nbsp;·&nbsp;
-      <strong>✦</strong> solved efficiently &nbsp;·&nbsp; <strong>✓</strong> solved &nbsp;·&nbsp;
+      Level list: <strong>★</strong> perfect — exactly the optimal pushes &nbsp;·&nbsp;
+      <strong>✦</strong> efficient — within the margin (not optimal) &nbsp;·&nbsp;
+      <strong>✓</strong> solved &nbsp;·&nbsp;
       <strong>🔒</strong> locked (needs a World Key or the Pull ability) &nbsp;·&nbsp;
       <strong>◆◇◇</strong> difficulty (easy → hard)
     </div>

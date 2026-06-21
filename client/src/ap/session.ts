@@ -27,6 +27,7 @@ import {
   worldOfLevel,
   type SlotData,
 } from "./slotData";
+import { emptyStat, sessionId, type LevelStat, type SolveEvent } from "../stats";
 
 /** UI hooks the play loop subscribes to. */
 export interface SessionCallbacks {
@@ -132,6 +133,10 @@ export class Session {
   private readonly received: ValveCounts = { skip: 0, undo: 0, hint: 0 };
   private readonly consumed: ValveCounts = { skip: 0, undo: 0, hint: 0 };
 
+  // Per-level play stats, persisted to DataStorage (one key per kind+level). The
+  // in-memory copy is seeded from the server on connect and updated optimistically.
+  private readonly stats = new Map<number, LevelStat>();
+
   constructor(cb: SessionCallbacks) {
     this.cb = cb;
   }
@@ -167,6 +172,7 @@ export class Session {
     // Seed from current state: load consumed-token counts, then tally the item backlog
     // (suppressing trap effects for already-received traps) and restore solved levels.
     await this.loadConsumed();
+    await this.loadStats();
     this.syncItems(true);
     this.handleChecked(this.client.room.checkedLocations);
     this.ready = true;
@@ -347,6 +353,74 @@ export class Session {
   private persistConsumed(kind: keyof ValveCounts): void {
     if (!this.slot) return;
     void this.client.storage.prepare(this.storageKey(kind), 0).add(1).commit();
+  }
+
+  // --- Per-level play stats (DataStorage) ----------------------------------
+
+  private statKey(kind: "visits" | "sessions" | "solves", n: number): string {
+    const s = this.slot;
+    return `sokopelago:${s?.seed_name ?? ""}:${s?.player_id ?? 0}:stats:${kind}:${n}`;
+  }
+
+  /** Seed in-memory stats from the server for every seed level (one batched fetch). */
+  private async loadStats(): Promise<void> {
+    const ns = this.slot?.levels ?? [];
+    if (!ns.length) return;
+    const keys: string[] = [];
+    for (const n of ns) {
+      keys.push(this.statKey("visits", n), this.statKey("sessions", n), this.statKey("solves", n));
+    }
+    try {
+      const data = (await this.client.storage.fetch(keys, true)) as unknown as Record<string, unknown>;
+      for (const n of ns) {
+        const visits = Number(data[this.statKey("visits", n)] ?? 0);
+        const sessions = (data[this.statKey("sessions", n)] as string[] | undefined) ?? [];
+        const solves = (data[this.statKey("solves", n)] as SolveEvent[] | undefined) ?? [];
+        if (visits || sessions.length || solves.length) {
+          this.stats.set(n, { visits, sessions: [...sessions], solves: [...solves] });
+        }
+      }
+    } catch {
+      /* storage unavailable — start with no history */
+    }
+  }
+
+  /** Read a level's raw stat record (undefined if it has none yet). */
+  statFor(n: number): LevelStat | undefined {
+    return this.stats.get(n);
+  }
+
+  /** All recorded stats as a plain record, for export. */
+  statsRecord(): Record<number, LevelStat> {
+    return Object.fromEntries(this.stats);
+  }
+
+  /** Record one *visit* (an open) of level `n`: bump the counter and tag this page-load
+   * session once (so unique-visits is the distinct-session count). */
+  recordVisit(n: number): void {
+    const stat = this.stats.get(n) ?? emptyStat();
+    stat.visits += 1;
+    const newSession = !stat.sessions.includes(sessionId);
+    if (newSession) stat.sessions.push(sessionId);
+    this.stats.set(n, stat);
+    if (!this.client.authenticated) return;
+    void this.client.storage.prepare(this.statKey("visits", n), 0).add(1).commit();
+    if (newSession) {
+      void this.client.storage.prepare(this.statKey("sessions", n), []).add([sessionId]).commit();
+    }
+  }
+
+  /** Append one solve event for level `n` to the log. */
+  recordSolve(n: number, ev: SolveEvent): void {
+    const stat = this.stats.get(n) ?? emptyStat();
+    stat.solves.push(ev);
+    this.stats.set(n, stat);
+    if (!this.client.authenticated) return;
+    // archipelago.js storage wants a JSONSerializable[]; a SolveEvent is all-number fields.
+    void this.client.storage
+      .prepare(this.statKey("solves", n), [])
+      .add([ev] as unknown as Record<string, number>[])
+      .commit();
   }
 
   private handleChecked(locations: number[]): void {

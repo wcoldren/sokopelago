@@ -11,6 +11,14 @@ import { Renderer } from "./render";
 import { attachInput } from "./input";
 import { effectiveDir, type Dir, type Level } from "./types";
 import { Session, loadPrefs, type SessionCallbacks } from "./ap/session";
+import {
+  SoloStats,
+  derive,
+  mergeStat,
+  type DerivedStat,
+  type SolveEvent,
+  type StatsExport,
+} from "./stats";
 import type { SlotData } from "./ap/slotData";
 import type { TrapVariant } from "./ap/ids";
 import { parseSolution, planHint, animateSolutionPrefix, type AnimationHandle } from "./solution";
@@ -51,6 +59,10 @@ const slotInput = $<HTMLInputElement>("ap-slot");
 const passInput = $<HTMLInputElement>("ap-pass");
 const connectBtn = $<HTMLButtonElement>("ap-connect");
 const connStatusEl = $<HTMLDivElement>("conn-status");
+const statsExportBtn = $<HTMLButtonElement>("stats-export");
+const statsImportBtn = $<HTMLButtonElement>("stats-import");
+const statsImportFile = $<HTMLInputElement>("stats-import-file");
+const statsStatusEl = $<HTMLSpanElement>("stats-status");
 
 const renderer = new Renderer(canvas);
 
@@ -74,6 +86,14 @@ let pullMode = false; // when on, plain direction input pulls instead of pushing
 let lastUnlockedCount = 0; // # of unlocked worlds last seen — detects a newly-opened world
 const solvedOffline = new Set<number>(); // levels solved this session in free play (no session)
 const solvedOptimalOffline = new Set<number>(); // of those, the ones solved in optimal (par) pushes
+
+// Per-level play stats (visits + per-solve event log). Solo play persists to localStorage;
+// AP play persists to the session's DataStorage. `attemptStart` clocks the current board
+// for solve time; `attemptActive` guards against logging a "solve" more than once per fresh
+// board (so nudging a box off and back onto a goal on a solved board doesn't re-log).
+const soloStats = new SoloStats();
+let attemptStart = Date.now();
+let attemptActive = false;
 
 const BIG_HINT_PUSHES = 3; // how many extra pushes a "big" hint (Shift+Hint) reveals/animates
 
@@ -99,7 +119,8 @@ const effTarget = (n: number): number | null => {
 };
 
 /** Difficulty tier for a level ("easy"/"medium"/"hard"), or null if the manifest has no
- * score for it. Manifest-driven, so badges show in solo play too. */
+ * score for it. Manifest-driven, so badges show in solo play too. The 0.33/0.66 cutoffs
+ * mirror apworld/sokopelago/tiers.py (EASY_MAX/HARD_MIN) — keep the two in sync. */
 function difficultyTier(n: number): "easy" | "medium" | "hard" | null {
   const d = manifestDifficulty.get(n);
   if (d === undefined) return null;
@@ -152,6 +173,16 @@ function renderStats(): void {
   statsEl.append(chip("pushes", pushesText, pushesCls));
   if (eff !== null && par !== null && eff > par) {
     statsEl.append(chip("eff", `≤ ${eff}`));
+  }
+  statsEl.append(chip("time", formatMs(Date.now() - attemptStart)));
+  // Lifetime play stats for this level (visits + bests over the solve log).
+  const st = statsFor(n);
+  if (st.visits > 0) {
+    const uniq = st.uniqueVisits > 1 ? ` · ${st.uniqueVisits} sessions` : "";
+    statsEl.append(chip("plays", `${st.visits}${uniq}`));
+  }
+  if (st.bestMoves !== null) {
+    statsEl.append(chip("best", `${st.bestMoves}m / ${st.bestPushes}p / ${formatMs(st.bestTimeMs ?? 0)}`));
   }
 }
 
@@ -298,6 +329,8 @@ function loadLevel(i: number): void {
   current = i;
   select.value = String(current);
   game = new Game(target);
+  beginAttempt();
+  recordVisit(levelNumber(target));
   locked = false;
   hintBoxMoves = 0;
   reversedControls = false; // a trap's curse lasts only for the level it hit
@@ -313,6 +346,92 @@ function refreshStatus(): void {
   updateValveButtons();
 }
 
+/** Begin timing/counting a fresh attempt on the current board (a level load or restart). */
+function beginAttempt(): void {
+  attemptStart = Date.now();
+  attemptActive = true;
+}
+
+/** Record one *visit* (an open) of level `n` against the active stats source. */
+function recordVisit(n: number): void {
+  if (slot && session) session.recordVisit(n);
+  else soloStats.recordVisit(loadedCorpus, n);
+}
+
+/** Log a solve event for level `n` — once per fresh attempt (so re-winning a solved board
+ * by nudging a box doesn't inflate the log). */
+function recordSolveEvent(n: number): void {
+  if (!game || !attemptActive) return;
+  attemptActive = false;
+  const ev: SolveEvent = {
+    moves: game.moves,
+    pushes: game.pushes,
+    timeMs: Math.max(0, Date.now() - attemptStart),
+    ts: Date.now(),
+  };
+  if (slot && session) session.recordSolve(n, ev);
+  else soloStats.recordSolve(loadedCorpus, n, ev);
+}
+
+/** Rolled-up stats (visits / unique / bests) for level `n` from the active source. */
+function statsFor(n: number): DerivedStat {
+  return derive(slot && session ? session.statFor(n) : soloStats.get(loadedCorpus, n));
+}
+
+/** Compact mm:ss / ss formatting for a millisecond duration. */
+function formatMs(ms: number): string {
+  const s = Math.floor(ms / 1000);
+  return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m${String(s % 60).padStart(2, "0")}s`;
+}
+
+function setStatsStatus(text: string): void {
+  statsStatusEl.textContent = text;
+}
+
+/** Build a portable stats export: the solo store, plus the live AP-session stats (current
+ * corpus) when connected. Deep-cloned so merging never mutates the live stores. */
+function buildStatsExport(): StatsExport {
+  const player = slotInput.value.trim() || "player";
+  const obj = structuredClone(soloStats.exportObject(player, Date.now()));
+  if (slot && session) {
+    const cs = (obj.corpora[loadedCorpus] ??= {});
+    for (const [k, stat] of Object.entries(session.statsRecord())) {
+      const n = Number(k);
+      const clone = structuredClone(stat);
+      cs[n] = cs[n] ? mergeStat(cs[n], clone) : clone;
+    }
+  }
+  return obj;
+}
+
+/** Trigger a client-side file download of `text`. */
+function download(filename: string, text: string): void {
+  const blob = new Blob([text], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportStats(): void {
+  const obj = buildStatsExport();
+  download(`sokopelago-stats-${obj.exportedAt}.json`, JSON.stringify(obj, null, 2));
+  setStatsStatus("Exported your play stats.");
+}
+
+async function importStats(file: File): Promise<void> {
+  try {
+    const data: unknown = JSON.parse(await file.text());
+    const ok = soloStats.importObject(data);
+    setStatsStatus(ok ? "Imported and merged stats into local play." : "Not a Sokopelago stats file.");
+    if (ok) refreshStatus();
+  } catch {
+    setStatsStatus("Couldn't read that file.");
+  }
+}
+
 /** Whether level `n` is already marked solved (AP session, or this session's free play). */
 function alreadySolved(n: number): boolean {
   return slot && session ? session.isLevelSolved(n) : solvedOffline.has(n);
@@ -323,6 +442,7 @@ function onSolved(): void {
   const lvl = game.level;
   const solved = lvl.name;
   const n = levelNumber(lvl);
+  recordSolveEvent(n);
 
   if (slot && session) {
     session.reportSolved(n, game.pushes);
@@ -332,9 +452,11 @@ function onSolved(): void {
     let parNote = "";
     if (slot.par_checks && par !== null) {
       if (session.isLevelPar(n)) {
-        parNote = ` ★ perfect — optimal ${par} pushes!`;
+        parNote = ` ★ perfect — exactly the optimal ${par} pushes!`;
       } else if (session.isLevelEfficient(n)) {
-        parNote = ` ✦ efficient (≤${eff}, par ${par})!`;
+        // Efficient ≠ perfect: spell out how far over optimal so the ✦ isn't mistaken
+        // for the ★. (Replaying the level in exactly `par` pushes upgrades it to ★.)
+        parNote = ` ✦ efficient — ${game.pushes} pushes, ${game.pushes - par} over the optimal ${par} (★ = exactly ${par})`;
       } else {
         parNote =
           eff !== null && eff > par
@@ -382,6 +504,60 @@ function onSolved(): void {
   }
 }
 
+/**
+ * A board win just happened. Route it: a first solve runs the full solve flow
+ * (check + notice + auto-advance); a win on an *already-solved* level (a replay) only
+ * attempts a tier upgrade — never re-advancing or re-locking, so nudging a box off and
+ * back onto a goal on a dead-end board can't re-spam notices.
+ */
+function handleWin(): void {
+  if (!game || !game.isWin()) {
+    refreshStatus();
+    return;
+  }
+  const n = levelNumber(game.level);
+  if (!alreadySolved(n)) onSolved();
+  else maybeUpgradeSolve(n);
+}
+
+/**
+ * Replay of an already-cleared level: if the player beat their recorded tier, send the
+ * par/efficiency check they newly earned and announce the upgrade. `reportSolved` is
+ * idempotent and only fires a tier check it hasn't fired yet, so this is safe to call
+ * on every replay win. Never advances or locks the board.
+ */
+function maybeUpgradeSolve(n: number): void {
+  if (!game) return;
+  recordSolveEvent(n); // a replay that wins is still a solve worth logging (better time, etc.)
+  if (slot && session) {
+    // Already at the top tier (or the seed has no par checks) → nothing to earn.
+    if (slot.par_checks && !session.isLevelPar(n)) {
+      const wasEfficient = session.isLevelEfficient(n);
+      session.reportSolved(n, game.pushes);
+      const par = parTarget(n);
+      if (session.isLevelPar(n)) {
+        rebuildSelector();
+        notice(`★ Upgraded ${game.level.name} to perfect — optimal ${par} pushes!`, { win: true });
+      } else if (session.isLevelEfficient(n) && !wasEfficient) {
+        rebuildSelector();
+        notice(`✦ Upgraded ${game.level.name} to efficient (≤${effTarget(n)}, par ${par})!`, {
+          win: true,
+        });
+      }
+    }
+    refreshStatus();
+    return;
+  }
+  // Solo free-play: upgrade ✓ → ★ when this replay was optimal.
+  const par = parTarget(n);
+  if (par !== null && game.pushes <= par && !solvedOptimalOffline.has(n)) {
+    solvedOptimalOffline.add(n);
+    rebuildSelector();
+    notice(`★ Upgraded ${game.level.name} to optimal (${par} pushes)!`, { win: true });
+  }
+  refreshStatus();
+}
+
 /** Whether Pull is part of this context at all: always in solo (god-mode for dev/testing);
  * in AP only on a pull-capable corpus or a pull-logic seed. */
 function pullInSeed(): boolean {
@@ -404,10 +580,7 @@ function move(dir: Dir): void {
   }
   if (!game.move(effectiveDir(dir, reversedControls))) return;
   renderer.draw(game);
-  // Don't re-fire the solve flow if this level is already solved (e.g. nudging a box off
-  // and back onto a goal on a dead-end board) — that would re-spam notices / re-lock.
-  if (game.isWin() && !alreadySolved(levelNumber(game.level))) onSolved();
-  else refreshStatus();
+  handleWin();
 }
 
 /** Pull a box that's directly behind the player (the expert mechanic). */
@@ -423,8 +596,7 @@ function pull(dir: Dir): void {
   }
   if (!game.pull(effectiveDir(dir, reversedControls))) return;
   renderer.draw(game);
-  if (game.isWin() && !alreadySolved(levelNumber(game.level))) onSolved();
-  else refreshStatus();
+  handleWin();
 }
 
 function restart(): void {
@@ -433,6 +605,7 @@ function restart(): void {
   hintAnim = null;
   animating = false;
   game.restart();
+  beginAttempt(); // same visit, fresh attempt — re-clock for solve time
   locked = false;
   renderer.draw(game);
   refreshStatus();
@@ -728,6 +901,13 @@ async function main(): Promise<void> {
   skipBtn.addEventListener("click", useSkip);
   pullBtn.addEventListener("click", togglePull);
   connectBtn.addEventListener("click", onConnectClick);
+  statsExportBtn.addEventListener("click", exportStats);
+  statsImportBtn.addEventListener("click", () => statsImportFile.click());
+  statsImportFile.addEventListener("change", () => {
+    const file = statsImportFile.files?.[0];
+    if (file) void importStats(file);
+    statsImportFile.value = ""; // allow re-importing the same file
+  });
   attachInput({
     onMove: move,
     onRestart: restart,

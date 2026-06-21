@@ -33,6 +33,7 @@ import {
   type SlotData,
 } from "../src/ap/slotData";
 import { resolveServerUrl, Session, type SessionCallbacks } from "../src/ap/session";
+import { derive } from "../src/stats";
 
 describe("ap/session — resolveServerUrl", () => {
   it("honors an explicit scheme", () => {
@@ -439,6 +440,25 @@ describe("ap/session — efficiency tier", () => {
     expect(s.isLevelEfficient(7)).toBe(false);
   });
 
+  it("a replay in fewer pushes upgrades efficient -> perfect (sends only the par check)", () => {
+    const { s, checked } = mockSession();
+    peek(s).slot = effSlot();
+    s.reportSolved(7, 12); // first clear: efficient only (12 > par 10, <= eff 12)
+    expect(s.isLevelPar(7)).toBe(false);
+    expect(s.isLevelEfficient(7)).toBe(true);
+
+    s.reportSolved(7, 10); // replay at exactly par -> upgrade to perfect
+    expect(s.isLevelPar(7)).toBe(true);
+    // The replay re-sends the idempotent solve check and the newly-earned par check,
+    // but not a second efficiency check (already earned).
+    expect(checked).toEqual([
+      locationIdForLevel(7),
+      locationIdForEfficientLevel(7),
+      locationIdForLevel(7),
+      locationIdForParLevel(7),
+    ]);
+  });
+
   it("never sends an efficiency check when the tier is off", () => {
     const { s, checked } = mockSession();
     peek(s).slot = sampleSlot({
@@ -450,5 +470,39 @@ describe("ap/session — efficiency tier", () => {
     s.reportSolved(7, 12);
     expect(checked).toEqual([locationIdForLevel(7)]);
     expect(s.isLevelEfficient(7)).toBe(false);
+  });
+});
+
+describe("ap/session — play stats", () => {
+  it("records visits (deduped per session) and solve events in memory", () => {
+    const { s } = mockSession();
+    peek(s).slot = sampleSlot();
+    s.recordVisit(7);
+    s.recordVisit(7); // same page-load session -> sessions deduped, visits still counts
+    s.recordVisit(8);
+    s.recordSolve(7, { moves: 40, pushes: 12, timeMs: 5000, ts: 1 });
+
+    const seven = derive(s.statFor(7));
+    expect(seven.visits).toBe(2);
+    expect(seven.uniqueVisits).toBe(1);
+    expect(seven.solveCount).toBe(1);
+    expect(seven.bestMoves).toBe(40);
+    expect(seven.bestPushes).toBe(12);
+    expect(seven.bestTimeMs).toBe(5000);
+
+    expect(derive(s.statFor(8)).visits).toBe(1);
+    expect(s.statFor(99)).toBeUndefined();
+  });
+
+  it("keeps the best (min) across multiple solve events", () => {
+    const { s } = mockSession();
+    peek(s).slot = sampleSlot();
+    s.recordSolve(7, { moves: 50, pushes: 14, timeMs: 9000, ts: 1 });
+    s.recordSolve(7, { moves: 44, pushes: 12, timeMs: 7000, ts: 2 });
+    const d = derive(s.statFor(7));
+    expect(d.solveCount).toBe(2);
+    expect(d.bestMoves).toBe(44);
+    expect(d.bestPushes).toBe(12);
+    expect(d.bestTimeMs).toBe(7000);
   });
 });
