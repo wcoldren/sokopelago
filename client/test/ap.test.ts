@@ -36,7 +36,7 @@ import {
   type SlotData,
 } from "../src/ap/slotData";
 import { resolveServerUrl, Session, type SessionCallbacks } from "../src/ap/session";
-import { derive } from "../src/stats";
+import { derive } from "../src/engine/stats";
 
 describe("ap/session — resolveServerUrl", () => {
   it("honors an explicit scheme", () => {

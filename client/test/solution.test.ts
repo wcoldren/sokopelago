@@ -6,9 +6,9 @@ import {
   parseSolution,
   planHint,
   replaySolutionPrefix,
-} from "../src/solution";
-import { parseXsb } from "../src/xsb";
-import { Game } from "../src/board";
+} from "../src/engine/solution";
+import { parseXsb } from "../src/engine/xsb";
+import { Game } from "../src/engine/board";
 
 // A one-line level: player, a gap, a box, then its goal. Solution "rr" = walk right,
 // then push the box onto the goal.

@@ -5,11 +5,11 @@
 //   - AP-connected: the selector shows only the seed's levels, gated by received
 //     world keys; solving a level reports a check; meeting the goal reports GOAL.
 
-import { levelFromBoard } from "./xsb";
-import { Game } from "./board";
-import { Renderer } from "./render";
-import { attachInput } from "./input";
-import { effectiveDir, type Dir, type Level } from "./types";
+import { levelFromBoard } from "./engine/xsb";
+import { Game } from "./engine/board";
+import { Renderer } from "./engine/render";
+import { attachInput } from "./engine/input";
+import { effectiveDir, type Dir, type Level } from "./engine/types";
 import { Session, loadPrefs, type SessionCallbacks } from "./ap/session";
 import {
   SoloStats,
@@ -18,7 +18,7 @@ import {
   type DerivedStat,
   type SolveEvent,
   type StatsExport,
-} from "./stats";
+} from "./engine/stats";
 import {
   levelsInWorld,
   nextLevelInWorldOrder,
@@ -26,22 +26,15 @@ import {
   type SlotData,
 } from "./ap/slotData";
 import type { TrapVariant } from "./ap/ids";
-import { parseSolution, planHint, animateSolutionPrefix, type AnimationHandle } from "./solution";
+import {
+  parseSolution,
+  planHint,
+  animateSolutionPrefix,
+  type AnimationHandle,
+} from "./engine/solution";
+import { fetchManifest } from "./engine/manifest";
 
 const DEFAULT_CORPUS = "microban";
-// Base-relative so the fetch resolves under whatever path the site is served from
-// (root locally, /sokopelago/ on GitHub Pages). BASE_URL is the Vite `base` ("./").
-const manifestUrl = (corpus: string): string => `${import.meta.env.BASE_URL}data/${corpus}.json`;
-
-/** One level entry in a bundled corpus manifest (data/<corpus>.json). */
-interface ManifestEntry {
-  n: number;
-  name: string;
-  board: string[];
-  solution?: string;
-  par?: number;
-  difficulty?: number;
-}
 
 const $ = <T extends HTMLElement>(id: string): T => {
   const el = document.getElementById(id);
@@ -1036,10 +1029,7 @@ function onConnectClick(): void {
 
 /** Fetch a corpus manifest by name: boards (rendered) + solutions (hints). */
 async function loadCorpus(corpus: string): Promise<void> {
-  const url = manifestUrl(corpus);
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`failed to load ${url}: ${res.status}`);
-  const entries = (await res.json()) as ManifestEntry[];
+  const entries = await fetchManifest(corpus);
   levels = entries.map((e) => levelFromBoard(e.board, e.n - 1, e.name));
   solutions = new Map(entries.filter((e) => e.solution).map((e) => [e.n, e.solution as string]));
   manifestPar = new Map(

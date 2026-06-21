@@ -11,7 +11,7 @@ import {
   normalizeStat,
   type LevelStat,
   type StatsStore,
-} from "../src/stats";
+} from "../src/engine/stats";
 
 const ev = (moves: number, pushes: number, timeMs: number, ts = 0) => ({
   moves,

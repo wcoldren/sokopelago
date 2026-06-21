@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { parseXsb, levelFromBoard } from "../src/xsb";
-import { Tile } from "../src/types";
+import { parseXsb, levelFromBoard } from "../src/engine/xsb";
+import { Tile } from "../src/engine/types";
 
 const corpus = readFileSync(new URL("../../levels/microban.xsb", import.meta.url), "utf8");
 

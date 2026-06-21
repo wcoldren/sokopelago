@@ -28,7 +28,7 @@ import {
   worldOfLevel,
   type SlotData,
 } from "./slotData";
-import { emptyStat, sessionId, type LevelStat, type SolveEvent } from "../stats";
+import { emptyStat, sessionId, type LevelStat, type SolveEvent } from "../engine/stats";
 
 /** UI hooks the play loop subscribes to. */
 export interface SessionCallbacks {

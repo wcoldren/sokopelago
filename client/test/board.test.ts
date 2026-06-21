@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { parseXsb } from "../src/xsb";
-import { Game } from "../src/board";
-import { effectiveDir } from "../src/types";
+import { parseXsb } from "../src/engine/xsb";
+import { Game } from "../src/engine/board";
+import { effectiveDir } from "../src/engine/types";
 
 const load = (xsb: string): Game => new Game(parseXsb(xsb)[0]);
 
