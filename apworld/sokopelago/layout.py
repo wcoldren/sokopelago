@@ -133,6 +133,42 @@ def floor_schedule(region_count: int, group: int, cap: int) -> list[int]:
     return floors
 
 
+# Solo fill (fill_restrictive) reliably places the count-floor key chain only while it stays
+# shallow; past a handful of keys of depth its swap search starts failing on tight seeds even
+# though a valid placement always exists. effective_floor_schedule caps the *effective* chain
+# depth by raising the group as the world count grows. 4 keeps every option combination at a 0%
+# fill-failure rate in stress testing (thousands of solo seeds) while leaving the default
+# layout's steepness untouched (ceil(6/4) == 2 == the default group).
+DEFAULT_CHAIN_MAX_DEPTH = 4
+
+
+def effective_floor_schedule(world_sizes: list[int], chain_group: int, max_depth: int, chained: bool) -> list[int]:
+    """The per-world key-count floors actually enforced for a seed (1-based; index ``i-1`` is
+    World ``i``), given the worlds' sizes.
+
+    Layers fill-robustness guards on top of ``floor_schedule``; both only ever *raise* the group
+    (gentler chain), so the fillability invariant always holds:
+      - Non-beat_final_region goals (``chained=False``) and single-world seeds → flat (all 0).
+      - **Zero-slack** layouts — where the keys exactly fill the non-boss worlds (e.g. one level
+        per region) — flatten the body floors and keep only the all-keys boss gate, since a tight
+        nested count-floor chain is an unreliable fill.
+      - Otherwise bound the effective steepness: narrow worlds (smallest non-boss world < 3) get
+        at least group 2, and the staircase rises at most ~``max_depth`` times overall (group is
+        raised to ``ceil(region_count / max_depth)``), so the deepest body floor stays shallow no
+        matter how many worlds there are.
+    """
+    n = len(world_sizes)
+    if not chained or n <= 1:
+        return [0] * n
+    body_sizes = world_sizes[:-1]  # worlds 1..N-1 (exclude the boss)
+    spare = sum(body_sizes) - (n - 1)  # non-boss locations left after the keys
+    if spare < 1:
+        return [0] * (n - 1) + [n - 1]  # flat body, boss informational
+    group = chain_group if min(body_sizes) >= 3 else max(chain_group, 2)
+    group = max(group, -(-n // max(1, max_depth)))  # ceil(n / max_depth)
+    return floor_schedule(n, group, n - 2)
+
+
 def boss_world_index(worlds: list[list[int]], boss_level: int) -> int:
     """1-based index of the world containing ``boss_level``. Falls back to the last
     world if the level isn't found (shouldn't happen after clamping)."""

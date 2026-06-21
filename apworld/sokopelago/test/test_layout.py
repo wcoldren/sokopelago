@@ -8,7 +8,14 @@ take a plain RNG and a difficulty dict.
 import random
 import unittest
 
-from ..layout import _allocate, chunk_list, floor_schedule, gentle_first_world, select_bucketed_levels
+from ..layout import (
+    _allocate,
+    chunk_list,
+    effective_floor_schedule,
+    floor_schedule,
+    gentle_first_world,
+    select_bucketed_levels,
+)
 
 # A monotonic difficulty ramp so "easiest tiers first" is checkable: level n -> n/155.
 _DIFF = {n: n / 155 for n in range(1, 156)}
@@ -152,6 +159,49 @@ class TestFloorSchedule(unittest.TestCase):
                     world_index = offset + 2
                     self.assertLessEqual(f, world_index - 2, "floor must not exceed earlier keyed worlds")
                 self.assertEqual(body, sorted(body), "body floors must be non-decreasing")
+
+
+class TestEffectiveFloorSchedule(unittest.TestCase):
+    """The fill-robustness guards layered on floor_schedule (flatten zero-slack, bound depth)."""
+
+    def test_non_chained_is_flat(self) -> None:
+        self.assertEqual(effective_floor_schedule([5, 5, 5, 5], 1, 4, chained=False), [0, 0, 0, 0])
+
+    def test_single_world(self) -> None:
+        self.assertEqual(effective_floor_schedule([5], 2, 4, chained=True), [0])
+
+    def test_zero_slack_flattens_body(self) -> None:
+        # 6 size-1 worlds: keys exactly fill the non-boss worlds -> flat body, boss informational.
+        self.assertEqual(effective_floor_schedule([1, 1, 1, 1, 1, 1], 1, 4, chained=True), [0, 0, 0, 0, 0, 5])
+
+    def test_default_layout_matches_raw_schedule(self) -> None:
+        # 6 worlds, group 2: no guard binds (ceil(6/4)=2, sizes>=3, slack>0) -> raw schedule.
+        sizes = [5, 5, 5, 5, 5, 5]
+        self.assertEqual(
+            effective_floor_schedule(sizes, 2, 4, chained=True),
+            floor_schedule(6, 2, 4),
+        )
+
+    def test_depth_is_bounded(self) -> None:
+        # Steepest group over many worlds: the depth cap keeps the deepest body floor <= max_depth.
+        floors = effective_floor_schedule([3] * 20, 1, 4, chained=True)
+        self.assertLessEqual(max(floors[1:-1]), 4)
+
+    def test_narrow_worlds_get_at_least_group_two(self) -> None:
+        # Size-2 worlds with group 1 must not produce the full i-2 staircase.
+        steep = effective_floor_schedule([2] * 8, 1, 99, chained=True)  # max_depth huge -> depth cap off
+        self.assertEqual(steep, floor_schedule(8, 2, 6))  # bumped to group 2
+
+    def test_guards_only_raise_floors_never_break_invariant(self) -> None:
+        for n in range(2, 18):
+            for size in (1, 2, 3, 5):
+                for group in (1, 2, 4):
+                    floors = effective_floor_schedule([size] * n, group, 4, chained=True)
+                    body = floors[1:-1]
+                    self.assertEqual(body, sorted(body))  # non-decreasing
+                    for offset, f in enumerate(body):
+                        # body[offset] is World i = offset+2, so the invariant is floor_i <= i-2 = offset.
+                        self.assertLessEqual(f, offset)
 
 
 class TestChunkList(unittest.TestCase):

@@ -31,12 +31,13 @@ from .Items import (
     world_key_name,
 )
 from .layout import (
+    DEFAULT_CHAIN_MAX_DEPTH,
     assign_levels_by_difficulty,
     boss_world_index,
     chunk_list,
     clamp,
+    effective_floor_schedule,
     escape_valve_counts,
-    floor_schedule,
     gentle_first_world,
     select_bucketed_levels,
     solve_count_keys_needed,
@@ -53,14 +54,6 @@ from .Locations import (
 )
 from .Options import SokopelagoOptions
 from .tiers import EASY_MAX, MAX_DIFFICULTY_CEILING, within_cap
-
-# Solo fill (fill_restrictive) reliably places the count-floor key chain only while it stays
-# shallow; past a handful of keys of depth its swap search starts failing on tight seeds even
-# though a valid placement always exists. We cap the *effective* chain depth here by raising the
-# group as the world count grows (see _effective_floors). 4 keeps every option combination at a
-# 0% fill-failure rate in stress testing (thousands of solo seeds) while leaving the default
-# layout's steepness untouched.
-_CHAIN_MAX_DEPTH = 4
 
 
 class SokopelagoWeb(WebWorld):
@@ -238,38 +231,11 @@ class SokopelagoWorld(World):
 
     def _effective_floors(self) -> list[int]:
         """Per-world key-count floors actually enforced (1-based; index ``i-1`` = World ``i``).
-
-        Non-beat_final_region goals use flat floors (the 0.6 single-key layout). Body chaining
-        also needs *fill slack* — spare non-boss solve locations beyond the keys that must live
-        there — so on a zero-slack layout (e.g. ``levels_per_region == 1``, where the N-1 keys
-        exactly fill the N-1 non-boss worlds) the body floors are flattened to 0, keeping only
-        the all-keys boss gate. A tight nested count-floor chain is otherwise an unreliable fill
-        (fill_restrictive occasionally fails to place into zero-slack), while the boss gate alone
-        fills reliably. The final entry stays ``region_count-1`` when chaining is on (the boss
-        gate is enforced separately by ``has_all`` in create_regions; this value is informational
-        for slot_data / the client)."""
-        if self.options.goal != "beat_final_region" or self.region_count <= 1:
-            return [0] * self.region_count
-        body_sizes = [len(world) for world in self.worlds[:-1]]  # worlds 1..N-1 (excl. boss)
-        spare = sum(body_sizes) - (self.region_count - 1)  # non-boss locations left after the keys
-        if spare < 1:
-            # Zero-slack layout (e.g. levels_per_region == 1): the keys exactly fill the non-boss
-            # worlds, so flatten the body floors and rely on the all-keys boss gate alone.
-            return [0] * (self.region_count - 1) + [self.region_count - 1]
-        # A steep, deep nested count-floor chain is an unreliable solo fill (a valid placement
-        # always exists, but fill_restrictive's swap search struggles past a few keys of depth),
-        # so bound the *effective* steepness two ways while leaving normal seeds untouched:
-        #   - narrow worlds (smallest non-boss world < 3 locations) get at least group 2;
-        #   - the staircase rises at most ~_CHAIN_MAX_DEPTH times overall, by raising the group
-        #     to ceil(region_count / _CHAIN_MAX_DEPTH) so the deepest body floor stays shallow
-        #     no matter how many worlds there are.
-        # Both only ever *increase* the group (gentler), so they never break the fillability
-        # invariant, and they're no-ops on the default layout (ceil(6/4) == 2 == the default).
-        min_body = min(body_sizes)
-        effective_group = self.chain_group if min_body >= 3 else max(self.chain_group, 2)
-        depth_group = -(-self.region_count // _CHAIN_MAX_DEPTH)  # ceil(region_count / max_depth)
-        effective_group = max(effective_group, depth_group)
-        return floor_schedule(self.region_count, effective_group, self.region_count - 2)
+        Delegates to the pure ``effective_floor_schedule`` (flatten on zero-slack, bound depth);
+        chaining + the all-keys boss gate are beat_final_region-only."""
+        chained = self.options.goal == "beat_final_region"
+        sizes = [len(world) for world in self.worlds]
+        return effective_floor_schedule(sizes, self.chain_group, DEFAULT_CHAIN_MAX_DEPTH, chained)
 
     def _apply_pull_gate(self, loc: SokopelagoLocation, n: int) -> None:
         """Gate a pull-required level's location behind the Pull item (expert logic)."""

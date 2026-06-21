@@ -17,22 +17,24 @@ levels/      Canonical level corpus (XSB), shared by the client now and the apwo
 ROADMAP.md   Source of truth for scope + phasing
 ```
 
-## Current status: `0.6.0` — easy-first alpha
+## Current status: `0.7.0` — accurate-logic alpha
 
-> ⚠ **Alpha — please help test!** Solo play and basic multiworlds work, but this is
-> unfinished: progression/sphere ordering is still being refined (the final world's key can
-> currently be found first — see [`docs/DESIGN-boss-zone.md`](docs/DESIGN-boss-zone.md)), so it
-> is **not yet recommended for real syncs or asyncs**. Expect rough edges and report what breaks.
+> ⚠ **Alpha — please help test!** Solo play and multiworld syncs both work. `0.7` adds real
+> sphere ordering — the boss zone unlocks last (behind every other world key) and later worlds
+> chain behind earlier ones (see [`docs/DESIGN-boss-zone.md`](docs/DESIGN-boss-zone.md)) — so a
+> seed can no longer be beaten out of order. Still pre-1.0: expect rough edges and report what breaks.
 
 Phases 0–5 are shipped and CI-green: local Sokoban play, the apworld core (region-key
 logic, solve-checks, goals), the live AP protocol client, Phase 3 escape valves
 (skip/undo/hint tokens + traps), Phase 4 per-level par checks, and the Phase 5 pull
 ability-logic tier — a **Pull** ability (opt-in Pull Logic) that hard-gates the
-pull-required levels of the original **Pullban** corpus. The `0.6.0` release adds honest
+pull-required levels of the original **Pullban** corpus. The `0.6.0` release added honest
 absolute difficulty, the `max_difficulty` easy-first default, gentle first world, and play
-stats (see below). For now **`beat_final_region` is the supported, tested goal**; the
-`solve_count` / `boss_level` goal modes are experimental. Remaining roadmap work: the
-boss-zone sphere ordering and **Phase 6** (polish — PopTracker, more abilities/corpora, hosting/UX).
+stats (see below); `0.7.0` adds **accurate logic** — the boss-zone all-keys gate and count-floor
+world chaining (the `Chain Group` knob), so seeds play in real sphere order. **`beat_final_region`
+is the supported, tested goal**; the `solve_count` / `boss_level` goal modes keep the simpler
+single-key layout and remain experimental. Remaining roadmap work: a larger pull corpus
+(`docs/DESIGN-pull-corpus.md`) and **Phase 6** (polish — PopTracker, more abilities/corpora, hosting/UX).
 
 ## Development
 

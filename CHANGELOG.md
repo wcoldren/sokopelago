@@ -7,6 +7,41 @@ apworld `world_version`, with the client kept in lockstep. The minor digit bumps
 contract changes (datapackage / `slot_data` schema / option schema), not roadmap phase
 numbers and not on every change to generated output.
 
+## [0.7.0] — Accurate logic: boss-zone gate + count-floor chaining
+
+Turns the flat region-key spine into real multiworld logic, so a seed can no longer be beaten
+out of order. The project label moves from beta to **alpha** to match. No new location/item IDs
+(the datapackage is unchanged); `slot_data` gains two fields, which is why this is a minor bump.
+
+### Added
+- **Boss-zone gate** (`beat_final_region`): the final world now unlocks only once **every** other
+  world key is held, so it is always the deepest sphere. This closes the 0.6 hole where the final
+  world's key could be found first and the seed beaten while skipping the middle worlds
+  (`docs/DESIGN-boss-zone.md`).
+- **Count-floor chaining**: body worlds open behind their own key **plus** a floor of earlier keys
+  (`has_from_list`), so progress fans out instead of every world opening the instant its lone key
+  appears. New **`Chain Group`** option tunes the steepness (lower = steeper; a large value
+  flattens back to the classic single-key star). The effective chain depth is bounded for fill
+  robustness (a pure `effective_floor_schedule` in `layout.py`).
+- **Pull-item late placement** (expert tier): when Pull Logic gates levels, the **Pull item** is
+  restricted to a late, non-pull-gated sphere so it can't trivialise early push puzzles. Implemented
+  with a no-eligible-host fallback that can never make a seed unfillable; dormant with the current
+  10-level pullban corpus (see `docs/DESIGN-pull-corpus.md`, a planned `0.7.1` follow-up).
+- **`tools/preview_layout.py`**: prints a seed's world layout + per-world key-count floors for a
+  given option set (a pure tuning aid).
+- `slot_data` now ships `chain_floors` (resolved per-world floors) and `boss_all_keys`; the browser
+  client mirrors the gate exactly so the unlock UI matches server logic for every goal.
+
+### Changed
+- **Default `Levels Per Region` is now 5** (was 10), so a default seed has more worlds and the
+  count-floor chain is active out of the box.
+- **beta → alpha** label across the README, client, and docs; the versioning policy is now
+  contract-based (see `VERSIONING.md`).
+
+### Notes
+- `solve_count` / `boss_level` keep the 0.6 single-key-per-world layout and remain experimental;
+  the boss-zone gate and chaining apply to `beat_final_region` only.
+
 ## [0.6.0] — Easy-first release: honest difficulty, tier gating, gentle first world, play stats
 
 ### Changed
