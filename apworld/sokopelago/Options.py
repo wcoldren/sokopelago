@@ -64,10 +64,10 @@ class MaxDifficulty(Choice):
     any: no cap — the whole corpus is eligible.
     easy: only easy-tier puzzles — a gentle, low-frustration seed.
     easy_medium: easy and medium tiers, excluding the hardest puzzles.
-    Defaults to easy for the 0.6 "easy-first" release (so the generated template and any
-    bare YAML stay gentle); raise it once you want tougher puzzles. The cap filters the
-    corpus *before* selection, so Level Count draws from the capped pool (and is clamped
-    down to it when the cap leaves fewer levels than requested)."""
+    Defaults to easy (so the generated template and any bare YAML stay gentle); raise it
+    once you want tougher puzzles. The cap filters the corpus *before* selection, so Level
+    Count draws from the capped pool (and is clamped down to it when the cap leaves fewer
+    levels than requested)."""
 
     display_name = "Max Difficulty"
     option_any = 0
@@ -106,9 +106,9 @@ class Goal(Choice):
     beat_final_region: reach the last world (hold its key).
     solve_count: solve a target number of levels (Goal Solve Count).
     boss_level: reach the world containing a designated boss level (Goal Boss Level).
-    For the 0.6 easy-first beta, beat_final_region (the default) is the supported, tested goal;
-    solve_count and boss_level are experimental and interact with the still-deferred boss-zone
-    sphere ordering (see docs/DESIGN-boss-zone.md)."""
+    beat_final_region (the default) is the supported, tested goal: the final world gates on all
+    keys and body worlds chain behind earlier keys (see docs/DESIGN-boss-zone.md). solve_count and
+    boss_level are experimental — they keep the simpler single-key layout (no chaining/boss gate)."""
 
     display_name = "Goal"
     option_beat_final_region = 0

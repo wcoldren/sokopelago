@@ -10,9 +10,9 @@ bare base; concrete ``Test*`` subclasses live in the sibling test modules.
 
 from test.bases import WorldTestBase
 
-# Options whose 0.6 defaults reshape level selection / world layout. The existing Test*
-# subclasses predate them and assume the whole corpus is eligible in its native layout,
-# so default them to the legacy behavior unless a subclass opts in. (An unknown key is
+# Options (added after the early phases) that reshape level selection / world layout. The
+# existing Test* subclasses predate them and assume the whole corpus is eligible in its native
+# layout, so default them to the legacy behavior unless a subclass opts in. (An unknown key is
 # ignored by world_setup, so listing gentle_first_world here is safe even before/after
 # the option exists.)
 _LEGACY_OPTION_DEFAULTS = {"max_difficulty": "any", "gentle_first_world": 0}

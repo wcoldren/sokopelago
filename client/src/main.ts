@@ -226,9 +226,9 @@ function setConnStatus(text: string, kind?: "ok" | "err"): void {
   connStatusEl.classList.toggle("err", kind === "err");
 }
 
-/** Human-readable win condition for the connected seed (shown on its own line). For the
- * 0.6 easy-first release `beat_final_region` is the supported goal; the others are
- * experimental (see docs/DESIGN-boss-zone.md for the sphere-ordering caveat). */
+/** Human-readable win condition for the connected seed (shown on its own line).
+ * `beat_final_region` is the supported goal (accurate sphere ordering — the final world needs all
+ * keys); `solve_count` / `boss_level` are experimental. See docs/DESIGN-boss-zone.md. */
 function goalDescription(s: SlotData): string {
   switch (s.goal) {
     case "solve_count":

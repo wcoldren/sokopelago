@@ -95,10 +95,14 @@ Treat these as required for v1, not polish.
   can't gate anything). Opt-in via the `expert_logic` option; the solver proves each gate.
   Push-Two / diagonal / teleport remain future passes.
 
-### Boss-zone sphere ordering (deferred from 0.6)
-- The final world's key is placed freely, so it can be found first and the seed beaten before the
-  middle worlds. Gate the final ("boss") world behind **all** other keys (server + client). Its
-  own logic release. See [`docs/DESIGN-boss-zone.md`](docs/DESIGN-boss-zone.md).
+### Accurate logic — boss-zone sphere ordering ✅ (shipped 2026-06-21, `0.7.0`)
+- The final ("boss") world now gates behind **all** other keys (server + client mirror), so a
+  freely-placed final key can no longer beat the seed before the middle worlds. Adds count-floor
+  body chaining (the `chain_group` option) so progress fans out, mirrored in `slot_data`
+  (`chain_floors`/`boss_all_keys`). Also expanded the pullban expert corpus 10→30 for robust Pull
+  fills, and reworked the client picker (world tabs / solo dropdown). beat_final_region is the
+  supported goal; solve_count/boss_level stay experimental. See
+  [`docs/DESIGN-boss-zone.md`](docs/DESIGN-boss-zone.md) and `CHANGELOG.md`.
 
 ### Phase 6 — Polish
 - Tracker support (PopTracker).

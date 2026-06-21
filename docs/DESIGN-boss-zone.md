@@ -1,9 +1,10 @@
 # Design: boss zone — make the final world reachable last
 
-Status: **proposal, not yet built.** Documents the progression/sphere-ordering problem
-surfaced during the 0.6 beta. No code changes accompany this doc beyond a pointer comment at the
-key-gating site. Build behind the existing options and bump `world_version` when shipped (it
-changes logic + slot_data + the client gate — see [VERSIONING.md](../VERSIONING.md)).
+Status: **shipped in 0.7.0.** Documents the progression/sphere-ordering problem surfaced during
+the 0.6 beta and the gate that fixed it. 0.7.0 implements the recommended approach below (the
+final world gates on all keys) plus count-floor body chaining, mirrored in the client and the
+`slot_data` (`chain_floors`/`boss_all_keys`) — see [VERSIONING.md](../VERSIONING.md) and the
+`CHANGELOG.md` `[0.7.0]` entry. Kept as the design rationale.
 
 ## The problem
 
@@ -21,8 +22,9 @@ There is no chain, `item_rule`, `local_items`, or multi-key access rule (`create
 found first.** With the default `beat_final_region` goal, the client win is "every level in the
 final world is solved" (`client/src/ap/slotData.ts::isGoalMet`), so a player who draws the
 final key early can open the final world and clear it **while skipping worlds 2..N-1** — beating
-the seed in the first sphere and trivializing the difficulty ramp. (The 0.6 beta ships with a
-disclaimer covering this; it is not yet safe for real syncs/asyncs.)
+the seed in the first sphere and trivializing the difficulty ramp. (This was the 0.6 behaviour,
+behind a beta disclaimer; **0.7.0 fixes it** via the all-keys boss gate below, so seeds now play in
+real sphere order.)
 
 ## Goal
 

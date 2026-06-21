@@ -267,7 +267,7 @@ class TestPullbanManifest:
         assert hosts, "no push-solvable host levels (Pull item would be unplaceable)"
 
     def test_corpus_is_host_heavy_for_fillability(self):
-        # The 0.7.1 expansion keeps the pull-gated fraction well under half so pull seeds have
+        # The 0.7.0 expansion keeps the pull-gated fraction well under half so pull seeds have
         # plenty of host locations and fill reliably (a high pull ratio starves the filler).
         data = json.loads(self.PULLBAN.read_text())
         assert len(data) >= 24, "expanded pull corpus should be sizable"

@@ -14,7 +14,7 @@ game: Sokopelago
 requires:
   version: 0.6.7 # Archipelago version required for this yaml.
   game:
-    Sokopelago: 0.6.0 # World version required for this yaml.
+    Sokopelago: 0.7.0 # World version required (accurate logic: boss-zone gate + count-floor chaining).
 
 Sokopelago:
   # Only Microban for now (pullban is the expert corpus; needs pull_logic).

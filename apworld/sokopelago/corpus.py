@@ -35,8 +35,8 @@ class LevelEntry(TypedDict, total=False):
 
 _DATA_DIR = Path(__file__).parent / "data"
 
-# Selectable corpora (each has a data/<name>.json manifest). ``microban`` is the v1 set;
-# ``pullban`` is the Phase 5 expert set of pull-gated levels.
+# Selectable corpora (each has a data/<name>.json manifest). ``microban`` is the standard
+# push-only set; ``pullban`` is the expert set with pull-required levels.
 CORPUS_NAMES: tuple[str, ...] = ("microban", "pullban")
 
 

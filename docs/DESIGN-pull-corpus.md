@@ -4,8 +4,8 @@ Status: **DONE (2026-06-21).** pullban expanded **10 → 30 levels** (pull-gated
 solver-verified, and the speculative Pull-item late-placement gate was **removed** (it caused
 6–42% fill failures once a bigger corpus made it engage). Net result: pull seeds now fill **0/150
 across `levels_per_region` 5/3/2** (was 5–100%). PATCH-class (changes generated output but breaks no
-contract — no new datapackage IDs, no `slot_data`/option change); lands on `dev`, version decided at
-release (fold into untagged 0.7.0 or tag 0.7.1).
+contract — no new datapackage IDs, no `slot_data`/option change); **shipped in 0.7.0** alongside
+the boss-zone/chaining work.
 
 > **Regen order matters:** `solve_corpus.py --corpus pullban` (enriches: par/solution/requires_pull/
 > difficulty) **then** `build_corpus.py --corpus pullban` (restores the `board` field, preserving
@@ -37,12 +37,9 @@ That 60% pull-gated ratio — not the small size per se — is what starves the 
     all-progression zero-slack fill in which 60% of slots are Pull-gated → **100% fill failure.**
     This is **pre-existing 0.6 behavior** (the unmodified `solve_count` goal fails identically),
     not a 0.7 regression. 0.7's boss gate alone (no pull) fills these layouts at 0% failure.
-- **The 0.7 Pull-item late-placement floor can't engage.** With so few worlds the count-floor
-  chain stays at 0, and the deep worlds tend to hold pull-gated levels, so there is no eligible
-  late host → the floor stays in its safe **fallback (disabled)**. The feature is implemented,
-  correct, and never makes a fill worse — but **dormant with the shipped corpus.** See
-  `_effective_floors` / `_pull_item_host_eligible` / `_has_pull_item_host` and
-  `TestPullItemFloorLogic` in `apworld/sokopelago/test/test_chaining.py`.
+- *(Historical: a "Pull-item late-placement floor" was prototyped to keep Pull out of early
+  spheres. With the 10-level corpus it never had an eligible late host and stayed dormant; once the
+  expanded corpus made it engage it degraded fills, so it was removed — see "As shipped" below.)*
 
 ## The fix: a larger, lower-pull-ratio pull corpus
 
@@ -53,10 +50,11 @@ like **~30–40 levels with ≤ ~1/3 pull-gated**. That:
 1. Gives the Pull item and the early keys many reachable non-pull homes + real filler budget →
    robust pull fills at any `levels_per_region` (including the zero-slack `=1` case, because the
    non-pull hosts now dominate);
-2. Produces enough worlds for the count-floor chain to rise, so the **Pull-item late-placement
-   floor actually activates** — Pull lands in a genuinely late sphere, delivering the intended
-   "don't trivialise early push puzzles by getting Pull first" behaviour;
-3. Makes the expert tier feel like a progression rather than 10 puzzles.
+2. Makes the expert tier feel like a progression rather than 10 puzzles.
+
+(The original plan also hoped a larger corpus would let a Pull-item placement floor enforce
+"acquire Pull late"; in practice any such restriction degraded fills, so that idea was dropped —
+see "As shipped".)
 
 ### Constraints / non-negotiables
 
@@ -75,23 +73,26 @@ like **~30–40 levels with ≤ ~1/3 pull-gated**. That:
 `n = 1..10 ≤ 155`). So **as long as the augmented pullban stays within `n ≤ 155`, it adds no new
 location/item IDs** and the name→id map is unchanged.
 
-It **changes generated output** for pullban seeds, but under the (contract-based) `VERSIONING.md`
-that is a **PATCH**, not a minor: it breaks no contract — no new location/item IDs, no `slot_data`
-schema change, no option change. So this ships as **`0.7.1`**.
+It **changes generated output** for pullban seeds but breaks no contract (no new location/item
+IDs, no `slot_data` schema change, no option change), so under the contract-based `VERSIONING.md`
+it's PATCH-class — and it **shipped in `0.7.0`** alongside the boss-zone/chaining work rather than
+as a separate tag.
 
-## Scope / sequencing
+## As shipped (0.7.0)
 
-- **0.7.0 (this release):** boss gate + count-floor chaining + the Pull-item floor *logic*
-  (dormant, safe fallback). pullban untouched.
-- **0.7.1 (this follow-up):** the augmented pullban corpus, which *activates* the Pull-item floor
-  and makes pull seeds robustly fillable at all region sizes. Pairs with the roadmap's deferred
-  "larger pull corpus" item. (A patch — corpus content, no contract change.)
+- pullban grew **10 → 30 levels**, pull-gated **60% → 30%** (21 host levels, 9 pull-required), every
+  board solver-verified.
+- The Pull-item late-placement floor was **tried and removed**: once the bigger corpus made it
+  engage, the placement restriction caused 6–42% generation failures (even the gentlest "exclude
+  World 1" variant was 1–2%). The corpus expansion alone is the fix — pull seeds now fill **~0%
+  failure** at `levels_per_region` 5/3/2. Pull is a normal shuffleable progression item again.
+- "Acquire Pull late" is **deferred** to a future fill-safe mechanism (e.g. deterministic
+  pre-placement, accepting a local Pull) — the analysis above is kept for that follow-up.
 
-## Tests to add with the corpus change
+## Tests (in place)
 
-- Pull seeds fill reliably across `levels_per_region` (including `= 1`) on the new corpus — the
-  WorldTestBase fill battery over several configs.
-- The Pull-item floor is now **active** on a representative config, and the Pull item is never
-  placed before its floor sphere (promote the dormant-path assertions in `TestPullItemFloorLogic`
-  to a live fill assertion once a host reliably exists).
-- The pull-gated fraction invariant (e.g. assert `< 0.5` of the corpus is `requires_pull`).
+- `tests/test_corpus_and_layout.py::TestPullbanManifest`: all solved, both host + pull levels,
+  solutions replay, gated levels push-unsolvable, and the **count ≥ 24 / pull-gated fraction < 0.5**
+  invariant.
+- Fill robustness was confirmed by a stress sweep over pullban `pull_logic` seeds (~0 failures at
+  lpr 5/3/2).

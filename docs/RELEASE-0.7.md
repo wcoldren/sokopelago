@@ -9,7 +9,8 @@ project from beta to **alpha** to match. This is the release that makes Sokopela
 **no new location/item IDs**, so the datapackage stays stable.
 
 ## In scope — and nothing else
-- Boss-zone gate, count-floor body chaining, Pull-**item** late placement.
+- Boss-zone gate, count-floor body chaining, Pull-**item** late placement (the last was attempted
+  but **removed** — it hurt fill; see "Decisions resolved during planning" §3).
 - Tunable knobs for the above, plus a sweet-spot pass on default level count / region size.
 - The beta → alpha relabel + the version bump.
 - Bug fixes that surface while doing the above.

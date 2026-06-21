@@ -23,9 +23,10 @@ The in-app credit is surfaced in the client footer (`client/index.html`).
 
 ## Levels — Pullban (original)
 
-The expert corpus (`levels/pullban.xsb`) is an **original** set designed by
-**William Coldren** for Sokopelago's Phase 5 ability tier: a mix of ordinary push
-levels and levels that require the **Pull** ability. It is freely distributable with
+The expert corpus (`levels/pullban.xsb`) is an **original** set for Sokopelago's expert
+ability tier: a mix of ordinary push levels and levels that require the **Pull** ability.
+Designed by **William Coldren**; expanded to 30 levels in 0.7.0 (the additional boards are
+machine-authored for this project, every one solver-verified). It is freely distributable with
 attribution, on the same terms as the bundled Microban set. Its solutions/par/difficulty
 and the `requires_pull` gate flags are computed offline by the project's own pull-aware
 solver (`tools/solve_corpus.py --corpus pullban`).

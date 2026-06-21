@@ -1,13 +1,14 @@
 """Sokopelago — a Sokoban world for Archipelago.
 
-Phase 1: region-key access logic. Levels are grouped into worlds; each world after
-the first is opened by a "World n Key" shuffled into the multiworld. A location is
-reachable iff its world's key is held — standard region-access logic. The goal is an
-item-reachability condition (see ``set_rules``); the client enforces the precise
-"levels solved" win in Phase 2.
+Region-key access logic: levels are grouped into worlds; each world after the first is opened by a
+"World n Key" shuffled into the multiworld. A location is reachable iff its world's key is held,
+plus (for the ``beat_final_region`` goal) count-floor chaining — a body world also needs a floor of
+earlier keys, and the final ("boss") world needs ALL keys, so seeds play in real sphere order (see
+``create_regions`` / ``set_rules`` and ``docs/DESIGN-boss-zone.md``). The client mirrors this gate
+from ``slot_data`` and enforces the precise "levels solved" win.
 
 The generator never solves Sokoban: it only reads the bundled level manifest
-(``corpus.py`` / ``data/microban.json``) for counts and names.
+(``corpus.py`` / ``data/<corpus>.json``) for counts, names, par, difficulty, and pull gates.
 """
 
 from __future__ import annotations
