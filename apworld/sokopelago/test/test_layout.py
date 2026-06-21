@@ -8,7 +8,7 @@ take a plain RNG and a difficulty dict.
 import random
 import unittest
 
-from ..layout import _allocate, chunk_list, gentle_first_world, select_bucketed_levels
+from ..layout import _allocate, chunk_list, floor_schedule, gentle_first_world, select_bucketed_levels
 
 # A monotonic difficulty ramp so "easiest tiers first" is checkable: level n -> n/155.
 _DIFF = {n: n / 155 for n in range(1, 156)}
@@ -110,6 +110,48 @@ class TestAllocate(unittest.TestCase):
             alloc = _allocate(total, sizes)
             self.assertEqual(sum(alloc), total)
             self.assertTrue(all(0 <= a <= s for a, s in zip(alloc, sizes, strict=True)))
+
+
+class TestFloorSchedule(unittest.TestCase):
+    """The count-floor chaining schedule (worlds 2..N-1 require their own key plus a floor of
+    earlier keys; World 1 free; boss world N reported as all-keys)."""
+
+    def test_degenerate_region_counts(self) -> None:
+        self.assertEqual(floor_schedule(0, 2, 0), [])
+        self.assertEqual(floor_schedule(1, 2, -1), [0])  # one free world; cap clamped to 0
+        self.assertEqual(floor_schedule(2, 2, 0), [0, 1])  # World 1 free, World 2 is the boss
+
+    def test_small_counts(self) -> None:
+        self.assertEqual(floor_schedule(3, 2, 1), [0, 0, 2])  # body w2 floor 0; boss = 2
+        self.assertEqual(floor_schedule(4, 2, 2), [0, 0, 0, 3])  # body floors (0,0); boss = 3
+
+    def test_group_one_is_a_staircase(self) -> None:
+        # group 1: body floor i -> min(i-2, cap); boss -> region_count-1.
+        self.assertEqual(floor_schedule(6, 1, 4), [0, 0, 1, 2, 3, 5])
+
+    def test_large_group_flattens_body(self) -> None:
+        # group >= world count: every body floor collapses to 0 (the classic single-key star),
+        # boss still all-keys.
+        self.assertEqual(floor_schedule(6, 100, 4), [0, 0, 0, 0, 0, 5])
+
+    def test_cap_bounds_body_floor(self) -> None:
+        floors = floor_schedule(10, 1, 3)  # cap 3
+        self.assertTrue(all(f <= 3 for f in floors[1:-1]))  # body floors never exceed the cap
+        self.assertEqual(floors[-1], 9)  # boss informational = region_count - 1
+
+    def test_invariant_and_monotonicity(self) -> None:
+        # Fillability invariant: a body world's floor never exceeds the count of strictly
+        # earlier keyed worlds (i-2), and floors are non-decreasing so spheres nest cleanly.
+        for region_count in range(2, 21):
+            for group in range(1, 6):
+                floors = floor_schedule(region_count, group, region_count - 2)
+                self.assertEqual(len(floors), region_count)
+                self.assertEqual(floors[0], 0)
+                body = floors[1:-1]  # worlds 2..N-1
+                for offset, f in enumerate(body):
+                    world_index = offset + 2
+                    self.assertLessEqual(f, world_index - 2, "floor must not exceed earlier keyed worlds")
+                self.assertEqual(body, sorted(body), "body floors must be non-decreasing")
 
 
 class TestChunkList(unittest.TestCase):

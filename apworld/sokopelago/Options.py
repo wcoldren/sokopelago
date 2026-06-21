@@ -83,7 +83,22 @@ class LevelsPerRegion(Range):
     display_name = "Levels Per Region"
     range_start = 1
     range_end = 50
-    default = 10
+    default = 5
+
+
+class ChainGroup(Range):
+    """How steeply later worlds chain behind earlier-world keys (count-floor chaining,
+    beat_final_region goal only). Body world i (2..N-1) requires its own key AND at least
+    floor((i-2) / Chain Group) *other* keys already held, so progress fans out instead of
+    every world opening the instant its lone key is found. Lower = steeper (you must clear
+    more of the earlier worlds first); a value >= the world count flattens it back to the
+    classic "any key opens its world" star. The final (boss) world always needs every key
+    regardless of this setting. Default 2 (a gentle step every couple of worlds)."""
+
+    display_name = "Chain Group"
+    range_start = 1
+    range_end = MAX_LEVEL_COUNT  # large value => flat / back-compat
+    default = 2
 
 
 class Goal(Choice):
@@ -236,6 +251,7 @@ class SokopelagoOptions(PerGameCommonOptions):
     difficulty_buckets: DifficultyBuckets
     max_difficulty: MaxDifficulty
     levels_per_region: LevelsPerRegion
+    chain_group: ChainGroup
     goal: Goal
     goal_solve_count: GoalSolveCount
     goal_boss_level: GoalBossLevel

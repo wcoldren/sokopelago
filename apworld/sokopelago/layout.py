@@ -108,6 +108,31 @@ def solve_count_keys_needed(world_sizes: list[int], target: int) -> int:
     return len(keyed_sorted)  # target clamped to level_count, so this always suffices
 
 
+def floor_schedule(region_count: int, group: int, cap: int) -> list[int]:
+    """Per-world key-count floor for the chained-access layout (returned 1-based: index
+    ``i-1`` is the floor for World ``i``).
+
+    World 1 is free (floor 0). Each body world ``i`` in ``2..N-1`` requires its own key AND
+    at least ``floor`` *other* keys already held, where the floor steps up every ``group``
+    worlds: ``min((i-2)//group, cap)``. The caller passes ``cap = region_count-2`` so a body
+    floor never exceeds the count of strictly-earlier keyed worlds — the fillability
+    invariant ``floor_i <= i-2`` (which holds because ``(i-2)//group <= i-2`` for
+    ``group >= 1``), guaranteeing a valid, non-decreasing sphere order. The boss world ``N``
+    is the all-keys special case (enforced by the access rule, not this schedule) and is
+    reported here as ``region_count-1`` for slot_data / diagnostics.
+
+    Returns a list of length ``region_count`` (``[]`` when ``region_count <= 0``)."""
+    if region_count <= 0:
+        return []
+    group = max(1, group)
+    cap = max(0, cap)
+    floors = [0]  # World 1 is free
+    floors += [min((i - 2) // group, cap) for i in range(2, region_count)]  # body worlds 2..N-1
+    if region_count >= 2:
+        floors.append(region_count - 1)  # boss world N: all keys
+    return floors
+
+
 def boss_world_index(worlds: list[list[int]], boss_level: int) -> int:
     """1-based index of the world containing ``boss_level``. Falls back to the last
     world if the level isn't found (shouldn't happen after clamping)."""

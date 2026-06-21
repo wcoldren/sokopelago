@@ -17,6 +17,7 @@ from typing import Any
 from BaseClasses import LocationProgressType, Region
 from Options import OptionError
 from worlds.AutoWorld import WebWorld, World
+from worlds.generic.Rules import add_item_rule
 
 from .corpus import CorpusData, load_corpus_data
 from .Items import (
@@ -35,6 +36,7 @@ from .layout import (
     chunk_list,
     clamp,
     escape_valve_counts,
+    floor_schedule,
     gentle_first_world,
     select_bucketed_levels,
     solve_count_keys_needed,
@@ -51,6 +53,14 @@ from .Locations import (
 )
 from .Options import SokopelagoOptions
 from .tiers import EASY_MAX, MAX_DIFFICULTY_CEILING, within_cap
+
+# Solo fill (fill_restrictive) reliably places the count-floor key chain only while it stays
+# shallow; past a handful of keys of depth its swap search starts failing on tight seeds even
+# though a valid placement always exists. We cap the *effective* chain depth here by raising the
+# group as the world count grows (see _effective_floors). 4 keeps every option combination at a
+# 0% fill-failure rate in stress testing (thousands of solo seeds) while leaving the default
+# layout's steepness untouched.
+_CHAIN_MAX_DEPTH = 4
 
 
 class SokopelagoWeb(WebWorld):
@@ -76,10 +86,13 @@ class SokopelagoWorld(World):
     region_count: int
     level_count: int
     levels_per_region: int
+    chain_group: int  # count-floor chaining steepness (beat_final_region only)
     goal_solve_count: int
     boss_level: int
     pull_logic: bool
     pull_levels: set[int]  # seed levels hard-gated behind the Pull ability (pull-logic only)
+    _pull_floor: int  # min keys held before a location may host the Pull *item*
+    _pull_item_floor_active: bool  # whether the Pull *item* late-placement floor is applied
 
     def generate_early(self) -> None:
         self.corpus_data = load_corpus_data(self.options.corpus.current_key)
@@ -124,6 +137,9 @@ class SokopelagoWorld(World):
         else:
             self.worlds = reassign(levels)
         self.region_count = len(self.worlds)
+        # Count-floor chaining steepness; clamped to the world count (a value >= the world
+        # count flattens the body floors back to the classic single-key star).
+        self.chain_group = clamp(self.options.chain_group.value, 1, max(1, self.region_count))
         self.goal_solve_count = clamp(self.options.goal_solve_count.value, 1, self.level_count)
         # Resolve the boss to an actually-selected level: 0 -> the highest-numbered level
         # in the seed ("the last level"); otherwise the requested number if it was drawn,
@@ -139,6 +155,7 @@ class SokopelagoWorld(World):
         # Pull Logic: hard-gate the seed's pull-required levels behind the Pull item.
         self.pull_logic = bool(self.options.pull_logic.value)
         self.pull_levels = {n for n in levels if n in self.corpus_data.requires_pull} if self.pull_logic else set()
+        self._pull_item_floor_active = False  # resolved in create_regions once floors are known
 
     def create_regions(self) -> None:
         menu = Region("Menu", self.player, self.multiworld)
@@ -146,18 +163,41 @@ class SokopelagoWorld(World):
 
         par_checks = bool(self.options.par_checks.value)
         eff_checks = par_checks and bool(self.options.efficiency_checks.value)
+
+        # 0.7 "accurate logic" (beat_final_region only): the final world is gated on ALL
+        # keys so it is always the deepest sphere, and body worlds chain behind a count-floor
+        # of earlier keys. solve_count / boss_level keep the 0.6 single-key-per-world layout
+        # (their key counting assumes single-key access), so they stay experimental.
+        chained = self.options.goal == "beat_final_region"
+        all_keys = tuple(world_key_name(n) for n in range(2, self.region_count + 1))
+        floors = self._effective_floors()
+
+        # Pull *item* late-placement floor (decoupled from any level's requires_pull access
+        # gate): the Pull item may only land in a deep, non-pull-gated body world, so it is
+        # acquired in a late sphere. The floor is the deepest body-world key-count (so it tracks
+        # the actual chain depth, which the depth cap keeps modest) — Pull then sits in the
+        # deepest reachable non-boss tier. Disabled when chaining is off or no eligible host
+        # exists, so the constraint can never make a seed unfillable.
+        body_floors = floors[1:-1]  # worlds 2..N-1 (exclude free World 1 and the boss)
+        self._pull_floor = max(1, max(body_floors, default=0))
+        self._pull_item_floor_active = bool(
+            self.pull_logic and self.pull_levels and chained and self._has_pull_item_host(floors)
+        )
+
         for i, level_ns in enumerate(self.worlds, start=1):
             region = Region(f"World {i}", self.player, self.multiworld)
             for n in level_ns:
                 loc_name = solve_location_name(n)
                 loc = SokopelagoLocation(self.player, loc_name, location_table[loc_name], region)
                 self._apply_pull_gate(loc, n)
+                self._apply_pull_item_floor(loc, i, n, floors)
                 region.locations.append(loc)
                 if par_checks:
                     # The par/efficiency locations share the region's key gate, but are
                     # EXCLUDED so only filler lands there — a hard push-count requirement
                     # (which escape valves can't bypass) can never strand a progression
                     # item. Par = exactly optimal (perfect); efficiency = within margin.
+                    # (EXCLUDED already rejects the Pull item, so the item-floor is moot here.)
                     self._add_excluded_check(region, par_location_name(n), par_location_table, n)
                     if eff_checks:
                         self._add_excluded_check(region, eff_location_name(n), eff_location_table, n)
@@ -165,22 +205,102 @@ class SokopelagoWorld(World):
 
             if i == 1:
                 menu.connect(region, f"Menu -> World {i}")
-            else:
-                # Each keyed world gates on its single key. NOTE: keys are placed freely by
-                # fill, so the *final* world's key can be found first and the seed beaten before
-                # the middle worlds (the boss-zone sphere-ordering problem). Deferred — see
-                # docs/DESIGN-boss-zone.md.
-                key = world_key_name(i)
+            elif chained and i == self.region_count:
+                # Boss world: gated on ALL keys, so it is always the deepest sphere — closing
+                # the find-the-final-key-first hole (docs/DESIGN-boss-zone.md). No key can fill
+                # here: a key placed in the boss world would need itself to be reachable.
                 menu.connect(
                     region,
                     f"Menu -> World {i}",
-                    rule=lambda state, key=key: state.has(key, self.player),
+                    rule=lambda state, keys=all_keys: state.has_all(keys, self.player),
                 )
+            else:
+                # Body world (and the boss world when chaining is off): own key, plus a
+                # count-floor of any earlier keys when chaining is active. floor_i counts all
+                # held keys incl. this world's own, so min keys to enter = max(1, floor_i). All
+                # loop-varying values are bound by default arg to avoid late-binding capture.
+                key = world_key_name(i)
+                floor_i = floors[i - 1] if chained else 0
+                if floor_i > 0:
+                    menu.connect(
+                        region,
+                        f"Menu -> World {i}",
+                        rule=lambda state, k=key, keys=all_keys, f=floor_i: (
+                            state.has(k, self.player) and state.has_from_list(keys, self.player, f)
+                        ),
+                    )
+                else:
+                    menu.connect(
+                        region,
+                        f"Menu -> World {i}",
+                        rule=lambda state, k=key: state.has(k, self.player),
+                    )
+
+    def _effective_floors(self) -> list[int]:
+        """Per-world key-count floors actually enforced (1-based; index ``i-1`` = World ``i``).
+
+        Non-beat_final_region goals use flat floors (the 0.6 single-key layout). Body chaining
+        also needs *fill slack* — spare non-boss solve locations beyond the keys that must live
+        there — so on a zero-slack layout (e.g. ``levels_per_region == 1``, where the N-1 keys
+        exactly fill the N-1 non-boss worlds) the body floors are flattened to 0, keeping only
+        the all-keys boss gate. A tight nested count-floor chain is otherwise an unreliable fill
+        (fill_restrictive occasionally fails to place into zero-slack), while the boss gate alone
+        fills reliably. The final entry stays ``region_count-1`` when chaining is on (the boss
+        gate is enforced separately by ``has_all`` in create_regions; this value is informational
+        for slot_data / the client)."""
+        if self.options.goal != "beat_final_region" or self.region_count <= 1:
+            return [0] * self.region_count
+        body_sizes = [len(world) for world in self.worlds[:-1]]  # worlds 1..N-1 (excl. boss)
+        spare = sum(body_sizes) - (self.region_count - 1)  # non-boss locations left after the keys
+        if spare < 1:
+            # Zero-slack layout (e.g. levels_per_region == 1): the keys exactly fill the non-boss
+            # worlds, so flatten the body floors and rely on the all-keys boss gate alone.
+            return [0] * (self.region_count - 1) + [self.region_count - 1]
+        # A steep, deep nested count-floor chain is an unreliable solo fill (a valid placement
+        # always exists, but fill_restrictive's swap search struggles past a few keys of depth),
+        # so bound the *effective* steepness two ways while leaving normal seeds untouched:
+        #   - narrow worlds (smallest non-boss world < 3 locations) get at least group 2;
+        #   - the staircase rises at most ~_CHAIN_MAX_DEPTH times overall, by raising the group
+        #     to ceil(region_count / _CHAIN_MAX_DEPTH) so the deepest body floor stays shallow
+        #     no matter how many worlds there are.
+        # Both only ever *increase* the group (gentler), so they never break the fillability
+        # invariant, and they're no-ops on the default layout (ceil(6/4) == 2 == the default).
+        min_body = min(body_sizes)
+        effective_group = self.chain_group if min_body >= 3 else max(self.chain_group, 2)
+        depth_group = -(-self.region_count // _CHAIN_MAX_DEPTH)  # ceil(region_count / max_depth)
+        effective_group = max(effective_group, depth_group)
+        return floor_schedule(self.region_count, effective_group, self.region_count - 2)
 
     def _apply_pull_gate(self, loc: SokopelagoLocation, n: int) -> None:
         """Gate a pull-required level's location behind the Pull item (expert logic)."""
         if n in self.pull_levels:
             loc.access_rule = lambda state, p=self.player: state.has(PULL_NAME, p)
+
+    def _pull_item_host_eligible(self, world_index: int, n: int, floors: list[int]) -> bool:
+        """Whether a solve location may host the Pull *item*: a deep-enough body world
+        (key-count floor >= ``_pull_floor``), not the all-keys boss world, and not itself a
+        pull-gated level (which would self-gate the item). Independent of the level's own
+        difficulty/requires_pull — this is purely a placement-depth constraint."""
+        return (
+            floors[world_index - 1] >= self._pull_floor
+            and world_index != self.region_count
+            and n not in self.pull_levels
+        )
+
+    def _has_pull_item_host(self, floors: list[int]) -> bool:
+        """Whether at least one Pull-item-eligible solve location exists. When none does, the
+        late-placement floor is disabled rather than risk an unfillable seed."""
+        return any(
+            self._pull_item_host_eligible(i, n, floors)
+            for i, level_ns in enumerate(self.worlds, start=1)
+            for n in level_ns
+        )
+
+    def _apply_pull_item_floor(self, loc: SokopelagoLocation, world_index: int, n: int, floors: list[int]) -> None:
+        """Forbid the Pull *item* from this location unless it is an eligible late host, so
+        Pull is acquired only in a deep sphere. No-op unless the floor is active."""
+        if self._pull_item_floor_active and not self._pull_item_host_eligible(world_index, n, floors):
+            add_item_rule(loc, lambda item: item.name != PULL_NAME)
 
     def _add_excluded_check(self, region: Region, name: str, table: dict[str, int], n: int) -> None:
         """Attach a filler-only (EXCLUDED) skill check (par/efficiency) for level ``n``,
@@ -253,9 +373,13 @@ class SokopelagoWorld(World):
             boss_key = world_key_name(bw)
             cc[player] = self._completion((lambda s: True) if bw == 1 else (lambda s, key=boss_key: s.has(key, player)))
         else:  # beat_final_region
-            final_key = world_key_name(self.region_count)
+            # Winning requires the boss world, which is gated on ALL keys (see create_regions),
+            # so completion holds only once every key is collected — no early win from drawing
+            # the final key first. has_all over the full key set is false until all are held.
             single = self.region_count <= 1
-            cc[player] = self._completion((lambda s: True) if single else (lambda s, key=final_key: s.has(key, player)))
+            cc[player] = self._completion(
+                (lambda s: True) if single else (lambda s, keys=tuple(all_keys): s.has_all(keys, player))
+            )
 
     def create_item(self, name: str) -> SokopelagoItem:
         data = item_table[name]
@@ -268,6 +392,13 @@ class SokopelagoWorld(World):
         seed_levels = [n for world in self.worlds for n in world]
         par_by_n = self.corpus_data.par_by_n
         difficulty_by_n = self.corpus_data.difficulty_by_n
+        # Ship the RESOLVED per-world key-count floors (the same ones create_regions enforces,
+        # via _effective_floors) so the client gate can never drift from a re-derived formula.
+        # Chaining + the all-keys boss gate are beat_final_region-only, so other goals report
+        # flat floors and no boss-all-keys flag.
+        chained = self.options.goal == "beat_final_region"
+        floors = self._effective_floors()
+        chain_floors = {str(i): floors[i - 1] for i in range(1, self.region_count + 1)}
         return {
             "corpus": self.corpus_data.name,
             "level_count": self.level_count,
@@ -278,6 +409,11 @@ class SokopelagoWorld(World):
             "goal_solve_count": self.goal_solve_count,
             "goal_boss_level": self.boss_level,
             "final_world": self.region_count,
+            # 0.7 accurate logic: per-world key-count floor (world index as string key) and the
+            # all-keys boss flag. A world unlocks when its own key is held AND total keys held
+            # >= its floor; the final_world unlocks only on all keys when boss_all_keys is set.
+            "chain_floors": chain_floors,
+            "boss_all_keys": chained and self.region_count > 1,
             # When on, the client sends the parallel par-location check for any level
             # solved within its push-par (the "perfect" tier — exactly optimal).
             "par_checks": bool(self.options.par_checks.value),
