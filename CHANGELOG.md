@@ -2,9 +2,10 @@
 
 All notable changes to Sokopelago are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project adheres to the policy in
-[VERSIONING.md](VERSIONING.md). The project is in beta (`0.x`); the version is the
-apworld `world_version`, with the client kept in lockstep. Versions correspond to
-world/datapackage-affecting changes, not roadmap phase numbers.
+[VERSIONING.md](VERSIONING.md). The project is in alpha (`0.x`); the version is the
+apworld `world_version`, with the client kept in lockstep. The minor digit bumps on
+contract changes (datapackage / `slot_data` schema / option schema), not roadmap phase
+numbers and not on every change to generated output.
 
 ## [0.6.0] — Easy-first release: honest difficulty, tier gating, gentle first world, play stats
 

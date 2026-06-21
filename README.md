@@ -6,7 +6,7 @@ send items to other players; receive items that unlock more levels and abilities
 
 See **[ROADMAP.md](ROADMAP.md)** for the authoritative scope and phase sequencing, and
 **[VERSIONING.md](VERSIONING.md)** for the release/versioning policy (the project is in
-beta — see **[CHANGELOG.md](CHANGELOG.md)**).
+alpha — see **[CHANGELOG.md](CHANGELOG.md)**).
 
 ## Repository layout
 
@@ -17,9 +17,9 @@ levels/      Canonical level corpus (XSB), shared by the client now and the apwo
 ROADMAP.md   Source of truth for scope + phasing
 ```
 
-## Current status: `0.6.0` — easy-first beta
+## Current status: `0.6.0` — easy-first alpha
 
-> ⚠ **Beta — please help test!** Solo play and basic multiworlds work, but this is
+> ⚠ **Alpha — please help test!** Solo play and basic multiworlds work, but this is
 > unfinished: progression/sphere ordering is still being refined (the final world's key can
 > currently be found first — see [`docs/DESIGN-boss-zone.md`](docs/DESIGN-boss-zone.md)), so it
 > is **not yet recommended for real syncs or asyncs**. Expect rough edges and report what breaks.

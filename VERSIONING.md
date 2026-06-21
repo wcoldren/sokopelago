@@ -21,24 +21,43 @@ both, or neither.
 it only when the world starts relying on a newer Archipelago API; it does not follow the
 project version.
 
-## Current status: beta (`0.x`)
+## Current status: alpha (`0.x`)
 
 We are pre-1.0. Per SemVer, the `0.x` line carries no stability promise — the public API,
-`slot_data` schema, and ID layout may still move. Current version: **`0.4.0`**.
+`slot_data` schema, and ID layout may still move. The authoritative current version lives in
+`apworld/sokopelago/archipelago.json` (`world_version`) and at the top of `CHANGELOG.md`; this
+doc deliberately does not restate a version number (a hand-maintained one here only goes stale).
 
-The minor digit bumps on each world/datapackage-affecting change, **not** per roadmap
-phase number. History to date: `0.1.0` (Phase 1, world core) → `0.2.0` (Phase 3 valves)
-→ `0.3.0` (Phase 4 par checks) → `0.4.0` (Phase 5 expert Pull tier — new option, Pull
-item, and the pullban corpus). Phase 2 was a client-only integration milestone and rode
-along with no world bump.
+The minor digit bumps on each **contract**-affecting change — **not** per roadmap phase number,
+and **not** on every change to generated output. History to date: `0.1.0` (Phase 1, world core)
+→ `0.2.0` (Phase 3 valves) → `0.3.0` (Phase 4 par checks) → `0.4.0` (Phase 5 expert Pull tier) →
+`0.5.0` (seed-varied selection + tiered par) → `0.6.0` (honest difficulty + easy-first options) →
+`0.7.0` (accurate logic: boss-zone gate + count-floor chaining). Phase 2 was a client-only
+integration milestone and rode along with no world bump.
 
 ### While `< 1.0.0`
 
-- **MINOR** (`0.4 → 0.5`): a completed roadmap phase, new options/items/locations, or
-  any change to seed compatibility, `slot_data` schema, or location/item ID assignments.
-  (Under SemVer, breaking changes ride minor bumps while `< 1.0`.)
-- **PATCH** (`0.4.0 → 0.4.1`): bug fixes, client-only fixes, docs, tests — nothing that
-  alters generation output or the datapackage.
+The split is about **contracts**, not about whether generated output changed. A "contract" is
+something another party depends on: the **datapackage** (location/item IDs + name→id map), the
+**`slot_data` schema** the client reads, the **YAML option schema**, and **`minimum_ap_version`**.
+
+- **MINOR** (`0.6 → 0.7`): a contract change — new/removed/renamed options, new items or
+  locations (new IDs), a `slot_data` **schema** change, or a `minimum_ap_version` raise that
+  invalidates existing seeds. (Pre-1.0 these "breaking" changes ride minor bumps.)
+- **PATCH** (`0.7.0 → 0.7.1`): anything that preserves every contract — bug fixes,
+  fill-robustness fixes, balance/difficulty/**corpus** tuning, default-value changes,
+  client-only fixes, docs, tests. A patch **may change generated output**: pre-1.0, identical
+  regeneration of a given (YAML, seed) is guaranteed only within the same version, and players
+  sync the apworld version anyway — so changing *which* puzzles or item placements a seed
+  produces is a patch, as long as the datapackage, `slot_data` schema, and option schema are
+  untouched.
+
+> Why output-changing patches are fine: the apworld *is* a generator, so almost every fix alters
+> output. Tying the minor digit to "output changed" would make the patch level unusable and
+> inflate the minor number on pure tuning. The datapackage / schema / option contracts are what
+> actually break other parties, so those — and only those — drive a minor bump. (Example: adding
+> push-solvable levels to the pullban corpus, reusing already-registered IDs, is a **patch**; it
+> changes which puzzles a pullban seed draws but breaks no contract.)
 
 ## `1.0.0` — first stable release
 
@@ -68,7 +87,9 @@ identical whether or not par checks are enabled.
 
 ## Release checklist
 
-1. Decide the bump (major/minor/patch) using the rules above.
+1. Decide the bump using the rules above: a **contract** change (datapackage / `slot_data`
+   schema / option schema / seed-invalidating `minimum_ap_version`) is MINOR pre-1.0; anything
+   that preserves every contract — even if it changes generated output — is PATCH.
 2. Update `world_version` and `package.json` (+ `package-lock.json`) to match.
 3. Add a `CHANGELOG.md` entry.
 4. Commit, tag `vX.Y.Z`, push commits and tags.

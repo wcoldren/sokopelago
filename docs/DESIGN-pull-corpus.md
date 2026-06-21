@@ -3,8 +3,8 @@
 Status: **proposal / follow-up to 0.7.** Documents a fill-robustness problem in the expert Pull
 tier and the corpus change that fixes it. No code logic change is required — this is offline
 data work (level authoring + the pull-aware solver) plus a manifest regen. Recommended bump:
-**MINOR (0.8.0)** — see [Versioning](#versioning) (it changes generation output even though it
-adds no new datapackage IDs).
+**PATCH (`0.7.1`)** — see [Versioning](#versioning) (it changes generated output but breaks no
+contract: no new datapackage IDs, no `slot_data` schema change, no option change).
 
 ## The problem
 
@@ -63,19 +63,17 @@ like **~30–40 levels with ≤ ~1/3 pull-gated**. That:
 `n = 1..10 ≤ 155`). So **as long as the augmented pullban stays within `n ≤ 155`, it adds no new
 location/item IDs** and the name→id map is unchanged.
 
-It still **changes generation output** for pullban seeds, though, which `VERSIONING.md` treats as
-a world-affecting change (cf. the 0.6.0 difficulty rescore, which shipped as a MINOR). So the
-honest bump is **MINOR → `0.8.0`**, not a patch. Shipping it as `0.7.1` would contradict the
-project's own policy (a patch must not alter generation output); only do that if the policy is
-deliberately relaxed for the pre-1.0 expert tier.
+It **changes generated output** for pullban seeds, but under the (contract-based) `VERSIONING.md`
+that is a **PATCH**, not a minor: it breaks no contract — no new location/item IDs, no `slot_data`
+schema change, no option change. So this ships as **`0.7.1`**.
 
 ## Scope / sequencing
 
 - **0.7.0 (this release):** boss gate + count-floor chaining + the Pull-item floor *logic*
   (dormant, safe fallback). pullban untouched.
-- **0.8.0 (this follow-up):** the augmented pullban corpus, which *activates* the Pull-item floor
+- **0.7.1 (this follow-up):** the augmented pullban corpus, which *activates* the Pull-item floor
   and makes pull seeds robustly fillable at all region sizes. Pairs with the roadmap's deferred
-  "larger pull corpus" item.
+  "larger pull corpus" item. (A patch — corpus content, no contract change.)
 
 ## Tests to add with the corpus change
 

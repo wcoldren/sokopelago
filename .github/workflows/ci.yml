@@ -156,4 +156,4 @@ jobs:
         with:
           files: sokopelago.apworld
           generate_release_notes: true
-          prerelease: true # 0.x is beta — see the in-app disclaimer
+          prerelease: true # 0.x is alpha — see the in-app disclaimer
