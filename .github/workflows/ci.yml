@@ -9,6 +9,30 @@ permissions:
   contents: read
 
 jobs:
+  # Path-filter so gated delivery only fires for the area that changed. The TEST jobs below are
+  # deliberately NOT gated on this (deploy-pages `needs:` them — a skipped need would skip the
+  # deploy). Only the deploy/publish jobs read these outputs.
+  changes:
+    name: detect changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      pages: ${{ steps.filter.outputs.pages }}
+      worker: ${{ steps.filter.outputs.worker }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            pages:
+              - 'client/**'
+              - 'apworld/sokopelago/data/**'
+            worker:
+              - 'server/potd-worker/**'
+
   python-lint:
     name: python · ruff
     runs-on: ubuntu-latest
@@ -79,6 +103,9 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run typecheck
+      # Import-boundary check: engine/** and potd must not import ap/** or main.ts. Keeps the
+      # `pages` path-filter honest (the offline POTD page ships without the AP code).
+      - run: npm run depcruise
 
   client-test:
     name: client · vitest + coverage
@@ -106,8 +133,12 @@ jobs:
 
   deploy-pages:
     name: deploy · GitHub Pages
-    needs: [python-lint, python-fast, python-world, client-lint, client-test]
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: [changes, python-lint, python-fast, python-world, client-lint, client-test]
+    # Only deploy on main, and only when the built site actually changed (client or bundled
+    # data). A Python-only apworld change no longer redeploys the static site.
+    if: >-
+      github.ref == 'refs/heads/main' && github.event_name != 'pull_request' &&
+      needs.changes.outputs.pages == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -157,3 +188,57 @@ jobs:
           files: sokopelago.apworld
           generate_release_notes: true
           prerelease: true # 0.x is alpha — see the in-app disclaimer
+
+  # --- POTD ratings Worker --------------------------------------------------
+  # The Worker tests run only when the Worker changed (deploy-worker `needs:` this — when it's
+  # skipped on a non-worker change, deploy-worker skips too, which is exactly what we want).
+
+  worker-test:
+    name: worker · vitest (workerd + D1)
+    needs: changes
+    if: needs.changes.outputs.worker == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server/potd-worker
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/potd-worker/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  deploy-worker:
+    name: deploy · Cloudflare Worker
+    needs: [changes, client-lint, client-test, worker-test]
+    # Deploy only on main, never on PRs, and only when the Worker changed.
+    if: >-
+      github.ref == 'refs/heads/main' && github.event_name != 'pull_request' &&
+      needs.changes.outputs.worker == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server/potd-worker
+    # Secrets supplied by the maintainer (NOT in the repo). Until CLOUDFLARE_API_TOKEN exists the
+    # deploy step below is skipped, so this job stays green and inert — scaffolded, not run.
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/potd-worker/package-lock.json
+      - run: npm ci
+      - name: Deploy Worker (wrangler)
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        run: npx wrangler deploy
+      - name: Deploy skipped (no Cloudflare secrets yet)
+        if: env.CLOUDFLARE_API_TOKEN == ''
+        run: echo "CLOUDFLARE_API_TOKEN not set — add the repo secrets to enable the Worker deploy."

@@ -1,0 +1,20 @@
+# Sokopelago Puzzle-of-the-Day ratings Worker. See README.md for the one-time setup commands.
+name = "sokopelago-potd"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+
+# D1 (SQLite) binding. Create the database with `wrangler d1 create sokopelago-potd` and paste
+# the printed database_id below (it is not a secret). Apply src/schema.sql with `wrangler d1
+# execute` (see README). The Worker reads this binding as env.DB.
+[[d1_databases]]
+binding = "DB"
+database_name = "sokopelago-potd"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+# Browser CORS allow-list: the exact origins allowed to call this Worker, comma-separated and
+# never wildcard. The production Pages origin plus the local Vite dev origins (Mode B local loop,
+# pinned to :5173 via --strictPort). Add a custom domain here if you set one up. Not a secret; the
+# deploy account id + API token are supplied out-of-band (CLOUDFLARE_ACCOUNT_ID /
+# CLOUDFLARE_API_TOKEN), never committed here.
+[vars]
+ALLOWED_ORIGINS = "https://wcoldren.github.io,http://localhost:5173,http://127.0.0.1:5173"

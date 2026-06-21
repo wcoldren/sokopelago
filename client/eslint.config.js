@@ -6,7 +6,15 @@ import prettier from "eslint-config-prettier";
 // real type-aware linting; eslint-config-prettier disables stylistic rules so the
 // formatter (Prettier) owns layout.
 export default tseslint.config(
-  { ignores: ["dist/**", "coverage/**", "node_modules/**", "eslint.config.js"] },
+  {
+    ignores: [
+      "dist/**",
+      "coverage/**",
+      "node_modules/**",
+      "eslint.config.js",
+      ".dependency-cruiser.cjs",
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   {

@@ -1,0 +1,21 @@
+{
+  "name": "sokopelago-potd-worker",
+  "private": true,
+  "type": "module",
+  "description": "Sokopelago Puzzle-of-the-Day ratings sink (Cloudflare Worker + D1)",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "db:local": "wrangler d1 execute sokopelago-potd --local --file=src/schema.sql",
+    "db:remote": "wrangler d1 execute sokopelago-potd --remote --file=src/schema.sql"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.8.19",
+    "@cloudflare/workers-types": "^4.20250109.0",
+    "typescript": "^5.7.2",
+    "vitest": "~3.2.0",
+    "wrangler": "^4.0.0"
+  }
+}
