@@ -1,0 +1,5 @@
+# Local env files (Mode B uses cross-env inline, so none are needed — this is a safety net so a
+# stray local override with a real API base or secret can never be committed).
+.env
+.env.*
+!.env.example

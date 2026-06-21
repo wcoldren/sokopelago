@@ -8,8 +8,8 @@
     "deploy": "wrangler deploy",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "db:apply:local": "wrangler d1 execute sokopelago-potd --local --file=src/schema.sql",
-    "db:apply:remote": "wrangler d1 execute sokopelago-potd --remote --file=src/schema.sql"
+    "db:local": "wrangler d1 execute sokopelago-potd --local --file=src/schema.sql",
+    "db:remote": "wrangler d1 execute sokopelago-potd --remote --file=src/schema.sql"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.8.19",

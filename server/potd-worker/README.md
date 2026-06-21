@@ -32,8 +32,8 @@ npx wrangler d1 create sokopelago-potd
 #      e.g. "https://<username>.github.io" (add a custom domain if you have one)
 
 # 4. Apply the schema to BOTH the local dev DB and the remote (production) DB:
-npm run db:apply:local
-npm run db:apply:remote
+npm run db:local
+npm run db:remote
 ```
 
 ## Develop & test locally
@@ -41,14 +41,12 @@ npm run db:apply:remote
 ```sh
 npm test         # runs the Worker tests in workerd against a local D1 (no account needed)
 npm run dev      # wrangler dev — serves the Worker locally with a local D1
+npm run db:local # (re)apply src/schema.sql to the local D1
 ```
 
-Point the client at your local Worker by building it with the API base set:
-
-```sh
-cd ../../client
-VITE_POTD_API="http://127.0.0.1:8787" npm run dev   # dev server reads import.meta.env.VITE_POTD_API
-```
+> **Tip:** to run the **whole** local loop (Worker + the POTD page wired to it, with the schema
+> applied for you) in one command, use `cd ../../client && npm run dev:full`. The two preview
+> modes are documented in [`docs/LOCAL-PREVIEW.md`](../../docs/LOCAL-PREVIEW.md).
 
 ## Deploy
 
