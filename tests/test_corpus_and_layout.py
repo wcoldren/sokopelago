@@ -4,6 +4,7 @@ from pathlib import Path
 import build_corpus
 import layout
 import solve_corpus
+import tiers
 import xsb_levels
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -92,6 +93,63 @@ class TestEnrichedManifest:
         data = json.loads(MANIFEST.read_text())
         unsolved = [e["n"] for e in data if not e.get("solved")]
         assert len(unsolved) <= self.MAX_UNSOLVED, f"too many unsolved levels: {unsolved}"
+
+
+class TestDifficultyDistribution:
+    """Difficulty is an *absolute* log-scaled score (not even thirds): "easy" must mean a
+    genuinely simple puzzle. The original bug — one external-solved outlier pinning the
+    min-max scale so 154/155 levels read as 'easy' — must not recur, but the honest
+    distribution is legitimately medium-heavy."""
+
+    def _tiers(self, diffs):
+        easy = sum(tiers.tier_of(d) == "easy" for d in diffs)
+        hard = sum(tiers.tier_of(d) == "hard" for d in diffs)
+        return easy, len(diffs) - easy - hard, hard
+
+    def test_committed_manifest_populates_every_tier(self):
+        data = json.loads(MANIFEST.read_text())
+        diffs = [e["difficulty"] for e in data]
+        easy, med, hard = self._tiers(diffs)
+        # Every tier non-empty, and "easy" is a sane minority of genuinely simple levels
+        # (not the degenerate 154/0/1, and not a flat third either).
+        assert easy and med and hard, f"a tier is empty: easy={easy} med={med} hard={hard}"
+        assert 20 <= easy <= 70, f"easy tier count out of expected range: {easy}"
+        # The hardest level (153, external-solved) sits in the hard tier, not 'easy'.
+        worst = max(data, key=lambda e: e["difficulty"])
+        assert tiers.tier_of(worst["difficulty"]) == "hard"
+
+    def test_attach_difficulty_is_monotonic_and_outlier_topped(self):
+        # A ramp of ordinary levels plus one runaway (huge par/nodes). The absolute score
+        # must rank heavier levels higher and put the outlier on top — without the old
+        # min-max collapse that flattened the ramp to a single value.
+        entries = [
+            {"n": i, "solved": True, "par": i, "moves": 2 * i, "boxes": 1 + i // 10, "_nodes": i * i}
+            for i in range(1, 31)
+        ]
+        entries.append(
+            {"n": 99, "solved": True, "par": 100000, "moves": 100000, "boxes": 9, "_nodes": 6_000_000}
+        )
+        solve_corpus._attach_difficulty(entries)
+        ramp = [e for e in entries if e["n"] != 99]
+        scores = [e["difficulty"] for e in ramp]
+        assert scores == sorted(scores), "ramp difficulty is not monotonic in the signals"
+        assert len(set(scores)) > 1, "ramp collapsed to a single difficulty (outlier crush)"
+        assert max(entries, key=lambda e: e["difficulty"])["n"] == 99  # runaway is hardest
+        assert all(0.0 <= e["difficulty"] <= 1.0 for e in entries)
+        # _nodes is consumed into the persisted search_nodes (so a re-score can reuse it).
+        assert all("search_nodes" in e and "_nodes" not in e for e in entries)
+
+    def test_rescore_reads_persisted_search_nodes(self):
+        # A re-score has no live _nodes; _attach_difficulty must fall back to search_nodes
+        # and leave it intact (no re-solve).
+        entries = [
+            {"n": 1, "solved": True, "par": 5, "moves": 5, "boxes": 1, "search_nodes": 10},
+            {"n": 2, "solved": True, "par": 50, "moves": 60, "boxes": 3, "search_nodes": 9999},
+        ]
+        solve_corpus._attach_difficulty(entries)
+        assert entries[1]["difficulty"] > entries[0]["difficulty"]  # heavier level outranks
+        assert entries[0]["search_nodes"] == 10 and entries[1]["search_nodes"] == 9999
+        assert entries[0]["search_nodes"] == 10 and entries[1]["search_nodes"] == 9999
 
 
 class TestSolverTechniques:

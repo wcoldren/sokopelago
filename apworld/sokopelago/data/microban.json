@@ -8,7 +8,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0204,
+    "difficulty": 0.2324,
     "search_nodes": 14,
     "board": [
       "####",
@@ -29,7 +29,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0182,
+    "difficulty": 0.1323,
     "search_nodes": 4,
     "board": [
       "######",
@@ -50,7 +50,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0277,
+    "difficulty": 0.3011,
     "search_nodes": 49,
     "board": [
       "  ####",
@@ -70,7 +70,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0255,
+    "difficulty": 0.2284,
     "search_nodes": 14,
     "board": [
       "########",
@@ -90,7 +90,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.031,
+    "difficulty": 0.2379,
     "search_nodes": 25,
     "board": [
       " #######",
@@ -111,7 +111,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0688,
+    "difficulty": 0.4356,
     "search_nodes": 261,
     "board": [
       "###### #####",
@@ -131,7 +131,7 @@
     "boxes": 6,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0461,
+    "difficulty": 0.3173,
     "search_nodes": 297,
     "board": [
       "#######",
@@ -153,7 +153,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0607,
+    "difficulty": 0.4072,
     "search_nodes": 100,
     "board": [
       "  ######",
@@ -179,7 +179,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0222,
+    "difficulty": 0.2473,
     "search_nodes": 15,
     "board": [
       "#####",
@@ -200,7 +200,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0542,
+    "difficulty": 0.3845,
     "search_nodes": 110,
     "board": [
       "      #####",
@@ -222,7 +222,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0374,
+    "difficulty": 0.3361,
     "search_nodes": 59,
     "board": [
       "  ######",
@@ -244,7 +244,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0266,
+    "difficulty": 0.27,
     "search_nodes": 18,
     "board": [
       "#####",
@@ -266,7 +266,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0475,
+    "difficulty": 0.3637,
     "search_nodes": 76,
     "board": [
       "####",
@@ -289,7 +289,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0257,
+    "difficulty": 0.2584,
     "search_nodes": 14,
     "board": [
       "#######",
@@ -309,7 +309,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0268,
+    "difficulty": 0.2807,
     "search_nodes": 25,
     "board": [
       "     ###",
@@ -330,7 +330,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0806,
+    "difficulty": 0.4947,
     "search_nodes": 1203,
     "board": [
       " ####",
@@ -352,7 +352,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.028,
+    "difficulty": 0.2632,
     "search_nodes": 29,
     "board": [
       "#####",
@@ -373,7 +373,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0333,
+    "difficulty": 0.3056,
     "search_nodes": 32,
     "board": [
       "#######",
@@ -396,7 +396,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0372,
+    "difficulty": 0.3435,
     "search_nodes": 66,
     "board": [
       "########",
@@ -418,7 +418,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0337,
+    "difficulty": 0.3269,
     "search_nodes": 56,
     "board": [
       "#######",
@@ -440,7 +440,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0141,
+    "difficulty": 0.1776,
     "search_nodes": 10,
     "board": [
       "####",
@@ -460,7 +460,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.034,
+    "difficulty": 0.3296,
     "search_nodes": 66,
     "board": [
       "#####",
@@ -483,7 +483,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0266,
+    "difficulty": 0.2676,
     "search_nodes": 19,
     "board": [
       "#######",
@@ -504,7 +504,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0219,
+    "difficulty": 0.2543,
     "search_nodes": 24,
     "board": [
       "# #####",
@@ -525,7 +525,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0252,
+    "difficulty": 0.2349,
     "search_nodes": 20,
     "board": [
       " ####",
@@ -546,7 +546,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0314,
+    "difficulty": 0.2951,
     "search_nodes": 58,
     "board": [
       " #####",
@@ -568,7 +568,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0256,
+    "difficulty": 0.2791,
     "search_nodes": 35,
     "board": [
       "######",
@@ -589,7 +589,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0215,
+    "difficulty": 0.2463,
     "search_nodes": 18,
     "board": [
       "#####",
@@ -610,7 +610,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0506,
+    "difficulty": 0.3752,
     "search_nodes": 77,
     "board": [
       "     #####",
@@ -633,7 +633,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0218,
+    "difficulty": 0.1837,
     "search_nodes": 7,
     "board": [
       "####",
@@ -654,7 +654,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.022,
+    "difficulty": 0.2221,
     "search_nodes": 31,
     "board": [
       "  ####",
@@ -675,7 +675,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0287,
+    "difficulty": 0.2711,
     "search_nodes": 36,
     "board": [
       " ####",
@@ -696,7 +696,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0314,
+    "difficulty": 0.3028,
     "search_nodes": 80,
     "board": [
       "#######",
@@ -717,7 +717,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0354,
+    "difficulty": 0.2791,
     "search_nodes": 45,
     "board": [
       "  ####",
@@ -737,7 +737,7 @@
     "boxes": 5,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0799,
+    "difficulty": 0.5158,
     "search_nodes": 4348,
     "board": [
       "  ####",
@@ -761,7 +761,7 @@
     "boxes": 5,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1331,
+    "difficulty": 0.6172,
     "search_nodes": 18035,
     "board": [
       "####",
@@ -780,7 +780,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0536,
+    "difficulty": 0.3912,
     "search_nodes": 133,
     "board": [
       "      ###",
@@ -802,7 +802,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0277,
+    "difficulty": 0.2521,
     "search_nodes": 22,
     "board": [
       "##########",
@@ -823,7 +823,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0517,
+    "difficulty": 0.3911,
     "search_nodes": 106,
     "board": [
       "#####",
@@ -846,7 +846,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0243,
+    "difficulty": 0.2398,
     "search_nodes": 30,
     "board": [
       " #####",
@@ -866,7 +866,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0377,
+    "difficulty": 0.3094,
     "search_nodes": 35,
     "board": [
       "#######",
@@ -886,7 +886,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0399,
+    "difficulty": 0.3525,
     "search_nodes": 141,
     "board": [
       "   ####",
@@ -908,7 +908,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0512,
+    "difficulty": 0.4036,
     "search_nodes": 280,
     "board": [
       "     ####",
@@ -948,7 +948,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0329,
+    "difficulty": 0.306,
     "search_nodes": 66,
     "board": [
       "######",
@@ -969,7 +969,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0227,
+    "difficulty": 0.2408,
     "search_nodes": 14,
     "board": [
       " ######",
@@ -991,7 +991,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0494,
+    "difficulty": 0.3752,
     "search_nodes": 82,
     "board": [
       "  #######",
@@ -1012,7 +1012,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0438,
+    "difficulty": 0.3509,
     "search_nodes": 107,
     "board": [
       "######",
@@ -1034,7 +1034,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.056,
+    "difficulty": 0.39,
     "search_nodes": 125,
     "board": [
       "######",
@@ -1058,7 +1058,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0416,
+    "difficulty": 0.3312,
     "search_nodes": 32,
     "board": [
       "  ####",
@@ -1079,7 +1079,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0205,
+    "difficulty": 0.2375,
     "search_nodes": 17,
     "board": [
       "####",
@@ -1100,7 +1100,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.033,
+    "difficulty": 0.2884,
     "search_nodes": 99,
     "board": [
       "  ####",
@@ -1122,7 +1122,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0405,
+    "difficulty": 0.3231,
     "search_nodes": 82,
     "board": [
       " #####",
@@ -1143,7 +1143,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0709,
+    "difficulty": 0.4874,
     "search_nodes": 2080,
     "board": [
       "      ######",
@@ -1165,7 +1165,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0489,
+    "difficulty": 0.381,
     "search_nodes": 87,
     "board": [
       "########",
@@ -1187,7 +1187,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0163,
+    "difficulty": 0.1944,
     "search_nodes": 9,
     "board": [
       "#####",
@@ -1207,7 +1207,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0438,
+    "difficulty": 0.3674,
     "search_nodes": 84,
     "board": [
       "  ####",
@@ -1230,7 +1230,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0328,
+    "difficulty": 0.2827,
     "search_nodes": 25,
     "board": [
       "####",
@@ -1251,7 +1251,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1467,
+    "difficulty": 0.5484,
     "search_nodes": 1471,
     "board": [
       "############",
@@ -1274,7 +1274,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1143,
+    "difficulty": 0.5209,
     "search_nodes": 933,
     "board": [
       " #########",
@@ -1298,7 +1298,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0627,
+    "difficulty": 0.3909,
     "search_nodes": 98,
     "board": [
       "########",
@@ -1322,7 +1322,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0691,
+    "difficulty": 0.4372,
     "search_nodes": 288,
     "board": [
       "   ##########",
@@ -1342,7 +1342,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0832,
+    "difficulty": 0.4603,
     "search_nodes": 210,
     "board": [
       "#####   ####",
@@ -1362,7 +1362,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0716,
+    "difficulty": 0.4448,
     "search_nodes": 338,
     "board": [
       " ######",
@@ -1385,7 +1385,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0998,
+    "difficulty": 0.539,
     "search_nodes": 3350,
     "board": [
       "  ######",
@@ -1408,7 +1408,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0457,
+    "difficulty": 0.3749,
     "search_nodes": 226,
     "board": [
       "   ###",
@@ -1436,7 +1436,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0303,
+    "difficulty": 0.2627,
     "search_nodes": 24,
     "board": [
       "#####",
@@ -1458,7 +1458,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0641,
+    "difficulty": 0.4335,
     "search_nodes": 318,
     "board": [
       " ####",
@@ -1479,7 +1479,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0831,
+    "difficulty": 0.5035,
     "search_nodes": 1673,
     "board": [
       "####  ####",
@@ -1501,7 +1501,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.065,
+    "difficulty": 0.4138,
     "search_nodes": 163,
     "board": [
       "#####",
@@ -1525,7 +1525,7 @@
     "boxes": 2,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0504,
+    "difficulty": 0.3775,
     "search_nodes": 93,
     "board": [
       "###########",
@@ -1548,7 +1548,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0799,
+    "difficulty": 0.4875,
     "search_nodes": 901,
     "board": [
       "  ####",
@@ -1573,7 +1573,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.065,
+    "difficulty": 0.4263,
     "search_nodes": 270,
     "board": [
       "####",
@@ -1597,7 +1597,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0794,
+    "difficulty": 0.4806,
     "search_nodes": 855,
     "board": [
       " ####",
@@ -1619,7 +1619,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0759,
+    "difficulty": 0.474,
     "search_nodes": 790,
     "board": [
       " #######",
@@ -1640,7 +1640,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1234,
+    "difficulty": 0.5406,
     "search_nodes": 1260,
     "board": [
       " #####",
@@ -1665,7 +1665,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1266,
+    "difficulty": 0.5615,
     "search_nodes": 2546,
     "board": [
       "##########",
@@ -1686,7 +1686,7 @@
     "boxes": 5,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0944,
+    "difficulty": 0.5324,
     "search_nodes": 4155,
     "board": [
       " #######",
@@ -1708,7 +1708,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0421,
+    "difficulty": 0.3509,
     "search_nodes": 87,
     "board": [
       " #########",
@@ -1728,7 +1728,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0909,
+    "difficulty": 0.5105,
     "search_nodes": 1565,
     "board": [
       "####",
@@ -1753,7 +1753,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.034,
+    "difficulty": 0.3042,
     "search_nodes": 48,
     "board": [
       " #####",
@@ -1776,7 +1776,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0373,
+    "difficulty": 0.3088,
     "search_nodes": 32,
     "board": [
       "#####",
@@ -1798,7 +1798,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1204,
+    "difficulty": 0.5699,
     "search_nodes": 5502,
     "board": [
       "######",
@@ -1822,7 +1822,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1371,
+    "difficulty": 0.5787,
     "search_nodes": 3340,
     "board": [
       "########",
@@ -1846,7 +1846,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1021,
+    "difficulty": 0.5348,
     "search_nodes": 2048,
     "board": [
       "       ####",
@@ -1871,7 +1871,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0683,
+    "difficulty": 0.4326,
     "search_nodes": 310,
     "board": [
       "    ####",
@@ -1893,7 +1893,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1144,
+    "difficulty": 0.574,
     "search_nodes": 6326,
     "board": [
       "     ####",
@@ -1917,7 +1917,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1238,
+    "difficulty": 0.5617,
     "search_nodes": 2535,
     "board": [
       "     ####",
@@ -1943,7 +1943,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0977,
+    "difficulty": 0.518,
     "search_nodes": 1985,
     "board": [
       "##########",
@@ -1966,7 +1966,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0515,
+    "difficulty": 0.4239,
     "search_nodes": 1247,
     "board": [
       " ########",
@@ -1987,7 +1987,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0434,
+    "difficulty": 0.3542,
     "search_nodes": 177,
     "board": [
       "###########",
@@ -2006,7 +2006,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0973,
+    "difficulty": 0.5174,
     "search_nodes": 1255,
     "board": [
       "  ####",
@@ -2030,7 +2030,7 @@
     "boxes": 8,
     "solved": true,
     "optimal": false,
-    "difficulty": 0.2089,
+    "difficulty": 0.7349,
     "search_nodes": 248728,
     "board": [
       " #########",
@@ -2055,7 +2055,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0624,
+    "difficulty": 0.4408,
     "search_nodes": 455,
     "board": [
       "#########",
@@ -2077,7 +2077,7 @@
     "boxes": 8,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0644,
+    "difficulty": 0.3466,
     "search_nodes": 188,
     "board": [
       "########",
@@ -2099,7 +2099,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0715,
+    "difficulty": 0.4791,
     "search_nodes": 1072,
     "board": [
       "  ######",
@@ -2124,7 +2124,7 @@
     "boxes": 5,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1063,
+    "difficulty": 0.5254,
     "search_nodes": 1448,
     "board": [
       "   ####",
@@ -2148,7 +2148,7 @@
     "boxes": 5,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.2258,
+    "difficulty": 0.7185,
     "search_nodes": 93002,
     "board": [
       "#####",
@@ -2172,7 +2172,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.2655,
+    "difficulty": 0.7429,
     "search_nodes": 149303,
     "board": [
       "               #####",
@@ -2196,7 +2196,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.109,
+    "difficulty": 0.5386,
     "search_nodes": 1769,
     "board": [
       "#######",
@@ -2218,7 +2218,7 @@
     "boxes": 5,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0564,
+    "difficulty": 0.4004,
     "search_nodes": 451,
     "board": [
       "  #####",
@@ -2245,7 +2245,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.104,
+    "difficulty": 0.5384,
     "search_nodes": 2562,
     "board": [
       "###########",
@@ -2267,7 +2267,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0425,
+    "difficulty": 0.3669,
     "search_nodes": 403,
     "board": [
       "  #####",
@@ -2289,7 +2289,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0607,
+    "difficulty": 0.4266,
     "search_nodes": 303,
     "board": [
       "    #####",
@@ -2312,7 +2312,7 @@
     "boxes": 8,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0924,
+    "difficulty": 0.5842,
     "search_nodes": 97155,
     "board": [
       " #### ####",
@@ -2337,7 +2337,7 @@
     "boxes": 5,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1288,
+    "difficulty": 0.5828,
     "search_nodes": 6105,
     "board": [
       " ########",
@@ -2360,7 +2360,7 @@
     "boxes": 11,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0873,
+    "difficulty": 0.3931,
     "search_nodes": 280,
     "board": [
       "########",
@@ -2382,7 +2382,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1583,
+    "difficulty": 0.6461,
     "search_nodes": 31969,
     "board": [
       "####     #####",
@@ -2404,7 +2404,7 @@
     "boxes": 5,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1315,
+    "difficulty": 0.6193,
     "search_nodes": 38829,
     "board": [
       "  #######",
@@ -2431,7 +2431,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0446,
+    "difficulty": 0.404,
     "search_nodes": 1226,
     "board": [
       "  ####",
@@ -2454,7 +2454,7 @@
     "boxes": 6,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1741,
+    "difficulty": 0.6996,
     "search_nodes": 246745,
     "board": [
       "######",
@@ -2480,7 +2480,7 @@
     "boxes": 5,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.2129,
+    "difficulty": 0.7271,
     "search_nodes": 224837,
     "board": [
       " #####",
@@ -2507,7 +2507,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1133,
+    "difficulty": 0.5991,
     "search_nodes": 19922,
     "board": [
       "   #####",
@@ -2534,7 +2534,7 @@
     "boxes": 6,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1596,
+    "difficulty": 0.6473,
     "search_nodes": 30015,
     "board": [
       "######",
@@ -2557,7 +2557,7 @@
     "boxes": 5,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0929,
+    "difficulty": 0.5144,
     "search_nodes": 2658,
     "board": [
       "    #####",
@@ -2579,7 +2579,7 @@
     "boxes": 5,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0532,
+    "difficulty": 0.3809,
     "search_nodes": 292,
     "board": [
       "     #####",
@@ -2600,7 +2600,7 @@
     "boxes": 5,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.139,
+    "difficulty": 0.6321,
     "search_nodes": 45182,
     "board": [
       " #### ####",
@@ -2624,7 +2624,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.107,
+    "difficulty": 0.545,
     "search_nodes": 3078,
     "board": [
       " #####",
@@ -2648,7 +2648,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0633,
+    "difficulty": 0.3943,
     "search_nodes": 152,
     "board": [
       "  ######",
@@ -2672,7 +2672,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1361,
+    "difficulty": 0.5809,
     "search_nodes": 3622,
     "board": [
       "      ####",
@@ -2697,7 +2697,7 @@
     "boxes": 5,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1138,
+    "difficulty": 0.5609,
     "search_nodes": 4067,
     "board": [
       " ######",
@@ -2722,7 +2722,7 @@
     "boxes": 5,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1999,
+    "difficulty": 0.7067,
     "search_nodes": 114389,
     "board": [
       "#####",
@@ -2748,7 +2748,7 @@
     "boxes": 5,
     "solved": true,
     "optimal": false,
-    "difficulty": 0.2248,
+    "difficulty": 0.6754,
     "search_nodes": 16698,
     "board": [
       "########",
@@ -2773,7 +2773,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.119,
+    "difficulty": 0.4899,
     "search_nodes": 354,
     "board": [
       "##############",
@@ -2796,7 +2796,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0922,
+    "difficulty": 0.5054,
     "search_nodes": 1203,
     "board": [
       "      #####",
@@ -2818,7 +2818,7 @@
     "boxes": 7,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0889,
+    "difficulty": 0.5486,
     "search_nodes": 19737,
     "board": [
       " ###########",
@@ -2839,7 +2839,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0759,
+    "difficulty": 0.4745,
     "search_nodes": 854,
     "board": [
       "## ####",
@@ -2862,7 +2862,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.057,
+    "difficulty": 0.4141,
     "search_nodes": 428,
     "board": [
       "  #########",
@@ -2884,7 +2884,7 @@
     "boxes": 5,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0691,
+    "difficulty": 0.4579,
     "search_nodes": 1139,
     "board": [
       "  #########",
@@ -2906,7 +2906,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0878,
+    "difficulty": 0.5242,
     "search_nodes": 3379,
     "board": [
       "#####  #####",
@@ -2927,7 +2927,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0731,
+    "difficulty": 0.4984,
     "search_nodes": 2793,
     "board": [
       "#####",
@@ -2952,7 +2952,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.093,
+    "difficulty": 0.4993,
     "search_nodes": 947,
     "board": [
       "####",
@@ -2974,7 +2974,7 @@
     "boxes": 5,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1011,
+    "difficulty": 0.5582,
     "search_nodes": 7339,
     "board": [
       " #######",
@@ -2996,7 +2996,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1686,
+    "difficulty": 0.6509,
     "search_nodes": 26868,
     "board": [
       "        ####",
@@ -3020,7 +3020,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0899,
+    "difficulty": 0.5092,
     "search_nodes": 1670,
     "board": [
       "#######",
@@ -3041,7 +3041,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0768,
+    "difficulty": 0.4531,
     "search_nodes": 508,
     "board": [
       " #######",
@@ -3063,7 +3063,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1128,
+    "difficulty": 0.5869,
     "search_nodes": 14105,
     "board": [
       "       ####",
@@ -3087,7 +3087,7 @@
     "boxes": 5,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1476,
+    "difficulty": 0.6543,
     "search_nodes": 75262,
     "board": [
       "  ####",
@@ -3112,7 +3112,7 @@
     "boxes": 6,
     "solved": true,
     "optimal": false,
-    "difficulty": 0.2927,
+    "difficulty": 0.7801,
     "search_nodes": 584022,
     "board": [
       " ####",
@@ -3138,7 +3138,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1766,
+    "difficulty": 0.6404,
     "search_nodes": 13783,
     "board": [
       "######## #####",
@@ -3161,7 +3161,7 @@
     "boxes": 6,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1224,
+    "difficulty": 0.602,
     "search_nodes": 14422,
     "board": [
       "  ########",
@@ -3184,7 +3184,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0566,
+    "difficulty": 0.4524,
     "search_nodes": 2009,
     "board": [
       "  ####",
@@ -3207,7 +3207,7 @@
     "boxes": 6,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1551,
+    "difficulty": 0.6736,
     "search_nodes": 94624,
     "board": [
       "####",
@@ -3236,7 +3236,7 @@
     "boxes": 16,
     "solved": true,
     "optimal": false,
-    "difficulty": 0.1876,
+    "difficulty": 0.5933,
     "search_nodes": 708,
     "board": [
       "   ####",
@@ -3262,7 +3262,7 @@
     "boxes": 12,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1041,
+    "difficulty": 0.5539,
     "search_nodes": 33081,
     "board": [
       "   #####",
@@ -3287,7 +3287,7 @@
     "boxes": 12,
     "solved": true,
     "optimal": false,
-    "difficulty": 0.1009,
+    "difficulty": 0.5321,
     "search_nodes": 22994,
     "board": [
       " #######",
@@ -3310,7 +3310,7 @@
     "boxes": 3,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0986,
+    "difficulty": 0.5358,
     "search_nodes": 2473,
     "board": [
       "       #####",
@@ -3334,7 +3334,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1209,
+    "difficulty": 0.5567,
     "search_nodes": 2905,
     "board": [
       "###########",
@@ -3355,7 +3355,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0761,
+    "difficulty": 0.4711,
     "search_nodes": 680,
     "board": [
       " ####",
@@ -3381,7 +3381,7 @@
     "boxes": 5,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.108,
+    "difficulty": 0.5919,
     "search_nodes": 20784,
     "board": [
       "     ####",
@@ -3403,7 +3403,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.1128,
+    "difficulty": 0.5662,
     "search_nodes": 5173,
     "board": [
       "   ####",
@@ -3427,7 +3427,7 @@
     "boxes": 4,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.104,
+    "difficulty": 0.5205,
     "search_nodes": 1877,
     "board": [
       "###### ####",
@@ -3475,7 +3475,7 @@
     "boxes": 1,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.0724,
+    "difficulty": 0.1704,
     "search_nodes": 3,
     "board": [
       " ############################",
@@ -3506,7 +3506,7 @@
     "boxes": 11,
     "solved": true,
     "optimal": true,
-    "difficulty": 0.3212,
+    "difficulty": 0.6388,
     "search_nodes": 199,
     "board": [
       "    ######               ####",

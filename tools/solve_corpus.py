@@ -60,6 +60,7 @@ from __future__ import annotations
 import argparse
 import heapq
 import json
+import math
 import os
 import re
 import shlex
@@ -801,40 +802,73 @@ def solve_pull(level: Level, time_budget: float = 30.0) -> dict[str, object]:
     }
 
 
-def _normalized(value: float, lo: float, hi: float) -> float:
+def _minmax(value: float, lo: float, hi: float) -> float:
     return 0.0 if hi <= lo else (value - lo) / (hi - lo)
 
 
 def _attach_difficulty(entries: list[dict[str, object]]) -> None:
-    """Add a normalized 0..1 ``difficulty`` blend across the corpus, in place.
+    """Add an *absolute* normalized 0..1 ``difficulty`` blend across the corpus, in place.
 
-    Normalization spans the solved levels; any level the solver couldn't crack is, by
+    Scoring spans the solved levels; any level the solver couldn't crack is, by
     definition, among the hardest, so it is assigned the max difficulty (1.0).
 
-    The blend is weighted toward ``par`` (optimal push count) and ``_nodes`` (search
-    effort / branching) — the two signals that best separate a fiddly puzzle from a long
-    but mechanical one — with ``moves``/``boxes`` as minor tie-breakers. The raw
-    ``_nodes`` count is persisted as ``search_nodes`` (it is the branching signal the
-    difficulty buckets lean on, and keeping it lets the weights be re-tuned without a
-    full re-solve)."""
+    The blend is weighted toward ``par`` (optimal push count) and the node count
+    (search effort / branching) — the two signals that best separate a fiddly puzzle
+    from a long but mechanical one — with ``moves``/``boxes`` as minor tie-breakers.
+    The heavy-tailed signals (``par``/``moves``/``_nodes`` span several orders of
+    magnitude) are ``log1p``-compressed before the per-signal min-max so one runaway
+    level (e.g. Microban 153 at par 336 / 6M search nodes) can't crush every other
+    level toward 0 — the failure that made the whole corpus read as "easy". The score
+    keeps absolute magnitude (it is *not* re-spread to even tiers), so "easy" means a
+    genuinely simple puzzle rather than merely the bottom third. The node count is
+    persisted as ``search_nodes`` (read back on a ``--rescore`` so the weights can be
+    re-tuned without a full re-solve)."""
     solved = [e for e in entries if e.get("solved")]
-    signals = ("par", "moves", "boxes", "_nodes")
-    bounds = {s: (min(float(e[s]) for e in solved), max(float(e[s]) for e in solved)) for s in signals}
-    weights = {"par": 0.4, "_nodes": 0.35, "moves": 0.15, "boxes": 0.1}
-    for e in entries:
-        if e.get("solved"):
-            score = sum(weights[s] * _normalized(float(e[s]), *bounds[s]) for s in signals)
+    if solved:
+        # Node count comes from a live solve (``_nodes``) or, on a re-score, the
+        # persisted ``search_nodes`` — normalize the source so both paths score alike.
+        for e in solved:
+            if "_nodes" not in e:
+                e["_nodes"] = e.get("search_nodes", 0)
+        weights = {"par": 0.4, "_nodes": 0.35, "moves": 0.15, "boxes": 0.1}
+        log_signals = {"par", "moves", "_nodes"}  # right-skewed; boxes is already bounded
+
+        def signal(e: dict[str, object], s: str) -> float:
+            v = float(e[s])
+            return math.log1p(v) if s in log_signals else v
+
+        bounds = {s: (min(signal(e, s) for e in solved), max(signal(e, s) for e in solved)) for s in weights}
+        for e in solved:
+            score = sum(weights[s] * _minmax(signal(e, s), *bounds[s]) for s in weights)
             e["difficulty"] = round(score, 4)
             e["search_nodes"] = int(e.pop("_nodes"))
-        else:
+    for e in entries:
+        if not e.get("solved"):
             e["difficulty"] = 1.0
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Solve a corpus into its enriched manifest.")
     ap.add_argument("--corpus", default="microban", help="corpus name (default: microban)")
-    name = ap.parse_args().corpus
+    ap.add_argument(
+        "--rescore",
+        action="store_true",
+        help="recompute only the difficulty blend from the existing manifest (reads the "
+        "persisted search_nodes; no re-solve, so external solutions are untouched)",
+    )
+    args = ap.parse_args()
+    name = args.corpus
     out = manifest_json(name)
+
+    if args.rescore:
+        if not out.exists():
+            raise SystemExit(f"--rescore: no manifest to re-score at {out}")
+        entries = json.loads(out.read_text(encoding="utf-8"))
+        _attach_difficulty(entries)
+        out.write_text(json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(f"re-scored difficulty for {len(entries)} levels -> {out.relative_to(REPO_ROOT)}")
+        return
+
     pull_aware = name != "microban"  # expert corpora may require pulls
 
     # Prior manifest (if any) so a re-run without the external solver doesn't downgrade a
