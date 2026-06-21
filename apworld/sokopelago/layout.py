@@ -6,6 +6,7 @@ None of this solves Sokoban; it only chunks the level list and counts keys.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 
@@ -60,22 +61,24 @@ def _allocate(total: int, sizes: list[int]) -> list[int]:
 
 
 def select_bucketed_levels(
+    pool: list[int],
     difficulty_by_n: dict[int, float],
-    corpus_count: int,
     level_count: int,
     bucket_count: int,
     rng: Any,
 ) -> list[int]:
-    """Pick ``level_count`` levels from a ``corpus_count``-level corpus, varied per seed
-    but keeping the difficulty ramp.
+    """Pick ``level_count`` levels from ``pool`` (the eligible level numbers), varied per
+    seed but keeping the difficulty ramp.
 
-    Levels are difficulty-ordered, split into ``bucket_count`` tiers, shuffled *within*
-    each tier (``rng`` is the multiworld's seeded RNG, so different seeds draw different
-    subsets while a given seed is reproducible), then a size-proportional share is taken
-    from each tier. The result is concatenated easiest-tier-first, so it still ramps
-    easy→hard. Levels missing a difficulty score sort as 0 (easiest)."""
-    level_count = clamp(level_count, 1, corpus_count)
-    ordered = sorted(range(1, corpus_count + 1), key=lambda n: (difficulty_by_n.get(n, 0.0), n))
+    ``pool`` is the candidate set after any ``max_difficulty`` cap — usually the whole
+    corpus, but a subset when harder tiers are excluded. Levels are difficulty-ordered,
+    split into ``bucket_count`` tiers, shuffled *within* each tier (``rng`` is the
+    multiworld's seeded RNG, so different seeds draw different subsets while a given seed
+    is reproducible), then a size-proportional share is taken from each tier. The result
+    is concatenated easiest-tier-first, so it still ramps easy→hard. Levels missing a
+    difficulty score sort as 0 (easiest)."""
+    level_count = clamp(level_count, 1, len(pool))
+    ordered = sorted(pool, key=lambda n: (difficulty_by_n.get(n, 0.0), n))
     buckets = _bucketize(ordered, bucket_count)
     for bucket in buckets:
         rng.shuffle(bucket)
@@ -159,3 +162,28 @@ def assign_levels_by_difficulty(
     for world in worlds:
         world.sort(key=lambda n: (difficulty.get(n, 0.0), n))
     return worlds
+
+
+def gentle_first_world(
+    levels: list[int],
+    difficulty: dict[int, float],
+    easy_max: float,
+    levels_per_region: int,
+    reassign: Callable[[list[int]], list[list[int]]],
+) -> list[list[int]]:
+    """Lay out ``levels`` so World 1 holds only easy-tier puzzles (difficulty < ``easy_max``),
+    for a gentle start, then lay out the rest with ``reassign``.
+
+    The easiest easy-tier levels (up to ``levels_per_region``) become World 1; every other
+    level — leftover easy ones plus all harder ones — is laid out into Worlds 2..N by
+    ``reassign`` (the normal difficulty-ordered or native chunking). No-op (returns
+    ``reassign(levels)``) when the seed has no easy levels (can't form a gentle world) or no
+    harder levels (every world is already easy)."""
+    easy = [n for n in levels if difficulty.get(n, 1.0) < easy_max]
+    harder = [n for n in levels if difficulty.get(n, 1.0) >= easy_max]
+    if not easy or not harder:
+        return reassign(levels)
+    first = sorted(easy, key=lambda n: (difficulty.get(n, 1.0), n))[:levels_per_region]
+    first_set = set(first)
+    rest = [n for n in levels if n not in first_set]
+    return [first] + reassign(rest)

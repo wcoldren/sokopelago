@@ -14,11 +14,15 @@ game: Sokopelago
 requires:
   version: 0.6.7 # Archipelago version required for this yaml.
   game:
-    Sokopelago: 0.4.1 # World version required for this yaml.
+    Sokopelago: 0.6.0 # World version required for this yaml.
 
 Sokopelago:
   # Only Microban for now (pullban is the expert corpus; needs pull_logic).
   corpus: microban
+
+  # Difficulty cap. 0.6 defaults this to `easy`; this dev playtest wants the full ramp,
+  # so pin it to `any` (any | easy | easy_medium).
+  max_difficulty: any
 
   # First N levels of the corpus (keeps the difficulty ramp). Small = quick to play.
   level_count: 15

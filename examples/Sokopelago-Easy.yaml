@@ -1,0 +1,46 @@
+# Sokopelago — easy-first single-player config (the 0.6 default shape).
+#
+# A gentle Microban seed restricted to easy-tier puzzles. This mirrors what the
+# AP-generated template ships by default (max_difficulty: easy), so it's a good
+# starting point while the harder-logic tiers are still being refined.
+# Generate + host + open the client in one shot:  ./playtest.sh examples/Sokopelago-Easy.yaml
+
+# Your slot name (<= 16 chars). playtest.sh reads this and prints it for you to
+# enter in the client's connect form.
+name: Player1
+
+description: Sokopelago easy-first — Microban, easy-tier only, single-player.
+
+game: Sokopelago
+requires:
+  version: 0.6.7 # Archipelago version required for this yaml.
+  game:
+    Sokopelago: 0.6.0 # World version (max_difficulty + gentle first world + play stats).
+
+Sokopelago:
+  corpus: microban
+
+  # Restrict the seed to easy-tier puzzles only (any | easy | easy_medium). This is the
+  # 0.6 default; shown explicitly here for clarity.
+  max_difficulty: easy
+
+  # Microban has 41 easy-tier levels; pick a gentle subset. shuffled_buckets varies the
+  # draw per seed while keeping the easy ramp.
+  level_count: 20
+  levels_per_region: 5
+  level_selection: shuffled_buckets
+  difficulty_buckets: 5
+
+  goal: beat_final_region
+
+  # World 1 is easy by default (gentle_first_world); moot here since the whole seed is easy.
+  gentle_first_world: true
+
+  # A few escape valves so the connected client has items to receive.
+  skip_tokens: 2
+  undo_charges: 2
+  hint_tokens: 5
+
+  trap_percentage: 0
+
+  difficulty_ordering: true

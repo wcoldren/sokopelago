@@ -8,14 +8,17 @@ take a plain RNG and a difficulty dict.
 import random
 import unittest
 
-from ..layout import _allocate, chunk_list, select_bucketed_levels
+from ..layout import _allocate, chunk_list, gentle_first_world, select_bucketed_levels
 
 # A monotonic difficulty ramp so "easiest tiers first" is checkable: level n -> n/155.
 _DIFF = {n: n / 155 for n in range(1, 156)}
 
 
+_POOL = list(range(1, 156))  # whole corpus eligible (no max_difficulty cap)
+
+
 def _select(seed: int, level_count: int = 30, buckets: int = 5) -> list[int]:
-    return select_bucketed_levels(_DIFF, 155, level_count, buckets, random.Random(seed))
+    return select_bucketed_levels(_POOL, _DIFF, level_count, buckets, random.Random(seed))
 
 
 class TestBucketedSelection(unittest.TestCase):
@@ -56,9 +59,48 @@ class TestBucketedSelection(unittest.TestCase):
 
     def test_missing_difficulty_sorts_as_easiest(self) -> None:
         # Levels without a difficulty score must still be selectable (treated as 0.0).
-        chosen = select_bucketed_levels({}, 20, 10, 3, random.Random(1))
+        chosen = select_bucketed_levels(list(range(1, 21)), {}, 10, 3, random.Random(1))
         self.assertEqual(len(chosen), 10)
         self.assertEqual(len(set(chosen)), 10)
+
+    def test_draws_only_from_the_pool(self) -> None:
+        # A max_difficulty cap passes a subset pool; selection must stay within it.
+        pool = list(range(1, 42))  # e.g. the easy-tier subset
+        chosen = select_bucketed_levels(pool, _DIFF, 20, 5, random.Random(2))
+        self.assertEqual(len(chosen), 20)
+        self.assertTrue(set(chosen) <= set(pool))
+
+
+class TestGentleFirstWorld(unittest.TestCase):
+    # Levels 1..5 easy (<0.33), 6..15 harder.
+    _DIFF = {n: (0.1 if n <= 5 else 0.5) for n in range(1, 16)}
+
+    def _chunk(self, lvls):
+        return chunk_list(lvls, 3)
+
+    def test_world_1_is_easy_only(self) -> None:
+        worlds = gentle_first_world(list(range(1, 16)), self._DIFF, 0.33, 3, self._chunk)
+        self.assertEqual(len(worlds[0]), 3)
+        self.assertTrue(all(self._DIFF[n] < 0.33 for n in worlds[0]))
+        flat = [n for w in worlds for n in w]
+        self.assertEqual(sorted(flat), list(range(1, 16)))  # all present, none lost
+        self.assertEqual(len(set(flat)), 15)  # none duplicated
+
+    def test_fewer_easy_than_a_full_world(self) -> None:
+        # Only 5 easy levels, region size 3 -> World 1 takes 3 of them; the 2 leftover easy
+        # ones fall into later worlds (still all easy in World 1).
+        worlds = gentle_first_world(list(range(1, 16)), self._DIFF, 0.33, 3, self._chunk)
+        self.assertTrue(all(self._DIFF[n] < 0.33 for n in worlds[0]))
+
+    def test_no_op_without_easy_levels(self) -> None:
+        diff = {n: 0.8 for n in range(1, 7)}  # all hard -> can't form a gentle world
+        worlds = gentle_first_world(list(range(1, 7)), diff, 0.33, 3, self._chunk)
+        self.assertEqual(worlds, chunk_list(list(range(1, 7)), 3))
+
+    def test_no_op_when_all_easy(self) -> None:
+        diff = {n: 0.1 for n in range(1, 7)}  # already entirely easy
+        worlds = gentle_first_world(list(range(1, 7)), diff, 0.33, 3, self._chunk)
+        self.assertEqual(worlds, chunk_list(list(range(1, 7)), 3))
 
 
 class TestAllocate(unittest.TestCase):

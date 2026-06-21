@@ -4,6 +4,7 @@ inherited WorldTestBase reachability/fill/beatability checks under its option se
 """
 
 from ..layout import chunk_levels
+from ..tiers import tier_of
 from .bases import SokopelagoTestBase
 
 
@@ -107,6 +108,61 @@ class TestDifficultyOrderingOff(SokopelagoTestBase):
     def test_layout_is_native_chunk_order(self) -> None:
         native = chunk_levels(self.world.level_count, self.world.levels_per_region)
         assert self.world.worlds == native
+
+
+class TestMaxDifficultyEasy(SokopelagoTestBase):
+    # The 0.6 easy-first default: with the cap at 'easy', every selected level must be
+    # easy-tier and Level Count is honored against the easy pool. The inherited battery
+    # proves the capped seed is still beatable.
+    options = {
+        "goal": "beat_final_region",
+        "level_count": 20,
+        "levels_per_region": 5,
+        "max_difficulty": "easy",
+    }
+
+    def test_all_selected_levels_are_easy(self) -> None:
+        diff = self.world.corpus_data.difficulty_by_n
+        chosen = [n for w in self.world.worlds for n in w]
+        assert chosen, "easy cap produced no levels"
+        assert all(tier_of(diff[n]) == "easy" for n in chosen)
+        assert len(chosen) == self.world.level_count == 20
+
+
+class TestMaxDifficultyClampsToPool(SokopelagoTestBase):
+    # Requesting more levels than the easy pool holds clamps Level Count to the pool size
+    # (microban has 41 easy levels) instead of erroring or pulling in harder levels.
+    options = {
+        "goal": "beat_final_region",
+        "level_count": 100,
+        "levels_per_region": 10,
+        "max_difficulty": "easy",
+    }
+
+    def test_level_count_clamped_to_easy_pool(self) -> None:
+        diff = self.world.corpus_data.difficulty_by_n
+        chosen = [n for w in self.world.worlds for n in w]
+        assert self.world.level_count == len(chosen) <= 41
+        assert all(tier_of(diff[n]) == "easy" for n in chosen)
+
+
+class TestGentleFirstWorldOn(SokopelagoTestBase):
+    # With a tier-spanning seed, World 1 ("sphere 1") must hold easy-tier puzzles only.
+    options = {
+        "goal": "beat_final_region",
+        "level_count": 60,
+        "levels_per_region": 10,
+        "max_difficulty": "any",
+        "gentle_first_world": 1,
+    }
+
+    def test_world_1_is_all_easy_while_harder_levels_exist_later(self) -> None:
+        diff = self.world.corpus_data.difficulty_by_n
+        world1 = self.world.worlds[0]
+        assert world1, "World 1 is empty"
+        assert all(tier_of(diff[n]) == "easy" for n in world1), "World 1 has a non-easy level"
+        later = [n for w in self.world.worlds[1:] for n in w]
+        assert any(tier_of(diff[n]) != "easy" for n in later), "seed wasn't actually tier-spanning"
 
 
 class TestPullbanExpert(SokopelagoTestBase):

@@ -15,6 +15,7 @@ from __future__ import annotations
 from typing import Any
 
 from BaseClasses import LocationProgressType, Region
+from Options import OptionError
 from worlds.AutoWorld import WebWorld, World
 
 from .corpus import CorpusData, load_corpus_data
@@ -34,6 +35,7 @@ from .layout import (
     chunk_list,
     clamp,
     escape_valve_counts,
+    gentle_first_world,
     select_bucketed_levels,
     solve_count_keys_needed,
 )
@@ -48,6 +50,7 @@ from .Locations import (
     solve_location_name,
 )
 from .Options import SokopelagoOptions
+from .tiers import EASY_MAX, MAX_DIFFICULTY_CEILING, within_cap
 
 
 class SokopelagoWeb(WebWorld):
@@ -80,24 +83,45 @@ class SokopelagoWorld(World):
 
     def generate_early(self) -> None:
         self.corpus_data = load_corpus_data(self.options.corpus.current_key)
-        self.level_count = clamp(self.options.level_count.value, 5, self.corpus_data.count)
+        diff = self.corpus_data.difficulty_by_n
+        # max_difficulty caps the candidate pool *before* selection, so Level Count draws
+        # from the eligible tiers (clamped down to them). Levels lacking a difficulty score
+        # are treated as hardest, so a cap excludes them; with no scores at all the cap is
+        # a no-op (the whole corpus is eligible).
+        ceiling = MAX_DIFFICULTY_CEILING[self.options.max_difficulty.current_key]
+        if diff:
+            allowed = [n for n in range(1, self.corpus_data.count + 1) if within_cap(diff.get(n, 1.0), ceiling)]
+        else:
+            allowed = list(range(1, self.corpus_data.count + 1))
+        if not allowed:
+            raise OptionError(
+                f"Sokopelago: max_difficulty='{self.options.max_difficulty.current_key}' leaves no "
+                f"levels in corpus '{self.corpus_data.name}'."
+            )
+        self.level_count = min(clamp(self.options.level_count.value, 5, self.corpus_data.count), len(allowed))
         self.levels_per_region = clamp(self.options.levels_per_region.value, 1, self.level_count)
         if self.options.level_selection == "shuffled_buckets":
             # Vary which puzzles a seed draws (per the multiworld's seeded RNG) while
-            # keeping the difficulty ramp; native selection is the first N in corpus order.
+            # keeping the difficulty ramp; native selection is the first N of the pool.
             levels = select_bucketed_levels(
-                self.corpus_data.difficulty_by_n,
-                self.corpus_data.count,
+                allowed,
+                diff,
                 self.level_count,
                 self.options.difficulty_buckets.value,
                 self.multiworld.random,
             )
         else:
-            levels = list(range(1, self.level_count + 1))
-        if self.options.difficulty_ordering.value and self.corpus_data.difficulty_by_n:
-            self.worlds = assign_levels_by_difficulty(levels, self.corpus_data.difficulty_by_n, self.levels_per_region)
+            levels = allowed[: self.level_count]
+        def reassign(lvls: list[int]) -> list[list[int]]:
+            if self.options.difficulty_ordering.value and diff:
+                return assign_levels_by_difficulty(lvls, diff, self.levels_per_region)
+            return chunk_list(lvls, self.levels_per_region)
+
+        if self.options.gentle_first_world.value and diff:
+            # Keep World 1 easy-tier only for a gentle start; lay out the rest normally.
+            self.worlds = gentle_first_world(levels, diff, EASY_MAX, self.levels_per_region, reassign)
         else:
-            self.worlds = chunk_list(levels, self.levels_per_region)
+            self.worlds = reassign(levels)
         self.region_count = len(self.worlds)
         self.goal_solve_count = clamp(self.options.goal_solve_count.value, 1, self.level_count)
         # Resolve the boss to an actually-selected level: 0 -> the highest-numbered level

@@ -58,6 +58,24 @@ class DifficultyBuckets(Range):
     default = 5
 
 
+class MaxDifficulty(Choice):
+    """Cap the seed's level pool to a difficulty tier ceiling (using each level's
+    precomputed difficulty score).
+    any: no cap — the whole corpus is eligible.
+    easy: only easy-tier puzzles — a gentle, low-frustration seed.
+    easy_medium: easy and medium tiers, excluding the hardest puzzles.
+    Defaults to easy for the 0.6 "easy-first" release (so the generated template and any
+    bare YAML stay gentle); raise it once you want tougher puzzles. The cap filters the
+    corpus *before* selection, so Level Count draws from the capped pool (and is clamped
+    down to it when the cap leaves fewer levels than requested)."""
+
+    display_name = "Max Difficulty"
+    option_any = 0
+    option_easy = 1
+    option_easy_medium = 2
+    default = 1
+
+
 class LevelsPerRegion(Range):
     """How many levels per region ("world"). Each world after the first is opened by a
     "World n Key" item shuffled into the multiworld."""
@@ -152,6 +170,16 @@ class DifficultyOrdering(Toggle):
     default = 1
 
 
+class GentleFirstWorld(Toggle):
+    """Keep World 1 ("sphere 1") to easy-tier puzzles only, for a gentle start, even when
+    the rest of the seed spans harder tiers. The hardest of an otherwise-easy first world
+    are pushed back into later worlds. No-op when the seed has no easy levels, or when it
+    is already entirely easy (e.g. Max Difficulty = easy). On by default."""
+
+    display_name = "Gentle First World"
+    default = 1
+
+
 class ParChecks(Toggle):
     """Add a second location per level: "Solve Microban n in <= par pushes". Solving a
     level within its precomputed push-par sends this extra check, roughly doubling the
@@ -203,6 +231,7 @@ class SokopelagoOptions(PerGameCommonOptions):
     level_count: LevelCount
     level_selection: LevelSelection
     difficulty_buckets: DifficultyBuckets
+    max_difficulty: MaxDifficulty
     levels_per_region: LevelsPerRegion
     goal: Goal
     goal_solve_count: GoalSolveCount
@@ -212,6 +241,7 @@ class SokopelagoOptions(PerGameCommonOptions):
     hint_tokens: HintTokens
     trap_percentage: TrapPercentage
     difficulty_ordering: DifficultyOrdering
+    gentle_first_world: GentleFirstWorld
     par_checks: ParChecks
     efficiency_checks: EfficiencyChecks
     efficiency_margin: EfficiencyMargin

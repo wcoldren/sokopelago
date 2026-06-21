@@ -16,10 +16,14 @@ game: Sokopelago
 requires:
   version: 0.6.7 # Archipelago version required for this yaml.
   game:
-    Sokopelago: 0.5.0 # World version required (shuffled_buckets + efficiency tier).
+    Sokopelago: 0.6.0 # World version required (max_difficulty + gentle first world + stats).
 
 Sokopelago:
   corpus: microban
+
+  # This seed showcases the par tiers across the whole difficulty range, so it opts out
+  # of the 0.6 `easy` default and uses the full corpus (any | easy | easy_medium).
+  max_difficulty: any
 
   # 20 levels / 5 per world => 4 worlds (so you receive world keys to test gating).
   level_count: 20
