@@ -89,6 +89,7 @@ let hintAnim: AnimationHandle | null = null; // in-flight hint playback (cancell
 let animating = false; // input blocked during a hint animation; never persists past it
 let reversedControls = false; // set by a Reversed-Controls trap; cleared on level change
 let pullMode = false; // when on, plain direction input pulls instead of pushing
+let soloPullNoticed = false; // one-time "pull is a sandbox aid" heads-up shown in solo microban
 let lastUnlockedCount = 0; // # of unlocked worlds last seen — detects a newly-opened world
 const solvedOffline = new Set<number>(); // levels solved this session in free play (no session)
 const solvedOptimalOffline = new Set<number>(); // of those, the ones solved in optimal (par) pushes
@@ -711,6 +712,15 @@ function pull(dir: Dir): void {
     return;
   }
   if (!game.pull(effectiveDir(dir, reversedControls))) return;
+  // Solo free-play on the push-only Microban corpus: Pull is a hidden keyboard aid (the button
+  // stays hidden). Flag once that these levels don't need it, so a pulled clear isn't mistaken
+  // for the intended solve. (A pull corpus loaded solo genuinely uses pull — no note there.)
+  if (!session && loadedCorpus === DEFAULT_CORPUS && !soloPullNoticed) {
+    soloPullNoticed = true;
+    notice("Pull here is a free sandbox aid — these Microban levels all solve with pushes alone.", {
+      ms: 7000,
+    });
+  }
   renderer.draw(game);
   handleWin();
 }

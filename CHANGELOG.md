@@ -31,10 +31,18 @@ out of order. The project label moves from beta to **alpha** to match. No new lo
   given option set (a pure tuning aid).
 - `slot_data` now ships `chain_floors` (resolved per-world floors) and `boss_all_keys`; the browser
   client mirrors the gate exactly so the unlock UI matches server logic for every goal.
+- **World-grouped level picker** (client): the dropdown is replaced by a grid of world cards with
+  level "pills". Each world header shows its difficulty range and key/lock state, and the **boss
+  world spells out "needs ALL keys (held/total)"** so the gate is explicit.
 
 ### Changed
 - **Default `Levels Per Region` is now 5** (was 10), so a default seed has more worlds and the
   count-floor chain is active out of the box.
+- **Per-world level numbering** (client): levels read `World N · L{pos}` (sequential within a
+  world) instead of the raw Microban corpus number, which jumped around under shuffled selection;
+  the corpus number is kept as the pill tooltip / title detail.
+- **World-aware "next"** (client): after a solve the game advances within the current world, then
+  to the next *unlocked* world, only wrapping back when everything ahead is locked.
 - **beta → alpha** label across the README, client, and docs; the versioning policy is now
   contract-based (see `VERSIONING.md`).
 
