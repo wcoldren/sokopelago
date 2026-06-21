@@ -6,6 +6,38 @@ All notable changes to Sokopelago are documented here. The format follows
 apworld `world_version`, with the client kept in lockstep. Versions correspond to
 world/datapackage-affecting changes, not roadmap phase numbers.
 
+## [0.6.0] — Easy-first release: honest difficulty, tier gating, gentle first world, play stats
+
+### Changed
+- **Difficulty is now an honest, absolute score.** The per-level `difficulty` is a log-scaled
+  blend of par / search-nodes / moves / boxes (`tools/solve_corpus.py`), so "easy" means a
+  genuinely simple puzzle instead of "the bottom third". This fixes the prior bug where one
+  outlier (Microban 153) min-max-pinned the scale and made nearly every level read as easy. The
+  microban split is now ~41 easy / 104 medium / 10 hard. Tier cutoffs (`easy < 0.33`,
+  `hard >= 0.66`) are centralized in `apworld/sokopelago/tiers.py` and mirrored by the client
+  badge. Difficulty values feed seed selection/ordering, so the same seed name may compose
+  differently — hence the world-version bump.
+- **0.6 defaults to easy-only seeds.** The new `max_difficulty` option defaults to `easy`, so the
+  AP-generated template and any YAML that omits it produce a gentle, easy-tier seed. Raise it to
+  `easy_medium` or `any` for tougher puzzles. The bundled `Sokopelago-Tiers`/`Sokopelago-Local`
+  examples pin `max_difficulty: any` to keep their full-range behaviour.
+
+### Added
+- **`max_difficulty`** (`any` / `easy` / `easy_medium`): caps a seed's level pool to a tier
+  ceiling, filtered before selection so `level_count` draws from (and clamps to) the eligible pool.
+- **`gentle_first_world`** (on by default): keeps World 1 ("sphere 1") to easy-tier puzzles for a
+  gentle start, even when the rest of the seed spans harder tiers. No-op for an all-easy seed.
+- **Per-level play stats**: visits, unique visits (distinct play sessions), and a per-solve event
+  log (moves / pushes / time, with derived bests), recorded in both solo (localStorage) and
+  AP-connected (DataStorage) play and shown in the HUD. **Export/Import** buttons serialize the
+  stats as JSON for offline cross-player analysis. See [`docs/DESIGN-statistics.md`](docs/DESIGN-statistics.md).
+- **`examples/Sokopelago-Easy.yaml`** — the easy-first single-player config (mirrors the default).
+
+### Fixed
+- The perfect (★) vs efficient (✦) HUD message now spells out how far over optimal an efficient
+  solve was, so ✦ isn't mistaken for ★. Replaying a solved level in fewer pushes now **upgrades**
+  its tier (sends the newly-earned par/efficiency check) instead of being ignored.
+
 ## [0.5.0] — Seed-varied selection + tiered par
 
 ### Added

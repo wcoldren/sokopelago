@@ -81,6 +81,18 @@ The web client is served on **GitHub Pages** and the world ships as an **.apworl
    server. To play against a *local* `MultiServer`, use `./playtest.sh` instead.)
 4. **Connect:** open the Pages URL, enter the room's `host:port` and your slot name.
 
+## Difficulty & stats (0.6)
+
+- **Difficulty** is an absolute, log-scaled score per level (easy `< 0.33`, hard `>= 0.66`;
+  see `apworld/sokopelago/tiers.py`). `max_difficulty` caps a seed to a tier ceiling and
+  **defaults to `easy`**, so the generated template and bare YAMLs are gentle; raise it to
+  `easy_medium`/`any` for tougher seeds. `gentle_first_world` (on by default) keeps World 1
+  easy-tier even when the rest spans tiers.
+- **Play stats** — visits, unique visits, and a per-solve log (moves / pushes / time, with
+  bests) are recorded in solo (localStorage) and AP (DataStorage) play, shown in the HUD, and
+  exportable/importable as JSON for offline cross-player analysis. See
+  [`docs/DESIGN-statistics.md`](docs/DESIGN-statistics.md).
+
 ## Level corpora
 
 - `levels/microban.xsb` — **Microban** by David W. Skinner (155 puzzles). Skinner's sets
