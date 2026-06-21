@@ -79,6 +79,17 @@ describe("POST /ratings", () => {
     expect((await post({ ...goodEvent, date: "nope" })).status).toBe(400);
     expect((await post("not json at all")).status).toBe(400); // valid JSON string, bad shape
   });
+
+  it("range-checks fun/difficulty server-side: rejects out-of-range and non-integer with 400", async () => {
+    // The server never trusts the client: fun and difficulty must be integers in 1..5.
+    for (const bad of [0, 6, 3.5, -1, "4", null]) {
+      expect((await post({ ...goodEvent, fun: bad })).status).toBe(400);
+      expect((await post({ ...goodEvent, difficulty: bad })).status).toBe(400);
+    }
+    // And nothing was written for any of those rejects.
+    const row = await env.DB.prepare("SELECT COUNT(*) AS n FROM ratings").first<{ n: number }>();
+    expect(row?.n).toBe(0);
+  });
 });
 
 describe("GET /results", () => {

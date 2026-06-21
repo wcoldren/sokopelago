@@ -11,8 +11,10 @@ binding = "DB"
 database_name = "sokopelago-potd"
 database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
 
-# Browser CORS allow-list: the exact Pages origin(s), comma-separated. Update to your Pages URL
-# (and any custom domain). Not a secret. The account id + API token used to deploy are supplied
-# out-of-band (CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN), never committed here.
+# Browser CORS allow-list: the exact origins allowed to call this Worker, comma-separated and
+# never wildcard. The production Pages origin plus the local Vite dev origins (Mode B local loop,
+# pinned to :5173 via --strictPort). Add a custom domain here if you set one up. Not a secret; the
+# deploy account id + API token are supplied out-of-band (CLOUDFLARE_ACCOUNT_ID /
+# CLOUDFLARE_API_TOKEN), never committed here.
 [vars]
-ALLOWED_ORIGINS = "https://USERNAME.github.io"
+ALLOWED_ORIGINS = "https://wcoldren.github.io,http://localhost:5173,http://127.0.0.1:5173"
