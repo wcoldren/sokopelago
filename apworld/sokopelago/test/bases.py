@@ -8,8 +8,6 @@ The class name deliberately does NOT start with ``Test`` so pytest does not coll
 bare base; concrete ``Test*`` subclasses live in the sibling test modules.
 """
 
-from typing import Optional
-
 from test.bases import WorldTestBase
 
 # Options whose 0.6 defaults reshape level selection / world layout. The existing Test*
@@ -23,7 +21,7 @@ _LEGACY_OPTION_DEFAULTS = {"max_difficulty": "any", "gentle_first_world": 0}
 class SokopelagoTestBase(WorldTestBase):
     game = "Sokopelago"
 
-    def world_setup(self, seed: Optional[int] = None) -> None:
+    def world_setup(self, seed: int | None = None) -> None:
         merged = dict(self.options)
         for key, value in _LEGACY_OPTION_DEFAULTS.items():
             merged.setdefault(key, value)

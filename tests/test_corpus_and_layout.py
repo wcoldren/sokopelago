@@ -126,9 +126,7 @@ class TestDifficultyDistribution:
             {"n": i, "solved": True, "par": i, "moves": 2 * i, "boxes": 1 + i // 10, "_nodes": i * i}
             for i in range(1, 31)
         ]
-        entries.append(
-            {"n": 99, "solved": True, "par": 100000, "moves": 100000, "boxes": 9, "_nodes": 6_000_000}
-        )
+        entries.append({"n": 99, "solved": True, "par": 100000, "moves": 100000, "boxes": 9, "_nodes": 6_000_000})
         solve_corpus._attach_difficulty(entries)
         ramp = [e for e in entries if e["n"] != 99]
         scores = [e["difficulty"] for e in ramp]

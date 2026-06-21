@@ -13,7 +13,12 @@ import {
   type StatsStore,
 } from "../src/stats";
 
-const ev = (moves: number, pushes: number, timeMs: number, ts = 0) => ({ moves, pushes, timeMs, ts });
+const ev = (moves: number, pushes: number, timeMs: number, ts = 0) => ({
+  moves,
+  pushes,
+  timeMs,
+  ts,
+});
 
 describe("stats — derive", () => {
   it("rolls up visits, unique sessions, and per-metric bests", () => {

@@ -112,6 +112,7 @@ class SokopelagoWorld(World):
             )
         else:
             levels = allowed[: self.level_count]
+
         def reassign(lvls: list[int]) -> list[list[int]]:
             if self.options.difficulty_ordering.value and diff:
                 return assign_levels_by_difficulty(lvls, diff, self.levels_per_region)

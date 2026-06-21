@@ -371,7 +371,10 @@ export class Session {
       keys.push(this.statKey("visits", n), this.statKey("sessions", n), this.statKey("solves", n));
     }
     try {
-      const data = (await this.client.storage.fetch(keys, true)) as unknown as Record<string, unknown>;
+      const data = (await this.client.storage.fetch(keys, true)) as unknown as Record<
+        string,
+        unknown
+      >;
       for (const n of ns) {
         const visits = Number(data[this.statKey("visits", n)] ?? 0);
         const sessions = (data[this.statKey("sessions", n)] as string[] | undefined) ?? [];

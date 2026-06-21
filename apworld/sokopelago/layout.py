@@ -186,4 +186,4 @@ def gentle_first_world(
     first = sorted(easy, key=lambda n: (difficulty.get(n, 1.0), n))[:levels_per_region]
     first_set = set(first)
     rest = [n for n in levels if n not in first_set]
-    return [first] + reassign(rest)
+    return [first, *reassign(rest)]

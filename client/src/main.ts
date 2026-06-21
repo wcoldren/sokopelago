@@ -183,7 +183,9 @@ function renderStats(): void {
     statsEl.append(chip("plays", `${st.visits}${uniq}`));
   }
   if (st.bestMoves !== null) {
-    statsEl.append(chip("best", `${st.bestMoves}m / ${st.bestPushes}p / ${formatMs(st.bestTimeMs ?? 0)}`));
+    statsEl.append(
+      chip("best", `${st.bestMoves}m / ${st.bestPushes}p / ${formatMs(st.bestTimeMs ?? 0)}`),
+    );
   }
 }
 
@@ -273,7 +275,8 @@ function performanceNote(n: number, pushes: number): string {
   if (par === null) return "";
   if (pushes <= par) return ` ★ optimal — ${par} pushes!`;
   const eff = Math.floor(par * (1 + effMarginPct() / 100));
-  if (pushes <= eff) return ` ✦ efficient — ${pushes} pushes, ${pushes - par} over the optimal ${par}`;
+  if (pushes <= eff)
+    return ` ✦ efficient — ${pushes} pushes, ${pushes - par} over the optimal ${par}`;
   return ` (optimal ${par})`;
 }
 
@@ -478,7 +481,9 @@ async function importStats(file: File): Promise<void> {
   try {
     const data: unknown = JSON.parse(await file.text());
     const ok = soloStats.importObject(data);
-    setStatsStatus(ok ? "Imported and merged stats into local play." : "Not a Sokopelago stats file.");
+    setStatsStatus(
+      ok ? "Imported and merged stats into local play." : "Not a Sokopelago stats file.",
+    );
     if (ok) refreshStatus();
   } catch {
     setStatsStatus("Couldn't read that file.");

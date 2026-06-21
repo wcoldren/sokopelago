@@ -93,12 +93,12 @@ class TestGentleFirstWorld(unittest.TestCase):
         self.assertTrue(all(self._DIFF[n] < 0.33 for n in worlds[0]))
 
     def test_no_op_without_easy_levels(self) -> None:
-        diff = {n: 0.8 for n in range(1, 7)}  # all hard -> can't form a gentle world
+        diff = dict.fromkeys(range(1, 7), 0.8)  # all hard -> can't form a gentle world
         worlds = gentle_first_world(list(range(1, 7)), diff, 0.33, 3, self._chunk)
         self.assertEqual(worlds, chunk_list(list(range(1, 7)), 3))
 
     def test_no_op_when_all_easy(self) -> None:
-        diff = {n: 0.1 for n in range(1, 7)}  # already entirely easy
+        diff = dict.fromkeys(range(1, 7), 0.1)  # already entirely easy
         worlds = gentle_first_world(list(range(1, 7)), diff, 0.33, 3, self._chunk)
         self.assertEqual(worlds, chunk_list(list(range(1, 7)), 3))
 

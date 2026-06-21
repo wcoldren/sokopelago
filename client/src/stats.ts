@@ -61,7 +61,9 @@ export function normalizeStat(raw: unknown): LevelStat {
   const solves = Array.isArray(r.solves) ? r.solves : [];
   return {
     visits: typeof r.visits === "number" && r.visits >= 0 ? r.visits : 0,
-    sessions: Array.isArray(r.sessions) ? r.sessions.filter((s): s is string => typeof s === "string") : [],
+    sessions: Array.isArray(r.sessions)
+      ? r.sessions.filter((s): s is string => typeof s === "string")
+      : [],
     solves: solves
       .filter((e): e is SolveEvent => Boolean(e) && typeof e === "object")
       .map((e) => ({
@@ -76,7 +78,14 @@ export function normalizeStat(raw: unknown): LevelStat {
 /** Roll a raw record up into the display view. */
 export function derive(stat: LevelStat | undefined): DerivedStat {
   if (!stat || (!stat.visits && !stat.solves.length)) {
-    return { visits: stat?.visits ?? 0, uniqueVisits: 0, solveCount: 0, bestMoves: null, bestPushes: null, bestTimeMs: null };
+    return {
+      visits: stat?.visits ?? 0,
+      uniqueVisits: 0,
+      solveCount: 0,
+      bestMoves: null,
+      bestPushes: null,
+      bestTimeMs: null,
+    };
   }
   const best = (sel: (e: SolveEvent) => number): number | null =>
     stat.solves.length ? Math.min(...stat.solves.map(sel)) : null;
