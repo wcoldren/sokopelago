@@ -19,7 +19,7 @@ import {
   type SolveEvent,
   type StatsExport,
 } from "./stats";
-import type { SlotData } from "./ap/slotData";
+import { levelsInWorld, type SlotData } from "./ap/slotData";
 import type { TrapVariant } from "./ap/ids";
 import { parseSolution, planHint, animateSolutionPrefix, type AnimationHandle } from "./solution";
 
@@ -59,6 +59,7 @@ const slotInput = $<HTMLInputElement>("ap-slot");
 const passInput = $<HTMLInputElement>("ap-pass");
 const connectBtn = $<HTMLButtonElement>("ap-connect");
 const connStatusEl = $<HTMLDivElement>("conn-status");
+const goalLineEl = $<HTMLDivElement>("goal-line");
 const statsExportBtn = $<HTMLButtonElement>("stats-export");
 const statsImportBtn = $<HTMLButtonElement>("stats-import");
 const statsImportFile = $<HTMLInputElement>("stats-import-file");
@@ -208,6 +209,23 @@ function setConnStatus(text: string, kind?: "ok" | "err"): void {
   connStatusEl.classList.toggle("err", kind === "err");
 }
 
+/** Human-readable win condition for the connected seed (shown on its own line). For the
+ * 0.6 easy-first release `beat_final_region` is the supported goal; the others are
+ * experimental (see docs/DESIGN-boss-zone.md for the sphere-ordering caveat). */
+function goalDescription(s: SlotData): string {
+  switch (s.goal) {
+    case "solve_count":
+      return `Goal: solve any ${s.goal_solve_count} of the ${s.level_count} levels.`;
+    case "boss_level":
+      return `Goal: solve the boss level — Microban ${s.goal_boss_level}.`;
+    case "beat_final_region":
+    default: {
+      const k = levelsInWorld(s, s.final_world).length;
+      return `Goal: solve every level in the final world (World ${s.final_world}${k ? ` — ${k} levels` : ""}).`;
+    }
+  }
+}
+
 // --- Level selector --------------------------------------------------------
 
 /** Levels shown in the selector: the whole corpus offline, the seed in AP mode. */
@@ -216,12 +234,47 @@ function shownLevels(): Level[] {
   return slot.levels.map((n) => levels[n - 1]).filter((l): l is Level => Boolean(l));
 }
 
-// Option markers — see the legend under the board: ★ par, ✦ efficient, ✓ solved, 🔒 locked, ◆ difficulty.
+// Option markers — see the legend under the board: ★ optimal, ✦ efficient, ✓ solved, 🔒 locked, ◆ difficulty.
+
+/** The efficiency margin (percent over optimal that still counts as ✦). Uses the seed's
+ * margin when it ships the efficiency tier, else a default so the *visual* ✦ works even
+ * when the seed has no par/efficiency reward checks. */
+function effMarginPct(): number {
+  return typeof slot?.efficiency_margin === "number" ? slot.efficiency_margin : 15;
+}
+
+/**
+ * Performance marker for a level from the player's *best pushes* (the play-stats log) vs the
+ * level's known optimal — so ★/✦ show in solo and multiworld alike, regardless of whether the
+ * seed enabled par checks. Falls back to the AP par/efficiency check sets when no pushes were
+ * recorded (e.g. a Skip clear), else null.
+ */
+function performanceMarker(n: number): "★" | "✦" | null {
+  const par = parTarget(n);
+  const best = statsFor(n).bestPushes;
+  if (par !== null && best !== null) {
+    if (best <= par) return "★";
+    if (best <= Math.floor(par * (1 + effMarginPct() / 100))) return "✦";
+    return null;
+  }
+  if (session?.isLevelPar(n)) return "★";
+  if (session?.isLevelEfficient(n)) return "✦";
+  return null;
+}
+
+/** Selector marker for a *solved* level: its performance tier, or a plain ✓. */
 function solvedMarker(n: number): string {
-  if (!session) return "✓";
-  if (session.isLevelPar(n)) return "★"; // perfect (exactly optimal)
-  if (session.isLevelEfficient(n)) return "✦"; // within the efficiency margin
-  return "✓";
+  return performanceMarker(n) ?? "✓";
+}
+
+/** Solve-time performance note (manifest-par based) shown in both solo and AP. */
+function performanceNote(n: number, pushes: number): string {
+  const par = parTarget(n);
+  if (par === null) return "";
+  if (pushes <= par) return ` ★ optimal — ${par} pushes!`;
+  const eff = Math.floor(par * (1 + effMarginPct() / 100));
+  if (pushes <= eff) return ` ✦ efficient — ${pushes} pushes, ${pushes - par} over the optimal ${par}`;
+  return ` (optimal ${par})`;
 }
 
 function optionLabel(lvl: Level): string {
@@ -229,9 +282,9 @@ function optionLabel(lvl: Level): string {
   const badge = difficultyBadge(n);
   const base = `${n}. ${lvl.name}${badge ? `  ${badge}` : ""}`;
   if (!slot || !session) {
-    // Solo free-play: reflect solves this session (★ when done in optimal pushes).
+    // Solo free-play: reflect solves this session (★ optimal / ✦ efficient from your pushes).
     if (!solvedOffline.has(n)) return base;
-    return `${solvedOptimalOffline.has(n) ? "★" : "✓"} ${base}`;
+    return `${solvedMarker(n)} ${base}`;
   }
   if (session.isLevelSolved(n)) return `${solvedMarker(n)} ${base}`;
   // The world's lock state is shown by the <optgroup> label, so options just flag the gate.
@@ -447,23 +500,9 @@ function onSolved(): void {
   if (slot && session) {
     session.reportSolved(n, game.pushes);
     rebuildSelector(); // mark the just-solved option
-    const par = parTarget(n);
-    const eff = effTarget(n);
-    let parNote = "";
-    if (slot.par_checks && par !== null) {
-      if (session.isLevelPar(n)) {
-        parNote = ` ★ perfect — exactly the optimal ${par} pushes!`;
-      } else if (session.isLevelEfficient(n)) {
-        // Efficient ≠ perfect: spell out how far over optimal so the ✦ isn't mistaken
-        // for the ★. (Replaying the level in exactly `par` pushes upgrades it to ★.)
-        parNote = ` ✦ efficient — ${game.pushes} pushes, ${game.pushes - par} over the optimal ${par} (★ = exactly ${par})`;
-      } else {
-        parNote =
-          eff !== null && eff > par
-            ? ` (par ${par} / eff ≤${eff} — missed)`
-            : ` (par ${par} — par check missed)`;
-      }
-    }
+    // Performance feedback is manifest-par based, so ★/✦ show even when the seed has no par
+    // checks. (The AP par/efficiency reward checks, if on, were just sent by reportSolved.)
+    const parNote = performanceNote(n, game.pushes);
     const next = nextPlayable(n);
     notice(
       next
@@ -486,9 +525,8 @@ function onSolved(): void {
   solvedOffline.add(n);
   const par = parTarget(n);
   if (par !== null && game.pushes <= par) solvedOptimalOffline.add(n);
-  rebuildSelector(); // reflect ✓/★ in the dropdown for solo play
-  const parNote =
-    par !== null ? (game.pushes <= par ? ` ★ optimal (${par} pushes)!` : ` (par ${par})`) : "";
+  rebuildSelector(); // reflect ✓/★/✦ in the dropdown for solo play
+  const parNote = performanceNote(n, game.pushes);
   const hasNext = current < levels.length - 1;
   notice(
     hasNext
@@ -783,6 +821,7 @@ function handleDisconnect(): void {
   connectBtn.textContent = "Connect";
   connectBtn.disabled = false;
   setConnStatus("Disconnected — free play (all levels).");
+  goalLineEl.textContent = "";
   void reloadDefaultCorpus();
 }
 
@@ -830,10 +869,8 @@ async function connect(): Promise<void> {
       slot = s;
       connectBtn.textContent = "Disconnect";
       connectBtn.disabled = false;
-      setConnStatus(
-        `Connected as ${s.player_name} — ${s.level_count} levels, goal: ${s.goal}.`,
-        "ok",
-      );
+      setConnStatus(`Connected as ${s.player_name} — ${s.level_count} levels.`, "ok");
+      goalLineEl.textContent = goalDescription(s);
       void onConnectedReady(s);
     },
     onUpdate: onSessionUpdate,

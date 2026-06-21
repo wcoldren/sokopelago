@@ -140,6 +140,15 @@
         opacity: 0.6;
         font-size: 0.85rem;
       }
+      .disclaimer {
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+        color: #e8c479;
+        border: 1px solid #5a4a1f;
+        background: #2a2410;
+        border-radius: 6px;
+        padding: 0.4rem 0.6rem;
+      }
       button[hidden] {
         display: none;
       }
@@ -169,6 +178,11 @@
     <header>
       <h1>Sokopelago</h1>
       <div class="hint">Sokoban for Archipelago — play locally, or connect to a multiworld</div>
+      <div class="disclaimer">
+        ⚠ <strong>Beta — please help test!</strong> Solo play and basic multiworlds work, but this
+        is unfinished: progression/sphere ordering is still being refined, so it's <em>not</em> yet
+        recommended for real syncs or asyncs. Expect rough edges and report what breaks.
+      </div>
     </header>
 
     <div class="panel">
@@ -178,6 +192,7 @@
       <button id="ap-connect">Connect</button>
     </div>
     <div id="conn-status">Not connected — free play (all levels).</div>
+    <div id="goal-line" class="hint"></div>
 
     <div class="toolbar stats-toolbar">
       <button id="stats-export" title="Download your play stats (visits, moves, pushes, time) as JSON">
