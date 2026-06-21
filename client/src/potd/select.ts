@@ -2,6 +2,9 @@
 // worldwide gets the same puzzle and it rolls over at 00:00 UTC. We seed a small deterministic
 // PRNG with the UTC date string and index the pool with it — deliberately NOT `dayIndex % len`,
 // which would march predictably up the list. No backend is involved in selection.
+//
+// Known limitation (corpus overlap / eventual repeats from this hash-based pick): accepted for
+// now — see docs/DESIGN-potd.md for the tension and the pool-level mitigations.
 
 /** The UTC calendar day of `date` as `YYYY-MM-DD`. Uses UTC accessors, so the result is
  *  timezone-independent — the same instant yields the same string in every locale. */
