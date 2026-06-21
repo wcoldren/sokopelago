@@ -1,0 +1,83 @@
+# Sokopelago POTD ratings Worker
+
+A dependency-light **Cloudflare Worker + D1** that collects Puzzle-of-the-Day ratings from the
+client and serves today's aggregates back. Append-only; no auth in v1.
+
+- `POST /ratings` — validate one rating event, insert one row, return `204`.
+- `GET /results?date=YYYY-MM-DD` — counts + average fun/difficulty + solve rate + a moves
+  distribution for that UTC day.
+
+**No personal data is collected.** The only identifier is the player's **self-chosen handle**
+(non-PII) plus a random per-page-load session id. CORS is allow-listed to the Pages origin(s).
+
+> These are the exact commands for **you** (the maintainer) to run. CI does not run any of the
+> `wrangler d1 create` / deploy steps for you — it only runs `wrangler deploy` once the repo
+> secrets exist (see the root CI section). Nothing here touches credentials in the repo.
+
+## One-time setup
+
+```sh
+cd server/potd-worker
+npm install                      # installs wrangler + the test pool (also creates package-lock.json)
+
+# 1. Authenticate wrangler to your Cloudflare account (interactive, opens a browser):
+npx wrangler login
+
+# 2. Create the D1 database. Copy the printed `database_id` into wrangler.toml.
+npx wrangler d1 create sokopelago-potd
+
+# 3. Edit wrangler.toml:
+#    - paste database_id under [[d1_databases]]
+#    - set ALLOWED_ORIGINS to your exact Pages origin(s), comma-separated
+#      e.g. "https://<username>.github.io" (add a custom domain if you have one)
+
+# 4. Apply the schema to BOTH the local dev DB and the remote (production) DB:
+npm run db:apply:local
+npm run db:apply:remote
+```
+
+## Develop & test locally
+
+```sh
+npm test         # runs the Worker tests in workerd against a local D1 (no account needed)
+npm run dev      # wrangler dev — serves the Worker locally with a local D1
+```
+
+Point the client at your local Worker by building it with the API base set:
+
+```sh
+cd ../../client
+VITE_POTD_API="http://127.0.0.1:8787" npm run dev   # dev server reads import.meta.env.VITE_POTD_API
+```
+
+## Deploy
+
+Manual (from your machine, after `wrangler login`):
+
+```sh
+cd server/potd-worker
+npx wrangler deploy
+```
+
+Automated via CI (`.github/workflows/ci.yml` → `deploy-worker` job): runs `wrangler deploy` on
+pushes to `main` that touch `server/potd-worker/**`, using repo secrets **you** add:
+
+- `CLOUDFLARE_API_TOKEN` — a scoped token with Workers + D1 edit permissions.
+- `CLOUDFLARE_ACCOUNT_ID` — your account id (passed to wrangler via env).
+
+The deploy job is **scaffolded but inert** until those secrets exist.
+
+## Client build wiring
+
+The client reads the backend origin from `VITE_POTD_API` at build time. Set it as a repo
+variable/secret consumed by the Pages build, or bake it into the deploy environment. When unset
+(local dev/preview), the POTD page still plays and **queues ratings locally**, retrying on the
+next load.
+
+## Notes / TODO
+
+- **Spam:** no auth in v1. If abused, gate `POST /ratings` behind Cloudflare Turnstile or a
+  shared token (checked in `src/index.ts`), and/or persist a salted hash of `CF-Connecting-IP`
+  for rate analysis. Marked with a `TODO(spam)` in the source.
+- **Dedup:** the server never dedups. "Already rated today" is a client-side `localStorage`
+  soft-guard only; offline analysis dedups by `session_id + date + level_n`.
