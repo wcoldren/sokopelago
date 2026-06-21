@@ -33,8 +33,7 @@ class TestWorld1OpenerVaries(SokopelagoTestBase):
     def test_opener_varies_across_seeds(self) -> None:
         openers = {self._opener_for_seed(seed) for seed in self.SEEDS}
         assert len(openers) > 1, (
-            f"opener was identical across {len(self.SEEDS)} seeds ({openers}); "
-            "World 1 order is not being varied"
+            f"opener was identical across {len(self.SEEDS)} seeds ({openers}); World 1 order is not being varied"
         )
 
     def test_opener_is_reproducible_for_a_fixed_seed(self) -> None:
