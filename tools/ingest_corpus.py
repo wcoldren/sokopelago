@@ -130,6 +130,7 @@ def parse_source(text: str, fmt: str = "auto") -> list:
     """Parse XSB/SOK collection text into Levels, normalizing ``_``->space and FAILING LOUDLY on
     any board-looking line with an unrecognized glyph (so a near-board line is never silently
     dropped as a separator). RLE-compressed SOK is not supported — its digits trip this guard."""
+    text = text.replace("\r\n", "\n").replace("\r", "\n")  # normalize CRLF and bare-CR (old-Mac, e.g. Sasquatch VIII)
     norm_lines = []
     for raw in text.split("\n"):
         line = raw.rstrip("\r").replace("_", " ")
