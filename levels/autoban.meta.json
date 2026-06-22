@@ -1,0 +1,27 @@
+{
+  "generator_version": "1.0.0",
+  "corpus": "autoban",
+  "seed": 0,
+  "quotas": {
+    "easy": 20,
+    "medium": 25,
+    "hard": 10
+  },
+  "node_budget": 300000,
+  "wall_cap": 120.0,
+  "attempt_budget": 200000,
+  "stats": {
+    "attempts": 269,
+    "scored": 256,
+    "easy": 20,
+    "medium": 25,
+    "hard": 10
+  },
+  "tier_counts": {
+    "easy": 20,
+    "medium": 25,
+    "hard": 10
+  },
+  "difficulty_min": 0.062,
+  "difficulty_max": 0.7335
+}

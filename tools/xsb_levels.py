@@ -28,10 +28,12 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 # Known corpora: name -> canonical XSB source. ``microban`` is the v1 corpus; ``pullban``
-# is the Phase 5 expert corpus of original pull-required levels.
+# is the Phase 5 expert corpus of original pull-required levels; ``autoban`` is the
+# in-house generated corpus (see ``tools/generate_corpus.py``), original by construction.
 CORPORA: dict[str, Path] = {
     "microban": REPO_ROOT / "levels" / "microban.xsb",
     "pullban": REPO_ROOT / "levels" / "pullban.xsb",
+    "autoban": REPO_ROOT / "levels" / "autoban.xsb",
 }
 CORPUS = CORPORA["microban"]  # default (backwards-compatible)
 

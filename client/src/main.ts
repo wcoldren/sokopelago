@@ -35,6 +35,12 @@ import {
 import { fetchManifest } from "./engine/manifest";
 
 const DEFAULT_CORPUS = "microban";
+// Solo free-play: ?corpus=<name> previews any bundled corpus (e.g. ?corpus=autoban).
+const KNOWN_CORPORA = ["microban", "pullban", "autoban"];
+function soloCorpus(): string {
+  const want = new URLSearchParams(location.search).get("corpus");
+  return want && KNOWN_CORPORA.includes(want) ? want : DEFAULT_CORPUS;
+}
 
 const $ = <T extends HTMLElement>(id: string): T => {
   const el = document.getElementById(id);
@@ -1045,7 +1051,7 @@ async function loadCorpus(corpus: string): Promise<void> {
 
 async function main(): Promise<void> {
   setStatus("Loading levels…");
-  await loadCorpus(DEFAULT_CORPUS);
+  await loadCorpus(soloCorpus());
 
   const prefs = loadPrefs();
   if (prefs) {
