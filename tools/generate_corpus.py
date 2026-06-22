@@ -289,17 +289,11 @@ def seen_from_corpora(names: tuple[str, ...]) -> set[str]:
 
 
 # --------------------------------------------------------------------------------------
-# Quality seam (the learned, POTD-fed fun-scorer drops in here later)
+# Quality seam: delegated to the standalone, interpretable scorer in ``tools/scoring.py``
+# (the same component the corpus annotator uses; a POTD-trained model drops in behind it).
+# Used here only to rank within a tier when more candidates survive than the quota.
 # --------------------------------------------------------------------------------------
-def score_quality(features: dict[str, float]) -> float:
-    """0..1 quality/"fun" score for a candidate, used only to rank within a tier when more
-    than the quota survive. v1 is a light placeholder heuristic; the POTD-trained scorer
-    will replace the body behind this exact signature."""
-    boxes = features.get("boxes", 1.0)
-    par = features.get("par", 1.0)
-    # Mild preference for multi-box, non-trivial puzzles; bounded to [0, 1]. Deterministic.
-    score = 0.5 + 0.1 * min(boxes, 4.0) + 0.02 * min(par, 5.0)
-    return max(0.0, min(1.0, score))
+from scoring import score_quality  # noqa: E402  (re-exported as generate_corpus.score_quality)
 
 
 def _features(result: dict[str, object]) -> dict[str, float]:
