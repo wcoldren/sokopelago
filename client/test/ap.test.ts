@@ -490,6 +490,15 @@ describe("ap/session — par checks (Phase 4)", () => {
     expect(s.isLevelPar(7)).toBe(false);
   });
 
+  it("with no pushCount sends only the solve check — the panic-button guarantee (no par credit)", () => {
+    const { s, checked } = mockSession();
+    peek(s).slot = sampleSlot({ par_checks: true, par: { "7": 10 } });
+    s.reportSolved(7); // panic clears with no pushCount -> never awards par/efficiency
+    expect(checked).toEqual([locationIdForLevel(7)]);
+    expect(s.isLevelSolved(7)).toBe(true);
+    expect(s.isLevelPar(7)).toBe(false);
+  });
+
   it("never sends a par check when par_checks is off", () => {
     const { s, checked } = mockSession();
     peek(s).slot = sampleSlot({ par_checks: false, par: { "7": 10 } });
