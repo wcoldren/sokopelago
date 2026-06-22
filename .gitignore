@@ -27,3 +27,8 @@ sokopelago.apworld
 
 # Local scratch / playtest notes (convention: scratch lives here, git-excluded)
 notes/local/
+
+# Offline corpus tooling: dev-only download caches (raw third-party sets, calibration data).
+# Ingested .xsb + provenance ARE committed; these raw caches are not.
+.ingest-cache/
+data/calibration/

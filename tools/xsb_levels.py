@@ -21,6 +21,7 @@ This module never solves Sokoban — it only splits levels and reads geometry.
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -35,6 +36,22 @@ CORPORA: dict[str, Path] = {
     "pullban": REPO_ROOT / "levels" / "pullban.xsb",
     "autoban": REPO_ROOT / "levels" / "autoban.xsb",
 }
+
+
+def _register_provenance_corpora() -> None:
+    """Make ingested corpora (recorded in ``levels/provenance.json`` by ``ingest_corpus.py``)
+    resolvable via :data:`CORPORA` without hand-editing the literal above. Reads the registry
+    JSON directly — importing ``provenance`` here would be circular (it imports this module)."""
+    reg = REPO_ROOT / "levels" / "provenance.json"
+    try:
+        names = json.loads(reg.read_text(encoding="utf-8"))
+    except Exception:  # registry absent/unreadable — the three built-ins above still work
+        return
+    for name in names:
+        CORPORA.setdefault(name, REPO_ROOT / "levels" / f"{name}.xsb")
+
+
+_register_provenance_corpora()
 CORPUS = CORPORA["microban"]  # default (backwards-compatible)
 
 
