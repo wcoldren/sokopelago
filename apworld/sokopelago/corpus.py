@@ -31,6 +31,16 @@ class LevelEntry(TypedDict, total=False):
     solved: bool
     solver: str  # provenance marker, present only on entries from the external fallback
     requires_pull: bool  # expert corpora: level is unsolvable by pushing alone
+    # Offline annotation fields (added by ``tools/annotate_corpus.py``; dev/dataset use only —
+    # the apworld and client ignore them, so they are purely additive). Curated third-party
+    # corpora carry these; the shipped microban/pullban/autoban manifests need not.
+    box_change_difficulty: float
+    fun_features: dict  # {playable_area, openness, boxes, steps_per_box, search_difficulty, likeability}
+    structural: dict  # {goal_room_connected, matter_fraction, matter_method, dead_floor_ratio, box_density, deadlock_proximity}
+    quality_score: float
+    canonical_hash: str  # symmetry+player-region invariant identity (tools/canonical.py)
+    provenance: str  # corpus key into levels/provenance.json
+    license: str  # license_id from the provenance entry
 
 
 _DATA_DIR = Path(__file__).parent / "data"
