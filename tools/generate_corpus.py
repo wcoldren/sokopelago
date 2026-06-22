@@ -56,6 +56,9 @@ from pathlib import Path
 from time import monotonic
 
 import solve_corpus
+from canonical import canonical
+from canonical import pad as _pad
+from canonical import rotate90 as _rotate90
 from solve_corpus import Solver
 from xsb_levels import REPO_ROOT, corpus_xsb, load_corpus, manifest_json, parse_levels
 
@@ -269,30 +272,9 @@ def construct_candidate(rng: random.Random, spec: TierSpec) -> Rows | None:
 # --------------------------------------------------------------------------------------
 # Symmetry-aware dedup (8 dihedral transforms)
 # --------------------------------------------------------------------------------------
-def _pad(rows: Rows) -> Rows:
-    width = max(len(r) for r in rows)
-    return tuple(r.ljust(width) for r in rows)
-
-
-def _rotate90(rows: Rows) -> Rows:
-    """Rotate a rectangular glyph grid 90deg clockwise."""
-    h = len(rows)
-    return tuple("".join(rows[h - 1 - r][c] for r in range(h)) for c in range(len(rows[0])))
-
-
-def canonical(rows: Rows) -> str:
-    """A dedup key invariant under the 8 dihedral symmetries: the lexicographically
-    smallest of the board's rotations/reflections. Equal canonical <=> same board up to
-    rotation/mirror."""
-    grid = _pad(rows)
-    forms: list[str] = []
-    for _ in range(4):
-        forms.append("\n".join(grid))
-        forms.append("\n".join(tuple(r[::-1] for r in grid)))
-        grid = _rotate90(grid)
-    return min(forms)
-
-
+# ``_pad`` / ``_rotate90`` / ``canonical`` now live in the shared ``canonical`` module
+# (re-imported above as aliases so this module's public names — and the tests pinning them —
+# are unchanged). The cross-corpus seed below stays here because it needs the corpus loader.
 def seen_from_corpora(names: tuple[str, ...]) -> set[str]:
     """Canonical forms of every level in the given existing corpora (for cross-corpus
     dedup). Missing corpora are skipped."""
