@@ -288,6 +288,81 @@ class TestPullbanManifest:
                 assert solve_corpus.push_solvable(levels[n]) is False, f"level {n} is actually push-solvable"
 
 
+class TestAutobanManifest:
+    """The generated, in-house ``autoban`` corpus (``tools/generate_corpus.py``): original
+    by construction, every level solver-verified, difficulty *calibrated against Microban's
+    native scale* so its tiers mean the same thing Microban's do."""
+
+    AUTOBAN = ROOT / "apworld/sokopelago/data/autoban.json"
+    XSB = ROOT / "levels/autoban.xsb"
+
+    def _data(self):
+        return json.loads(self.AUTOBAN.read_text())
+
+    def _levels(self):
+        return {lvl.n: lvl for lvl in xsb_levels.load_corpus(xsb_levels.corpus_xsb("autoban"))}
+
+    def test_all_solved_with_base_fields_and_boards(self):
+        data = self._data()
+        assert len(data) >= 20
+        for e in data:
+            for key in ("n", "name", "par", "moves", "solution", "boxes", "difficulty", "optimal", "solved"):
+                assert key in e, f"level {e.get('n')} missing {key}"
+            assert e["solved"] is True
+            assert "board" in e
+            assert 0.0 <= e["difficulty"] <= 1.0
+            assert e["par"] >= 1 and e["moves"] >= e["par"]
+
+    def test_solutions_replay(self):
+        data = {e["n"]: e for e in self._data()}
+        for n, lvl in self._levels().items():
+            assert solve_corpus.replay(lvl, data[n]["solution"]), f"level {n} solution does not solve it"
+
+    def test_boards_match_canonical_xsb(self):
+        data = {e["n"]: e for e in self._data()}
+        levels = self._levels()
+        assert set(data) == set(levels)
+        for n, lvl in levels.items():
+            assert data[n].get("board") == list(lvl.rows), f"level {n} board mismatch"
+
+    def test_every_tier_populated(self):
+        diffs = [e["difficulty"] for e in self._data()]
+        counts = {t: sum(tiers.tier_of(d) == t for d in diffs) for t in ("easy", "medium", "hard")}
+        assert all(counts.values()), f"a tier is empty: {counts}"
+
+    def test_difficulty_is_microban_calibrated(self):
+        # Re-deriving each level's difficulty against Microban's native reference bounds must
+        # reproduce the committed value — i.e. the corpus is scored on the absolute scale,
+        # not self-relatively.
+        microban = json.loads(MANIFEST.read_text())
+        ref = solve_corpus.reference_bounds(microban)
+        for e in self._data():
+            probe = {
+                "solved": True,
+                "par": e["par"],
+                "moves": e["moves"],
+                "boxes": e["boxes"],
+                "search_nodes": e["search_nodes"],
+            }
+            solve_corpus._attach_difficulty([probe], ref_bounds=ref)
+            assert probe["difficulty"] == e["difficulty"], f"level {e['n']} not microban-calibrated"
+
+    def test_no_dihedral_duplicates_within_or_against_microban(self):
+        import generate_corpus
+
+        mine = [generate_corpus.canonical(lvl.rows) for lvl in self._levels().values()]
+        assert len(mine) == len(set(mine)), "autoban has internal dihedral duplicates"
+        microban = {generate_corpus.canonical(lvl.rows) for lvl in xsb_levels.load_corpus()}
+        assert not (set(mine) & microban), "an autoban level duplicates a Microban level"
+
+    def test_loads_through_the_apworld_data_layer(self):
+        from corpus import load_corpus_data
+
+        cd = load_corpus_data("autoban")
+        assert cd.count == len(self._data())
+        assert cd.count == len(cd.par_by_n) == len(cd.difficulty_by_n)
+
+
 class TestChunkLevels:
     def test_even_split(self):
         worlds = layout.chunk_levels(30, 10)

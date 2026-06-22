@@ -31,6 +31,18 @@ attribution, on the same terms as the bundled Microban set. Its solutions/par/di
 and the `requires_pull` gate flags are computed offline by the project's own pull-aware
 solver (`tools/solve_corpus.py --corpus pullban`).
 
+## Levels — Autoban (generated, original)
+
+The `autoban` corpus (`levels/autoban.xsb`) is **generated in-house** by Sokopelago's own
+puzzle generator (`tools/generate_corpus.py`) and is **original by construction**: each
+level is built by reverse-construction (place every box on a goal, then scatter with legal
+pulls), so it contains no third-party puzzles and needs no external attribution. Every
+level is solver-verified, and its difficulty is calibrated against Microban's native scale
+so its easy/medium/hard tiers mean the same thing Microban's do. The pack is fully
+reproducible — the generator version, RNG seed, and parameters are recorded in
+`levels/autoban.meta.json`. Solutions/par/difficulty are computed offline by the project's
+own solver (`tools/solve_corpus.py --corpus autoban`), exactly as for the other corpora.
+
 ## Solutions / par data
 
 Per-level solutions and push-par values in `apworld/sokopelago/data/microban.json` are

@@ -13,11 +13,14 @@ class Corpus(Choice):
     """Which level corpus to play.
     microban: the standard 155-level Microban set (push-only).
     pullban: a small expert set whose harder levels require the Pull ability (see
-    Pull Logic)."""
+    Pull Logic).
+    autoban: an in-house generated push-only set with a calibrated easy/medium/hard
+    spread (original by construction)."""
 
     display_name = "Corpus"
     option_microban = 0
     option_pullban = 1
+    option_autoban = 2
     default = 0
 
 

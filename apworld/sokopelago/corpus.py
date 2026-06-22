@@ -36,8 +36,10 @@ class LevelEntry(TypedDict, total=False):
 _DATA_DIR = Path(__file__).parent / "data"
 
 # Selectable corpora (each has a data/<name>.json manifest). ``microban`` is the standard
-# push-only set; ``pullban`` is the expert set with pull-required levels.
-CORPUS_NAMES: tuple[str, ...] = ("microban", "pullban")
+# push-only set; ``pullban`` is the expert set with pull-required levels; ``autoban`` is the
+# in-house generated push-only set (``tools/generate_corpus.py``), difficulty-calibrated to
+# Microban's scale.
+CORPUS_NAMES: tuple[str, ...] = ("microban", "pullban", "autoban")
 
 
 @dataclass(frozen=True)
