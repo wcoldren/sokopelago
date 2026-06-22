@@ -55,3 +55,35 @@ Required credit: *Autoban (generated) by the Sokopelago puzzle generator.*
 Generated in-house by Sokopelago's own puzzle generator and original by construction: each level is built by reverse-construction (place every box on a goal, then scatter with legal pulls), so it contains no third-party puzzles and needs no external attribution. Difficulty is calibrated against Microban's native scale.
 
 `sha256(levels/autoban.xsb)` = `95e2325c4ed64b0f91463118846bbe74ea5cafa8c52d40c81b89dfd17833de5e`
+
+## Microban II (135 puzzles) — `microban2.xsb`
+
+- **Author:** David W. Skinner
+- **Source:** <https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/m2.txt>
+- **License:** `skinner-free-distribution-with-credit`
+
+### Distribution terms
+
+> These sets may be freely distributed provided they remain properly credited.
+
+Required credit: *Microban II (135 puzzles) by David W. Skinner.*
+
+Downloaded from the canonical Skinner mirror (https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/m2.txt). XSB text with no per-file credit; an attribution header is prepended on ingest.
+
+`sha256(levels/microban2.xsb)` = `c7e200f4608ae3984505e2aa8a5ad9b58bd11bc20ad6e4140c45a8e874b13787`
+
+## XSokoban (90 levels) — `xsokoban90.xsb`
+
+- **Author:** XSokoban project (Joseph L. Traub, Andrew Myers, et al.)
+- **Source:** <https://github.com/andrewcmyers/xsokoban>
+- **License:** `public-domain`
+
+### Distribution terms
+
+> XSokoban is distributed in the public domain and may be freely redistributed.
+
+Required credit: *XSokoban (public domain).*
+
+Concatenated from screens/screen.1..90 in https://github.com/andrewcmyers/xsokoban (public domain). Each screen is one board; a '; N' title is added per level on ingest.
+
+`sha256(levels/xsokoban90.xsb)` = `10cc5b589c60c7cc50d34ba8725af8ef14fe26664fa06c4fb79cf921779b4678`

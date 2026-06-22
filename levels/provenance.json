@@ -43,5 +43,35 @@
     "notes": "Generated in-house by Sokopelago's own puzzle generator and original by construction: each level is built by reverse-construction (place every box on a goal, then scatter with legal pulls), so it contains no third-party puzzles and needs no external attribution. Difficulty is calibrated against Microban's native scale.",
     "retrieved_utc": null,
     "sha256_xsb": "95e2325c4ed64b0f91463118846bbe74ea5cafa8c52d40c81b89dfd17833de5e"
+  },
+  "microban2": {
+    "corpus": "microban2",
+    "source_name": "Microban II (135 puzzles)",
+    "author": "David W. Skinner",
+    "source_url": "https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/m2.txt",
+    "license_id": "skinner-free-distribution-with-credit",
+    "license_url": null,
+    "distribution_terms": "These sets may be freely distributed provided they remain properly credited.",
+    "attribution_required": "Microban II (135 puzzles) by David W. Skinner.",
+    "redistributable": true,
+    "original_by_construction": false,
+    "notes": "Downloaded from the canonical Skinner mirror (https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/m2.txt). XSB text with no per-file credit; an attribution header is prepended on ingest.",
+    "retrieved_utc": "2026-06-22T16:11:02+00:00",
+    "sha256_xsb": "c7e200f4608ae3984505e2aa8a5ad9b58bd11bc20ad6e4140c45a8e874b13787"
+  },
+  "xsokoban90": {
+    "corpus": "xsokoban90",
+    "source_name": "XSokoban (90 levels)",
+    "author": "XSokoban project (Joseph L. Traub, Andrew Myers, et al.)",
+    "source_url": "https://github.com/andrewcmyers/xsokoban",
+    "license_id": "public-domain",
+    "license_url": null,
+    "distribution_terms": "XSokoban is distributed in the public domain and may be freely redistributed.",
+    "attribution_required": "XSokoban (public domain).",
+    "redistributable": true,
+    "original_by_construction": false,
+    "notes": "Concatenated from screens/screen.1..90 in https://github.com/andrewcmyers/xsokoban (public domain). Each screen is one board; a '; N' title is added per level on ingest.",
+    "retrieved_utc": "2026-06-22T16:11:03+00:00",
+    "sha256_xsb": "10cc5b589c60c7cc50d34ba8725af8ef14fe26664fa06c4fb79cf921779b4678"
   }
 }
