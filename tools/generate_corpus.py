@@ -29,11 +29,14 @@ with symmetry-aware dedup throughout and a fixed RNG seed for reproducibility.
   Microban rather than merely "hardest in this pack". Calibrated scores are independent of
   pool-mates, so per-tier quota targeting is exact.
 
-The committed manifest is produced by the *canonical* pipeline
-(``solve_corpus.build_corpus_manifest`` then ``build_corpus.merge_boards``) over the
-written ``levels/autoban.xsb``, so the deliverable is exactly what those tools emit. A
-``levels/autoban.meta.json`` sidecar records the generator version, seed, and parameters
-(the consumed JSON schema is fixed, so provenance lives outside it).
+The committed manifest is written *directly* from the push-optimal scores computed during
+selection (each via ``solve_corpus.solve`` + ``_attach_difficulty``), in the exact
+microban.json schema — not re-solved through ``solve_corpus``'s full coverage ladder, whose
+per-phase time deadlines would let the optimal phase time out on the hardest levels and
+record a suboptimal greedy par. A ``levels/autoban.meta.json`` sidecar records the generator
+version, seed, and parameters (the consumed JSON schema is fixed, so provenance lives
+outside it); its presence also makes ``solve_corpus.build_corpus_manifest`` refuse a naive
+re-solve.
 
 Run:  python tools/generate_corpus.py --easy 20 --medium 25 --hard 10 --seed 0
 """
@@ -52,10 +55,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from time import monotonic
 
-import build_corpus
 import solve_corpus
 from solve_corpus import Solver
-from xsb_levels import REPO_ROOT, corpus_xsb, load_corpus, parse_levels
+from xsb_levels import REPO_ROOT, corpus_xsb, load_corpus, manifest_json, parse_levels
 
 # ``tiers`` lives in the apworld package (the cutoffs the apworld/client share); make it
 # importable when this tool runs standalone (the test harness adds it via conftest).
@@ -503,12 +505,19 @@ def ordered_levels(kept: dict[str, list[dict[str, object]]]) -> list[dict[str, o
 
 
 # --------------------------------------------------------------------------------------
-# Emission: write the .xsb, run the canonical pipeline, write the meta sidecar
+# Emission: write the .xsb, the committed manifest, and the meta sidecar
 # --------------------------------------------------------------------------------------
 def emit(name: str, levels: list[dict[str, object]], params: dict, *, log=print) -> None:
-    """Write ``levels/<name>.xsb`` then build the committed manifest via the canonical
-    pipeline (so the artifact is exactly what the standard tools produce), and a
-    deterministic meta sidecar with provenance."""
+    """Write ``levels/<name>.xsb``, the committed manifest, and a deterministic meta
+    sidecar with provenance.
+
+    The manifest is written *directly* from the optimal scores the generator already
+    computed during selection (each via ``solve_corpus.solve`` + ``_attach_difficulty``) —
+    it is NOT re-solved through ``solve_corpus``'s full coverage ladder. That ladder's
+    per-phase time deadlines would let the optimal phase time out on the hardest levels and
+    fall back to a *suboptimal* greedy par (wrong par + node count + difficulty), so a naive
+    re-solve would degrade the pack. Emitting from the cached optimal scores keeps every
+    level push-optimal and makes the committed manifest exactly the selected one."""
     xsb_path = corpus_xsb(name)
     header = [
         f"; {name} — generated corpus (original by construction; see CREDITS.md)",
@@ -516,19 +525,34 @@ def emit(name: str, levels: list[dict[str, object]], params: dict, *, log=print)
         "",
     ]
     body: list[str] = []
+    entries: list[dict[str, object]] = []
     for n, cand in enumerate(levels, start=1):
         body.append(f"; {n}")
         body.append("")
         body.extend(cand["rows"])
         body.append("")
+        entries.append(
+            {
+                "n": n,
+                "name": str(n),
+                "par": cand["par"],
+                "moves": cand["moves"],
+                "solution": cand["solution"],
+                "boxes": cand["boxes"],
+                "solved": True,
+                "optimal": cand["optimal"],
+                "difficulty": cand["difficulty"],
+                "search_nodes": cand["search_nodes"],
+                "board": list(cand["rows"]),
+            }
+        )
     xsb_path.write_text("\n".join(header + body).rstrip("\n") + "\n", encoding="utf-8")
     log(f"wrote {len(levels)} levels -> {xsb_path.relative_to(REPO_ROOT)}")
 
-    # Canonical committed manifest. Use the same node-budget gate so the committed scores
-    # match selection exactly, then bundle boards.
-    _apply_scoring_caps(params["node_budget"])
-    solve_corpus.build_corpus_manifest(name)
-    build_corpus.merge_boards(name)
+    out = manifest_json(name)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    log(f"wrote manifest -> {out.relative_to(REPO_ROOT)}")
 
     diffs = [float(c["difficulty"]) for c in levels]
     meta = {

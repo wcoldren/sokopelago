@@ -62,7 +62,9 @@ with symmetry-aware dedup throughout and a fixed RNG seed.
 ## Output
 - `levels/autoban.xsb` — canonical authoring source (provenance header comment).
 - `apworld/sokopelago/data/autoban.json` — committed manifest, microban.json schema,
-  produced by the canonical pipeline (`build_corpus_manifest` + `merge_boards`).
+  written *directly* by the generator from the push-optimal scores it computed during
+  selection (reusing `solve_corpus.solve` + `_attach_difficulty`), so the committed pack is
+  exactly the selected one.
 - `levels/autoban.meta.json` — generator version, seed, params, stats (provenance lives
   outside the consumed JSON, whose schema is fixed).
 - Registered as a selectable corpus (`corpus.CORPUS_NAMES`, `Options.Corpus`). No apworld
@@ -76,11 +78,12 @@ The committed v1 pack: **55 levels, 20/25/10 easy/medium/hard, seed 0**
   earn their tier mostly through search-node difficulty (congested, branchy) at modest par
   (≤ ~40), rather than very long solutions. If a larger/longer hard set is wanted, raise
   `--node-budget` (slower, lower yield) and/or the hard `TierSpec` scatter.
-- **Regenerate with `generate_corpus.py`, not a bare re-solve.** The committed manifest is
-  built with the generator's deterministic single-phase, node-capped scoring. A standalone
-  `solve_corpus.py --corpus autoban` uses the full uncapped coverage ladder with real
-  per-phase time deadlines, which can differ for the few hardest levels on a slow machine
-  (if their optimal solve exceeds the 15 s phase-1 deadline). The generator is the
-  machine-independent, reproducible producer.
+- **Regenerate with `generate_corpus.py`, not a bare re-solve.** The generator emits the
+  manifest from push-optimal scores. A standalone `solve_corpus.py --corpus autoban` would
+  re-solve through the full coverage ladder, whose per-phase *time* deadlines let the optimal
+  phase time out on the hardest levels and fall back to a suboptimal greedy par (wrong par +
+  node count + difficulty). To prevent that footgun, `build_corpus_manifest` **refuses** any
+  corpus with a `*.meta.json` sidecar and points back here. A difficulty-only
+  `--rescore` is still safe (it never re-solves).
 - **Pull-requiring generation is out of scope** (needs `solve_pull` verification — a later
   effort). v1 is push-only by construction.

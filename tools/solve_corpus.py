@@ -904,12 +904,23 @@ def _calibration_bounds(name: str) -> Bounds | None:
 
 
 def build_corpus_manifest(name: str) -> list[dict[str, object]]:
-    """Solve ``name`` end-to-end and write its enriched manifest (solver fields + the
-    difficulty blend), returning the entries. This is the canonical producer — used by
-    ``main`` and reused by ``tools/generate_corpus.py`` so the generated corpus's committed
-    scores are exactly what this tool emits. Pull-aware for expert corpora
-    (``PULL_AWARE_CORPORA``); difficulty-calibrated when a reference is registered
-    (``CALIBRATION_REF``). Boards are merged in afterwards by ``build_corpus.merge_boards``."""
+    """Solve a *hand-authored* corpus end-to-end and write its enriched manifest (solver
+    fields + the difficulty blend), returning the entries. This is the canonical producer
+    for Microban/Pullban; difficulty-calibrated when a reference is registered
+    (``CALIBRATION_REF``), pull-aware for expert corpora (``PULL_AWARE_CORPORA``). Boards are
+    merged in afterwards by ``build_corpus.merge_boards``.
+
+    A *generated* corpus (one with a ``levels/<name>.meta.json`` sidecar, e.g. ``autoban``)
+    is refused here: it must be (re)built by ``tools/generate_corpus.py``, which emits the
+    manifest from push-*optimal* scores. Re-solving it through the full coverage ladder would
+    let the optimal phase time out on the hardest levels and record a suboptimal greedy par,
+    degrading the pack. (A difficulty-only ``--rescore`` is still safe — it never re-solves.)"""
+    meta = REPO_ROOT / "levels" / f"{name}.meta.json"
+    if meta.exists():
+        raise SystemExit(
+            f"{name!r} is a generated corpus — rebuild it with tools/generate_corpus.py "
+            f"(re-solving here would record suboptimal pars). Use --rescore to re-weight difficulty only."
+        )
     out = manifest_json(name)
     pull_aware = name in PULL_AWARE_CORPORA
     ref_bounds = _calibration_bounds(name)
