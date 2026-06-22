@@ -81,9 +81,19 @@ def load_corpus_data(name: str) -> CorpusData:
     )
 
 
+# Registered location-id ceiling: ``Locations.py`` registers "Solve … n" ids for n in
+# 1..LOCATION_MAX (each band is 10_000 wide, so this can grow to ~9_999 before bands collide).
+# A corpus may not exceed it — every selected level n needs a pre-registered location id. This
+# only ever *grows* the location map (ids 1..155 are unchanged), so it's backward-compatible.
+LOCATION_MAX: int = 999
+
 # Largest corpus size — the ceiling for the Level Count / boss-level option ranges
 # (generate_early clamps the actual count to the *selected* corpus).
 MAX_LEVEL_COUNT: int = max(len(json.loads((_DATA_DIR / f"{n}.json").read_text(encoding="utf-8"))) for n in CORPUS_NAMES)
+assert MAX_LEVEL_COUNT <= LOCATION_MAX, (
+    f"corpus has {MAX_LEVEL_COUNT} levels but only {LOCATION_MAX} location ids are registered "
+    f"(raise LOCATION_MAX in corpus.py — keep it < 10_000 so the id bands don't collide)."
+)
 
 # Backwards-compatible module-level Microban view (the default corpus).
 _MICROBAN = load_corpus_data("microban")

@@ -20,8 +20,11 @@ import typing
 
 from BaseClasses import Item, ItemClassification
 
-# Microban has 155 levels, so at most 155 worlds (levels_per_region == 1).
-MAX_WORLDS = 155
+# Max worlds = max keyed worlds. Keys are KEY_ID_BASE + n (n in 2..MAX_WORLDS); the escape-valve
+# band starts at KEY_ID_BASE + 200 (SKIP_ID 9_750_200), so MAX_WORLDS must stay < 200 to keep the
+# key ids clear of it. 198 leaves a margin and covers any realistic worlds-per-seed (a large merged
+# pool at levels_per_region >= ~3). Raising it only adds key ids 156..198 — backward-compatible.
+MAX_WORLDS = 198
 
 KEY_ID_BASE = 9_750_000  # "World n Key" -> KEY_ID_BASE + n  (n in 2..MAX_WORLDS)
 FILLER_ID = 9_750_001  # n == 1 slot is unused (World 1 is free), so this is free.
