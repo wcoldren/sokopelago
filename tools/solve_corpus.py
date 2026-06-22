@@ -79,7 +79,8 @@ from xsb_levels import REPO_ROOT, Cell, Level, corpus_xsb, load_corpus, manifest
 # (otherwise the path is appended), and the process must print a LURD move string to
 # stdout. Whatever it returns is replay-verified here exactly like a native solution, so
 # a wrong/garbled answer is rejected, never trusted. GPL solvers (JSoko) are fine to run
-# locally this way; we never vendor or ship their binaries.
+# locally this way; we never vendor or ship their binaries. The concrete SokoBoy build +
+# wrapper recipe lives in docs/EXTERNAL-SOLVER.md (use tools/sokoboy_solve.py as the cmd).
 SOLVER_CMD_ENV = "SOKO_SOLVER_CMD"
 SOLVER_TIMEOUT_ENV = "SOKO_SOLVER_TIMEOUT"  # seconds; default 300
 _LURD_RUN = re.compile(r"[lrudLRUD]{4,}")

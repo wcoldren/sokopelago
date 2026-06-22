@@ -55,4 +55,5 @@ build-time `SOKO_SOLVER_CMD` hook can shell out to a developer-local external so
 exactly like a native solution. Entries produced this way are flagged with
 `"solver": "external"` in the manifest. The committed manifest's level 153 was solved
 this way using [SokoBoy](https://github.com/celicom11/SokoBoy) (an open-source C++
-console solver, run locally — not vendored or redistributed).
+console solver, run locally — not vendored or redistributed). The build + invocation
+recipe is documented in [`docs/EXTERNAL-SOLVER.md`](docs/EXTERNAL-SOLVER.md).
