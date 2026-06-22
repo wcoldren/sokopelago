@@ -36,10 +36,21 @@ import { fetchManifest } from "./engine/manifest";
 
 const DEFAULT_CORPUS = "microban";
 // Solo free-play: ?corpus=<name> previews any bundled corpus (e.g. ?corpus=autoban).
-const KNOWN_CORPORA = ["microban", "pullban", "autoban"];
+const KNOWN_CORPORA = [
+  "microban", "pullban", "autoban", "curated",
+  "microban2", "microban3", "xsokoban90",
+  ...Array.from({ length: 9 }, (_, i) => `sasquatch${i + 1}`),
+];
 function soloCorpus(): string {
   const want = new URLSearchParams(location.search).get("corpus");
   return want && KNOWN_CORPORA.includes(want) ? want : DEFAULT_CORPUS;
+}
+// Level labels: prefix with the corpus name only when the level name doesn't already carry its
+// source. The merged `curated` pool names already read "Sasquatch III 17", so they get no prefix.
+const CORPUS_LABEL: Record<string, string> = { microban: "Microban", pullban: "Pullban", autoban: "Autoban" };
+function corpusPrefix(): string {
+  const l = CORPUS_LABEL[loadedCorpus];
+  return l ? `${l} ` : "";
 }
 
 const $ = <T extends HTMLElement>(id: string): T => {
@@ -55,6 +66,7 @@ const undoBtn = $<HTMLButtonElement>("undo-btn");
 const hintBtn = $<HTMLButtonElement>("hint-btn");
 const skipBtn = $<HTMLButtonElement>("skip-btn");
 const pullBtn = $<HTMLButtonElement>("pull-btn");
+const panicBtn = $<HTMLButtonElement>("panic-btn");
 const statusEl = $<HTMLDivElement>("status");
 const statsEl = $<HTMLDivElement>("stats");
 const noticeEl = $<HTMLDivElement>("notice");
@@ -85,6 +97,7 @@ let current = 0;
 let locked = false; // briefly true between solving and auto-advancing
 let hintBoxMoves = 0; // box-moves (pushes/pulls) the Hint has revealed on the current level
 let hintAnim: AnimationHandle | null = null; // in-flight hint playback (cancelled on level change)
+let panicAnim: AnimationHandle | null = null; // in-flight panic solution playback (cancelled on level change)
 let animating = false; // input blocked during a hint animation; never persists past it
 let reversedControls = false; // set by a Reversed-Controls trap; cleared on level change
 let pullMode = false; // when on, plain direction input pulls instead of pushing
@@ -158,7 +171,7 @@ function levelTitle(target: Level): string {
     const w = session.worldForLevel(n);
     const pos = seedPositionInWorld(slot, n);
     if (w !== undefined && pos > 0)
-      return `World ${w} · L${pos} — Microban ${target.name}${suffix}`;
+      return `World ${w} · L${pos} — ${corpusPrefix()}${target.name}${suffix}`;
   }
   return `Level ${target.name}${suffix}`;
 }
@@ -233,7 +246,7 @@ function goalDescription(s: SlotData): string {
     case "solve_count":
       return `Goal: solve any ${s.goal_solve_count} of the ${s.level_count} levels.`;
     case "boss_level":
-      return `Goal: solve the boss level — Microban ${s.goal_boss_level}.`;
+      return `Goal: solve the boss level (#${s.goal_boss_level}).`;
     case "beat_final_region":
     default: {
       const k = levelsInWorld(s, s.final_world).length;
@@ -316,7 +329,7 @@ function makePill(lvl: Level, posInWorld: number): HTMLButtonElement {
   const n = levelNumber(lvl);
   const btn = document.createElement("button");
   btn.className = "pill";
-  btn.title = `Microban ${lvl.name}`;
+  btn.title = `${corpusPrefix()}${lvl.name}`;
   const solved = slot && session ? session.isLevelSolved(n) : solvedOffline.has(n);
   const playable = !slot || !session || session.isLevelPlayable(n);
   let mark = "";
@@ -497,6 +510,8 @@ function loadLevel(i: number): void {
   }
   hintAnim?.cancel(); // stop any in-flight hint playback from mutating the new board
   hintAnim = null;
+  panicAnim?.cancel();
+  panicAnim = null;
   animating = false;
   current = i;
   // Keep the visible world tab on the level being played (so auto-advance follows along).
@@ -773,6 +788,8 @@ function restart(): void {
   if (!game) return;
   hintAnim?.cancel(); // a manual restart cancels any hint playback
   hintAnim = null;
+  panicAnim?.cancel();
+  panicAnim = null;
   animating = false;
   game.restart();
   beginAttempt(); // same visit, fresh attempt — re-clock for solve time
@@ -882,6 +899,64 @@ function useSkip(): void {
   if (next) window.setTimeout(() => loadLevel(next.index), 900);
 }
 
+/** Free solve+unlock — a playtest/accessibility "give up" that sends only the solve check (no par
+ * or efficiency credit, unlike a real solve) and advances. Works in solo (marks locally). */
+function panicClear(n: number, label: string): void {
+  if (slot && session) {
+    session.reportSolved(n); // solve check only; no pushCount -> no par/eff reward
+    rebuildLevelGrid();
+    notice(`Panic: solved & unlocked ${label} — check sent.`, { win: true });
+    const next = nextPlayable(n);
+    if (next) {
+      locked = true;
+      window.setTimeout(() => loadLevel(next.index), 900);
+    } else {
+      locked = false;
+    }
+  } else {
+    solvedOffline.add(n);
+    rebuildLevelGrid();
+    notice(`Panic: solved ${label}.`, { win: true });
+    if (current < levels.length - 1) {
+      locked = true;
+      window.setTimeout(() => loadLevel(current + 1), 900);
+    } else {
+      locked = false;
+    }
+  }
+}
+
+/** Panic button: solve + unlock the current puzzle. Plays the real solution to the win as a courtesy
+ * when one exists (unsolved levels have none), then force-clears. Always available, no token. */
+function usePanic(): void {
+  if (!game || locked || animating) return;
+  const n = levelNumber(game.level);
+  const label = game.level.name;
+  if (alreadySolved(n)) {
+    notice("Already solved.");
+    return;
+  }
+  if (!window.confirm(`Panic: solve and unlock “${label}”? (no par credit)`)) return;
+  const solution = solutions.get(n);
+  if (solution) {
+    const moves = parseSolution(solution);
+    animating = true;
+    updateValveButtons();
+    const g = game;
+    panicAnim = animateSolutionPrefix(g, moves, moves.length, {
+      onStep: () => renderer.draw(g),
+      onDone: () => {
+        animating = false;
+        panicAnim = null;
+        updateValveButtons();
+        panicClear(n, label);
+      },
+    });
+  } else {
+    panicClear(n, label); // no solution (unsolved level) -> instant force-clear
+  }
+}
+
 /** Apply a (presentation-only) trap effect — never alters the solvable board. */
 function triggerTrap(variant: TrapVariant): void {
   if (variant === "reversed") {
@@ -941,6 +1016,9 @@ function updateValveButtons(): void {
     hintBtn.textContent = "Hint";
     hintBtn.disabled = busy || !hasHint;
   }
+
+  // Panic is always available (free solve+unlock); disabled while busy or on an already-solved level.
+  panicBtn.disabled = busy || !game || alreadySolved(levelNumber(game.level));
 }
 
 // --- AP connection ---------------------------------------------------------
@@ -1065,6 +1143,7 @@ async function main(): Promise<void> {
   // Shift-click (or Shift+H) is a bigger hint: more moves animated for more tokens.
   hintBtn.addEventListener("click", (e) => runHint(e.shiftKey ? BIG_HINT_PUSHES : 1));
   skipBtn.addEventListener("click", useSkip);
+panicBtn.addEventListener("click", usePanic);
   pullBtn.addEventListener("click", togglePull);
   connectBtn.addEventListener("click", onConnectClick);
   statsExportBtn.addEventListener("click", exportStats);

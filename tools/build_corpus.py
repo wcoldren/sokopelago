@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import json
 
+import provenance
 from xsb_levels import REPO_ROOT, corpus_xsb, load_corpus, manifest_json
 from xsb_levels import parse_levels as _parse_full
 
@@ -34,6 +35,7 @@ def merge_boards(name: str) -> list[dict[str, object]]:
     """Refresh ``n``/``name``/``board`` in ``name``'s manifest from the canonical XSB,
     preserving any existing solver fields, and return the entries. Reused by
     ``tools/generate_corpus.py`` to bundle boards after the solver pass."""
+    provenance.require(name)  # no manifest without a recorded, redistributable source
     out = manifest_json(name)
     levels = load_corpus(corpus_xsb(name))
     existing: dict[int, dict[str, object]] = {}

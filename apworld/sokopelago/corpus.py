@@ -31,6 +31,16 @@ class LevelEntry(TypedDict, total=False):
     solved: bool
     solver: str  # provenance marker, present only on entries from the external fallback
     requires_pull: bool  # expert corpora: level is unsolvable by pushing alone
+    # Offline annotation fields (added by ``tools/annotate_corpus.py``; dev/dataset use only —
+    # the apworld and client ignore them, so they are purely additive). Curated third-party
+    # corpora carry these; the shipped microban/pullban/autoban manifests need not.
+    box_change_difficulty: float
+    fun_features: dict  # {playable_area, openness, boxes, steps_per_box, search_difficulty, likeability}
+    structural: dict  # {goal_room_connected, matter_fraction, matter_method, dead_floor_ratio, box_density, deadlock_proximity}
+    quality_score: float
+    canonical_hash: str  # symmetry+player-region invariant identity (tools/canonical.py)
+    provenance: str  # corpus key into levels/provenance.json
+    license: str  # license_id from the provenance entry
 
 
 _DATA_DIR = Path(__file__).parent / "data"
@@ -39,7 +49,7 @@ _DATA_DIR = Path(__file__).parent / "data"
 # push-only set; ``pullban`` is the expert set with pull-required levels; ``autoban`` is the
 # in-house generated push-only set (``tools/generate_corpus.py``), difficulty-calibrated to
 # Microban's scale.
-CORPUS_NAMES: tuple[str, ...] = ("microban", "pullban", "autoban")
+CORPUS_NAMES: tuple[str, ...] = ("microban", "pullban", "autoban", "curated")
 
 
 @dataclass(frozen=True)
@@ -71,9 +81,19 @@ def load_corpus_data(name: str) -> CorpusData:
     )
 
 
+# Registered location-id ceiling: ``Locations.py`` registers "Solve … n" ids for n in
+# 1..LOCATION_MAX (each band is 10_000 wide, so this can grow to ~9_999 before bands collide).
+# A corpus may not exceed it — every selected level n needs a pre-registered location id. This
+# only ever *grows* the location map (ids 1..155 are unchanged), so it's backward-compatible.
+LOCATION_MAX: int = 999
+
 # Largest corpus size — the ceiling for the Level Count / boss-level option ranges
 # (generate_early clamps the actual count to the *selected* corpus).
 MAX_LEVEL_COUNT: int = max(len(json.loads((_DATA_DIR / f"{n}.json").read_text(encoding="utf-8"))) for n in CORPUS_NAMES)
+assert MAX_LEVEL_COUNT <= LOCATION_MAX, (
+    f"corpus has {MAX_LEVEL_COUNT} levels but only {LOCATION_MAX} location ids are registered "
+    f"(raise LOCATION_MAX in corpus.py — keep it < 10_000 so the id bands don't collide)."
+)
 
 # Backwards-compatible module-level Microban view (the default corpus).
 _MICROBAN = load_corpus_data("microban")

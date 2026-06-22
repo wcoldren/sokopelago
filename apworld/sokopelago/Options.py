@@ -15,12 +15,15 @@ class Corpus(Choice):
     pullban: a small expert set whose harder levels require the Pull ability (see
     Pull Logic).
     autoban: an in-house generated push-only set with a calibrated easy/medium/hard
-    spread (original by construction)."""
+    spread (original by construction).
+    curated: a large merged pool of solved levels across all curated sets (Microban I-III,
+    Sasquatch, etc.), re-indexed — for variety; built by tools/build_pool.py."""
 
     display_name = "Corpus"
     option_microban = 0
     option_pullban = 1
     option_autoban = 2
+    option_curated = 3
     default = 0
 
 

@@ -1,0 +1,33 @@
+{
+  "name": "curated",
+  "count": 545,
+  "tiers": {
+    "easy": 93,
+    "medium": 323,
+    "hard": 129
+  },
+  "filter": {
+    "corpora": [
+      "microban",
+      "pullban",
+      "autoban",
+      "microban2",
+      "microban3",
+      "sasquatch1",
+      "sasquatch2",
+      "sasquatch3",
+      "sasquatch4",
+      "sasquatch5",
+      "sasquatch6",
+      "sasquatch7",
+      "sasquatch8",
+      "sasquatch9",
+      "xsokoban90"
+    ],
+    "solved_only": true,
+    "max_difficulty": "any",
+    "max_boxes": 0,
+    "limit": 0,
+    "dedup": true
+  }
+}

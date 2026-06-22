@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from BaseClasses import Location
 
-from .corpus import LEVELS
+from .corpus import LOCATION_MAX
 
 LOC_ID_BASE = 9_760_000  # "Solve Microban n" -> LOC_ID_BASE + n
 PAR_LOC_ID_BASE = 9_770_000  # "Solve Microban n in <= par pushes" -> PAR_LOC_ID_BASE + n
@@ -43,9 +43,13 @@ def eff_location_name(n: int) -> str:
     return f"Solve Microban {n} efficiently"
 
 
-location_table: dict[str, int] = {solve_location_name(entry["n"]): LOC_ID_BASE + entry["n"] for entry in LEVELS}
-par_location_table: dict[str, int] = {par_location_name(entry["n"]): PAR_LOC_ID_BASE + entry["n"] for entry in LEVELS}
-eff_location_table: dict[str, int] = {eff_location_name(entry["n"]): EFF_LOC_ID_BASE + entry["n"] for entry in LEVELS}
+# Register a fixed id for every level number 1..LOCATION_MAX (not just the Microban corpus), so any
+# corpus up to that size — e.g. a large merged pool — has its "Solve … n" locations available. The
+# ids for 1..155 are unchanged, so this only adds entries and never breaks an existing seed.
+_NS = range(1, LOCATION_MAX + 1)
+location_table: dict[str, int] = {solve_location_name(n): LOC_ID_BASE + n for n in _NS}
+par_location_table: dict[str, int] = {par_location_name(n): PAR_LOC_ID_BASE + n for n in _NS}
+eff_location_table: dict[str, int] = {eff_location_name(n): EFF_LOC_ID_BASE + n for n in _NS}
 
 # All bands are registered so location_name_to_id is stable regardless of the per-seed
 # Par Checks / Efficiency Checks toggles (Archipelago requires a fixed name->id map).

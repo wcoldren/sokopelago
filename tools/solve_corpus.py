@@ -69,6 +69,7 @@ import tempfile
 import time
 from collections import deque
 
+import provenance
 from xsb_levels import REPO_ROOT, Cell, Level, corpus_xsb, load_corpus, manifest_json
 
 # Optional build-time external-solver fallback (data-prep only — never on the generation
@@ -78,7 +79,8 @@ from xsb_levels import REPO_ROOT, Cell, Level, corpus_xsb, load_corpus, manifest
 # (otherwise the path is appended), and the process must print a LURD move string to
 # stdout. Whatever it returns is replay-verified here exactly like a native solution, so
 # a wrong/garbled answer is rejected, never trusted. GPL solvers (JSoko) are fine to run
-# locally this way; we never vendor or ship their binaries.
+# locally this way; we never vendor or ship their binaries. The concrete SokoBoy build +
+# wrapper recipe lives in docs/EXTERNAL-SOLVER.md (use tools/sokoboy_solve.py as the cmd).
 SOLVER_CMD_ENV = "SOKO_SOLVER_CMD"
 SOLVER_TIMEOUT_ENV = "SOKO_SOLVER_TIMEOUT"  # seconds; default 300
 _LURD_RUN = re.compile(r"[lrudLRUD]{4,}")
@@ -915,6 +917,7 @@ def build_corpus_manifest(name: str) -> list[dict[str, object]]:
     manifest from push-*optimal* scores. Re-solving it through the full coverage ladder would
     let the optimal phase time out on the hardest levels and record a suboptimal greedy par,
     degrading the pack. (A difficulty-only ``--rescore`` is still safe — it never re-solves.)"""
+    provenance.require(name)  # no manifest without a recorded, redistributable source
     meta = REPO_ROOT / "levels" / f"{name}.meta.json"
     if meta.exists():
         raise SystemExit(
