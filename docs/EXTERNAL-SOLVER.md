@@ -24,8 +24,15 @@ via an env var. Only *our* glue (`tools/sokoboy_solve.py`) and this doc live in 
 
 [SokoBoy](https://github.com/celicom11/SokoBoy) by celicom11 — an open-source C++17 console Sokoban
 solver (BFS/DFS/AStar), no external dependencies. We use **AStar** (sub-optimal but tractable on
-hard/large levels; BFS is optimal but blows up). License: see the SokoBoy repo (run locally only;
+hard levels; BFS is optimal but blows up). License: see the SokoBoy repo (run locally only;
 not redistributed).
+
+> **Hard limit — ≤ 64 empty cells.** SokoBoy represents the board with 64-bit cell bitsets and
+> refuses any puzzle with more than 64 floor cells (`"Number of empty cells in puzzle greater than
+> 64"`). It is therefore the right tool for **compact-but-deep** levels (e.g. Microban 153, a
+> ≤64-cell 10-box comb) but **cannot help large-board expert sets** — e.g. only 1 of the 90 XSokoban
+> levels fits, so XSokoban stays geometry-only. A large-board set needs a different solver (future
+> work).
 
 ### Build on macOS (clang)
 

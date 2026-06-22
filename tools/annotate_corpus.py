@@ -30,6 +30,7 @@ import json
 import multiprocessing as mp
 import os
 import queue
+import sys
 import time
 from time import monotonic
 
@@ -62,7 +63,12 @@ def _annotate_one(rows, existing: dict, ref_bounds) -> dict:
         result = entry
         base = {k: entry[k] for k in _BASE_KEYS if k in entry}
     features = scoring.compute_features(level, result)
-    return {"base": base, "features": features, "solved": bool(result.get("solved"))}
+    by = ("reused" if not base
+          else "external" if result.get("solver") == "external"
+          else "internal" if result.get("solved") else "unsolved")
+    # the re-parse uses a synthetic "; 1" title, so prefer the real number from the prior entry
+    return {"base": base, "features": features, "solved": bool(result.get("solved")),
+            "n": existing.get("n", level.n), "by": by}
 
 
 def _worker(rows, existing, node_budget, ref_bounds, out: "mp.Queue") -> None:
@@ -73,14 +79,42 @@ def _worker(rows, existing, node_budget, ref_bounds, out: "mp.Queue") -> None:
         out.put(None)
 
 
-def parallel_annotate(items, workers: int, node_budget: int, wall_cap: float, ref_bounds):
+def _progress(done: int, total: int, tally: dict, t0: float, last: str) -> None:
+    """One progress line to stderr (a new line per completion, so it reads as a live rate log
+    in a backgrounded run's output file)."""
+    elapsed = monotonic() - t0
+    # Rate over *solved* work only (reused levels return instantly and would inflate it); ETA is
+    # remaining levels at that solve-rate — a rough but honest estimate for the slow tail.
+    worked = tally["internal"] + tally["external"] + tally["unsolved"] + tally["killed"]
+    rate = worked / max(1e-6, elapsed)  # solves per second
+    eta = (total - done) / rate if rate > 0 else float("inf")
+    sys.stderr.write(
+        f"[{done:>3}/{total}] last:{last:<14} "
+        f"internal={tally['internal']} external={tally['external']} unsolved={tally['unsolved']} "
+        f"reused={tally['reused']} | {rate*60:4.1f} solved/min  {elapsed/60:4.1f}m elapsed  eta~{eta/60:4.1f}m\n"
+    )
+    sys.stderr.flush()
+
+
+def parallel_annotate(items, workers: int, node_budget: int, wall_cap: float, ref_bounds,
+                      progress: bool = False):
     """Annotate ``items`` (``(rows, existing)`` pairs) concurrently, results in input order.
     The node budget bounds each (capped) solve; ``wall_cap`` is a per-level kill backstop.
-    ``workers<=1`` runs in-process (deterministic; used by tests and the Microban smoke test)."""
+    ``workers<=1`` runs in-process (deterministic; used by tests and the Microban smoke test).
+    ``progress`` emits a per-completion rate line to stderr (real multi-worker runs only)."""
     n = len(items)
     results: list[dict | None] = [None] * n
     if n == 0:
         return results
+    tally = {"internal": 0, "external": 0, "unsolved": 0, "reused": 0, "killed": 0}
+    t_start = monotonic()
+
+    def record(res, idx):
+        if progress:
+            by = (res or {}).get("by", "killed") if res is not None else "killed"
+            tally[by if by in tally else "unsolved"] += 1
+            _progress(sum(tally.values()), n, tally, t_start, f"L{(res or {}).get('n', '?')} {by}")
+
     if workers <= 1:
         _apply_scoring_caps(node_budget)
         for i, (rows, existing) in enumerate(items):
@@ -88,6 +122,7 @@ def parallel_annotate(items, workers: int, node_budget: int, wall_cap: float, re
                 results[i] = _annotate_one(rows, existing, ref_bounds)
             except Exception:
                 results[i] = None
+            record(results[i], i)
         return results
 
     ctx = mp.get_context("fork" if hasattr(os, "fork") else "spawn")
@@ -117,13 +152,14 @@ def parallel_annotate(items, workers: int, node_budget: int, wall_cap: float, re
         for i in done:
             del running[i]
             completed += 1
+            record(results[i], i)
         if not done:
             time.sleep(0.005)
     return results
 
 
 def annotate(name: str, *, node_budget: int = 2_000_000, wall_cap: float = 120.0,
-             workers: int = 1, write: bool = True) -> tuple[list[dict], dict]:
+             workers: int = 1, write: bool = True, progress: bool = False) -> tuple[list[dict], dict]:
     """Annotate corpus ``name`` and (optionally) write its manifest. Returns (entries, stats)."""
     prov = provenance.require(name)  # gate: no annotation without a recorded, redistributable source
     levels = load_corpus(corpus_xsb(name))
@@ -134,7 +170,7 @@ def annotate(name: str, *, node_budget: int = 2_000_000, wall_cap: float = 120.0
     ref_bounds = microban_reference_bounds()
 
     items = [(list(lvl.rows), existing.get(lvl.n, {})) for lvl in levels]
-    annotated = parallel_annotate(items, workers, node_budget, wall_cap, ref_bounds)
+    annotated = parallel_annotate(items, workers, node_budget, wall_cap, ref_bounds, progress=progress)
 
     entries: list[dict] = []
     solved_fresh = unsolved = reused = 0
@@ -173,9 +209,10 @@ def main() -> None:
     ap.add_argument("--node-budget", type=int, default=2_000_000, help="per-level solve cap")
     ap.add_argument("--wall-cap", type=float, default=120.0, help="per-level kill-on-timeout (s)")
     ap.add_argument("--dry-run", action="store_true", help="compute but do not write the manifest")
+    ap.add_argument("--quiet", action="store_true", help="suppress the per-level progress lines")
     args = ap.parse_args()
     annotate(args.corpus, node_budget=args.node_budget, wall_cap=args.wall_cap,
-             workers=args.workers, write=not args.dry_run)
+             workers=args.workers, write=not args.dry_run, progress=not args.quiet)
 
 
 if __name__ == "__main__":
