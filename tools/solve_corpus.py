@@ -69,6 +69,7 @@ import tempfile
 import time
 from collections import deque
 
+import provenance
 from xsb_levels import REPO_ROOT, Cell, Level, corpus_xsb, load_corpus, manifest_json
 
 # Optional build-time external-solver fallback (data-prep only — never on the generation
@@ -915,6 +916,7 @@ def build_corpus_manifest(name: str) -> list[dict[str, object]]:
     manifest from push-*optimal* scores. Re-solving it through the full coverage ladder would
     let the optimal phase time out on the hardest levels and record a suboptimal greedy par,
     degrading the pack. (A difficulty-only ``--rescore`` is still safe — it never re-solves.)"""
+    provenance.require(name)  # no manifest without a recorded, redistributable source
     meta = REPO_ROOT / "levels" / f"{name}.meta.json"
     if meta.exists():
         raise SystemExit(

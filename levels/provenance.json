@@ -1,0 +1,47 @@
+{
+  "microban": {
+    "corpus": "microban",
+    "source_name": "Microban (155 puzzles, revised April 2000)",
+    "author": "David W. Skinner",
+    "source_url": "https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/",
+    "license_id": "skinner-free-distribution-with-credit",
+    "license_url": null,
+    "distribution_terms": "These sets may be freely distributed provided they remain properly credited.",
+    "attribution_required": "Microban by David W. Skinner.",
+    "redistributable": true,
+    "original_by_construction": false,
+    "notes": "Vendored verbatim from the ShenMian/sokoban-rs collection (assets/levels/microban_155.xsb), which preserves Skinner's original file. The only change is a prepended attribution header (XSB ';' comments, ignored by every parser) so the credit travels with the corpus.",
+    "retrieved_utc": null,
+    "sha256_xsb": "4f75d3a7101e4fd37d52d5801cf15eccb1f9e50f4f655e7ec27f432a5a180675"
+  },
+  "pullban": {
+    "corpus": "pullban",
+    "source_name": "Pullban (30 original expert levels)",
+    "author": "William Coldren",
+    "source_url": null,
+    "license_id": "sokopelago-free-distribution-with-credit",
+    "license_url": null,
+    "distribution_terms": "Freely distributable with attribution, on the same terms as the bundled Microban set.",
+    "attribution_required": "Pullban (original) by William Coldren, for Sokopelago.",
+    "redistributable": true,
+    "original_by_construction": true,
+    "notes": "An original Sokopelago expert corpus for the Phase 5 ability tier: a mix of ordinary push levels and levels that require the Pull ability. Designed by William Coldren (2026); levels 11+ are machine-authored for this project, every board solver-verified. Adopts Microban's distribution terms but is original work owing no Skinner attribution.",
+    "retrieved_utc": null,
+    "sha256_xsb": "40ab04bd34bf84363fd2eb04816b554044894e47bda074d42a556d5398a79242"
+  },
+  "autoban": {
+    "corpus": "autoban",
+    "source_name": "Autoban (generated corpus, v1.0.0, seed 0)",
+    "author": "Sokopelago owned generator (tools/generate_corpus.py)",
+    "source_url": null,
+    "license_id": "sokopelago-free-distribution-with-credit",
+    "license_url": null,
+    "distribution_terms": "Freely distributable with attribution, on the same terms as the bundled Microban set.",
+    "attribution_required": "Autoban (generated) by the Sokopelago puzzle generator.",
+    "redistributable": true,
+    "original_by_construction": true,
+    "notes": "Generated in-house by Sokopelago's own puzzle generator and original by construction: each level is built by reverse-construction (place every box on a goal, then scatter with legal pulls), so it contains no third-party puzzles and needs no external attribution. Difficulty is calibrated against Microban's native scale.",
+    "retrieved_utc": null,
+    "sha256_xsb": "95e2325c4ed64b0f91463118846bbe74ea5cafa8c52d40c81b89dfd17833de5e"
+  }
+}
