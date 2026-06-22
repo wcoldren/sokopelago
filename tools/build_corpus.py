@@ -30,12 +30,11 @@ def parse_levels(text: str) -> list[dict[str, object]]:
     return [{"n": lvl.n, "name": lvl.name, "board": list(lvl.rows)} for lvl in _parse_full(text)]
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--corpus", default="microban", help="corpus name (default: microban)")
-    name = ap.parse_args().corpus
+def merge_boards(name: str) -> list[dict[str, object]]:
+    """Refresh ``n``/``name``/``board`` in ``name``'s manifest from the canonical XSB,
+    preserving any existing solver fields, and return the entries. Reused by
+    ``tools/generate_corpus.py`` to bundle boards after the solver pass."""
     out = manifest_json(name)
-
     levels = load_corpus(corpus_xsb(name))
     existing: dict[int, dict[str, object]] = {}
     if out.exists():
@@ -52,6 +51,13 @@ def main() -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"wrote {len(entries)} levels -> {out.relative_to(REPO_ROOT)}")
+    return entries
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--corpus", default="microban", help="corpus name (default: microban)")
+    merge_boards(ap.parse_args().corpus)
 
 
 if __name__ == "__main__":

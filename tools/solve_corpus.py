@@ -806,23 +806,54 @@ def _minmax(value: float, lo: float, hi: float) -> float:
     return 0.0 if hi <= lo else (value - lo) / (hi - lo)
 
 
-def _attach_difficulty(entries: list[dict[str, object]]) -> None:
-    """Add an *absolute* normalized 0..1 ``difficulty`` blend across the corpus, in place.
+# Difficulty blend shared by the self-relative score and the calibrated (ref_bounds) score.
+_DIFF_WEIGHTS: dict[str, float] = {"par": 0.4, "_nodes": 0.35, "moves": 0.15, "boxes": 0.1}
+_DIFF_LOG_SIGNALS = {"par", "moves", "_nodes"}  # right-skewed; boxes is already bounded
 
-    Scoring spans the solved levels; any level the solver couldn't crack is, by
-    definition, among the hardest, so it is assigned the max difficulty (1.0).
+Bounds = dict[str, tuple[float, float]]
 
-    The blend is weighted toward ``par`` (optimal push count) and the node count
-    (search effort / branching) — the two signals that best separate a fiddly puzzle
-    from a long but mechanical one — with ``moves``/``boxes`` as minor tie-breakers.
-    The heavy-tailed signals (``par``/``moves``/``_nodes`` span several orders of
-    magnitude) are ``log1p``-compressed before the per-signal min-max so one runaway
-    level (e.g. Microban 153 at par 336 / 6M search nodes) can't crush every other
-    level toward 0 — the failure that made the whole corpus read as "easy". The score
-    keeps absolute magnitude (it is *not* re-spread to even tiers), so "easy" means a
-    genuinely simple puzzle rather than merely the bottom third. The node count is
-    persisted as ``search_nodes`` (read back on a ``--rescore`` so the weights can be
-    re-tuned without a full re-solve)."""
+
+def _diff_signal(e: dict[str, object], s: str) -> float:
+    """One difficulty signal in scoring space: ``log1p``-compressed for the heavy-tailed
+    ones (``par``/``moves``/``_nodes``), raw for ``boxes``. The node count reads ``_nodes``
+    (a live solve) or the persisted ``search_nodes`` (a re-score, or a reference manifest),
+    so every path scores on the same scale."""
+    raw = e.get("_nodes", e.get("search_nodes", 0)) if s == "_nodes" else e[s]
+    v = float(raw)
+    return math.log1p(v) if s in _DIFF_LOG_SIGNALS else v
+
+
+def reference_bounds(entries: list[dict[str, object]]) -> Bounds:
+    """Per-signal ``(lo, hi)`` in scoring space from a reference corpus's *natively* solved
+    levels — the fixed scale a calibrated :func:`_attach_difficulty` normalizes against.
+
+    External-solver levels (e.g. Microban 153 at par 336 / 6M nodes) are excluded so a
+    single 300 s outlier can't stretch the absolute scale until the hard tier is
+    unreachable: the scale then anchors to genuinely search-solvable difficulty."""
+    ref = [e for e in entries if e.get("solved") and e.get("solver") != "external"]
+    if not ref:
+        raise ValueError("reference corpus has no natively-solved levels to calibrate against")
+    return {s: (min(_diff_signal(e, s) for e in ref), max(_diff_signal(e, s) for e in ref)) for s in _DIFF_WEIGHTS}
+
+
+def _attach_difficulty(entries: list[dict[str, object]], ref_bounds: Bounds | None = None) -> None:
+    """Add an *absolute* normalized 0..1 ``difficulty`` blend, in place.
+
+    With ``ref_bounds=None`` (default) the score is min-max normalized across *this*
+    corpus's own solved levels — the self-relative behavior the committed Microban/Pullban
+    manifests use. Passing ``ref_bounds`` (from :func:`reference_bounds`) instead normalizes
+    each signal against a *fixed reference* corpus and clamps to [0, 1], yielding an
+    absolute, cross-corpus-comparable scale (used by the generated ``autoban`` corpus, which
+    calibrates against Microban so its tiers mean the same thing Microban's do).
+
+    Either way the blend weights ``par`` (optimal push count) and the node count (search
+    effort / branching) most — the two signals that best separate a fiddly puzzle from a
+    long-but-mechanical one — with ``moves``/``boxes`` as minor tie-breakers; the
+    heavy-tailed signals are ``log1p``-compressed first (see :func:`_diff_signal`) so one
+    runaway level can't crush every other toward 0. Any level the solver couldn't crack is,
+    by definition, among the hardest and gets 1.0. The node count is persisted as
+    ``search_nodes`` (read back on a ``--rescore`` so the weights can be re-tuned without a
+    full re-solve)."""
     solved = [e for e in entries if e.get("solved")]
     if solved:
         # Node count comes from a live solve (``_nodes``) or, on a re-score, the
@@ -830,16 +861,22 @@ def _attach_difficulty(entries: list[dict[str, object]]) -> None:
         for e in solved:
             if "_nodes" not in e:
                 e["_nodes"] = e.get("search_nodes", 0)
-        weights = {"par": 0.4, "_nodes": 0.35, "moves": 0.15, "boxes": 0.1}
-        log_signals = {"par", "moves", "_nodes"}  # right-skewed; boxes is already bounded
-
-        def signal(e: dict[str, object], s: str) -> float:
-            v = float(e[s])
-            return math.log1p(v) if s in log_signals else v
-
-        bounds = {s: (min(signal(e, s) for e in solved), max(signal(e, s) for e in solved)) for s in weights}
+        if ref_bounds is None:
+            bounds = {
+                s: (min(_diff_signal(e, s) for e in solved), max(_diff_signal(e, s) for e in solved))
+                for s in _DIFF_WEIGHTS
+            }
+            clamp = False
+        else:
+            bounds = ref_bounds  # calibrated against a fixed reference corpus
+            clamp = True
         for e in solved:
-            score = sum(weights[s] * _minmax(signal(e, s), *bounds[s]) for s in weights)
+            score = 0.0
+            for s, w in _DIFF_WEIGHTS.items():
+                nv = _minmax(_diff_signal(e, s), *bounds[s])
+                if clamp:  # a calibrated signal can fall outside the reference range
+                    nv = 0.0 if nv < 0.0 else 1.0 if nv > 1.0 else nv
+                score += w * nv
             e["difficulty"] = round(score, 4)
             e["search_nodes"] = int(e.pop("_nodes"))
     for e in entries:
@@ -847,29 +884,35 @@ def _attach_difficulty(entries: list[dict[str, object]]) -> None:
             e["difficulty"] = 1.0
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser(description="Solve a corpus into its enriched manifest.")
-    ap.add_argument("--corpus", default="microban", help="corpus name (default: microban)")
-    ap.add_argument(
-        "--rescore",
-        action="store_true",
-        help="recompute only the difficulty blend from the existing manifest (reads the "
-        "persisted search_nodes; no re-solve, so external solutions are untouched)",
-    )
-    args = ap.parse_args()
-    name = args.corpus
+# Corpora whose harder levels may genuinely require the Pull ability (solved pull-aware,
+# flagging ``requires_pull``). Everything else is solved push-only.
+PULL_AWARE_CORPORA = {"pullban"}
+# corpus -> reference corpus whose native difficulty bounds calibrate it onto one absolute,
+# cross-corpus-comparable scale. ``autoban`` (the generated corpus) calibrates to Microban.
+CALIBRATION_REF = {"autoban": "microban"}
+
+
+def _calibration_bounds(name: str) -> Bounds | None:
+    """Reference difficulty bounds for ``name``, or None if it scores self-relatively."""
+    ref_name = CALIBRATION_REF.get(name)
+    if ref_name is None:
+        return None
+    ref_manifest = manifest_json(ref_name)
+    if not ref_manifest.exists():
+        raise SystemExit(f"calibration reference {ref_name!r} manifest not found: {ref_manifest}")
+    return reference_bounds(json.loads(ref_manifest.read_text(encoding="utf-8")))
+
+
+def build_corpus_manifest(name: str) -> list[dict[str, object]]:
+    """Solve ``name`` end-to-end and write its enriched manifest (solver fields + the
+    difficulty blend), returning the entries. This is the canonical producer — used by
+    ``main`` and reused by ``tools/generate_corpus.py`` so the generated corpus's committed
+    scores are exactly what this tool emits. Pull-aware for expert corpora
+    (``PULL_AWARE_CORPORA``); difficulty-calibrated when a reference is registered
+    (``CALIBRATION_REF``). Boards are merged in afterwards by ``build_corpus.merge_boards``."""
     out = manifest_json(name)
-
-    if args.rescore:
-        if not out.exists():
-            raise SystemExit(f"--rescore: no manifest to re-score at {out}")
-        entries = json.loads(out.read_text(encoding="utf-8"))
-        _attach_difficulty(entries)
-        out.write_text(json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        print(f"re-scored difficulty for {len(entries)} levels -> {out.relative_to(REPO_ROOT)}")
-        return
-
-    pull_aware = name != "microban"  # expert corpora may require pulls
+    pull_aware = name in PULL_AWARE_CORPORA
+    ref_bounds = _calibration_bounds(name)
 
     # Prior manifest (if any) so a re-run without the external solver doesn't downgrade a
     # level only the external solver (SOKO_SOLVER_CMD) could crack — e.g. Microban 153.
@@ -907,7 +950,7 @@ def main() -> None:
         else:
             status = "UNSOLVED (no hint)"
         print(f"  level {level.n}: {status}", flush=True)
-    _attach_difficulty(entries)
+    _attach_difficulty(entries, ref_bounds=ref_bounds)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     non_optimal = [e["n"] for e in entries if e.get("solved") and not e["optimal"]]
@@ -917,6 +960,32 @@ def main() -> None:
         print(f"  note: non-optimal greedy fallback used for levels: {non_optimal}")
     if unsolved:
         print(f"  note: no solution found (no hint available) for levels: {unsolved}")
+    return entries
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description="Solve a corpus into its enriched manifest.")
+    ap.add_argument("--corpus", default="microban", help="corpus name (default: microban)")
+    ap.add_argument(
+        "--rescore",
+        action="store_true",
+        help="recompute only the difficulty blend from the existing manifest (reads the "
+        "persisted search_nodes; no re-solve, so external solutions are untouched)",
+    )
+    args = ap.parse_args()
+    name = args.corpus
+
+    if args.rescore:
+        out = manifest_json(name)
+        if not out.exists():
+            raise SystemExit(f"--rescore: no manifest to re-score at {out}")
+        entries = json.loads(out.read_text(encoding="utf-8"))
+        _attach_difficulty(entries, ref_bounds=_calibration_bounds(name))
+        out.write_text(json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(f"re-scored difficulty for {len(entries)} levels -> {out.relative_to(REPO_ROOT)}")
+        return
+
+    build_corpus_manifest(name)
 
 
 if __name__ == "__main__":
