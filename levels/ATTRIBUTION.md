@@ -87,3 +87,163 @@ Required credit: *XSokoban (public domain).*
 Concatenated from screens/screen.1..90 in https://github.com/andrewcmyers/xsokoban (public domain). Each screen is one board; a '; N' title is added per level on ingest.
 
 `sha256(levels/xsokoban90.xsb)` = `10cc5b589c60c7cc50d34ba8725af8ef14fe26664fa06c4fb79cf921779b4678`
+
+## Microban III (64 puzzles) — `microban3.xsb`
+
+- **Author:** David W. Skinner
+- **Source:** <https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/m3.txt>
+- **License:** `skinner-free-distribution-with-credit`
+
+### Distribution terms
+
+> These sets may be freely distributed provided they remain properly credited.
+
+Required credit: *Microban III (64 puzzles) by David W. Skinner.*
+
+Downloaded from the canonical Skinner mirror (https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/m3.txt). XSB text with no per-file credit; an attribution header is prepended on ingest.
+
+`sha256(levels/microban3.xsb)` = `1692d6f10083c54e2bd28bdc33f16f8b48a634561b158d8c8f12738111ffb646`
+
+## Sasquatch (50 puzzles) — `sasquatch1.xsb`
+
+- **Author:** David W. Skinner
+- **Source:** <https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/s1.txt>
+- **License:** `skinner-free-distribution-with-credit`
+
+### Distribution terms
+
+> These sets may be freely distributed provided they remain properly credited.
+
+Required credit: *Sasquatch (50 puzzles) by David W. Skinner.*
+
+Downloaded from the canonical Skinner mirror (https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/s1.txt). XSB text with no per-file credit; an attribution header is prepended on ingest.
+
+`sha256(levels/sasquatch1.xsb)` = `96e3e0777ea8bbf88fd4ce29eab2e201a4701004c5243700092f2b7c82a99cd6`
+
+## Mas Sasquatch (50 puzzles) — `sasquatch2.xsb`
+
+- **Author:** David W. Skinner
+- **Source:** <https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/s2.txt>
+- **License:** `skinner-free-distribution-with-credit`
+
+### Distribution terms
+
+> These sets may be freely distributed provided they remain properly credited.
+
+Required credit: *Mas Sasquatch (50 puzzles) by David W. Skinner.*
+
+Downloaded from the canonical Skinner mirror (https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/s2.txt). XSB text with no per-file credit; an attribution header is prepended on ingest.
+
+`sha256(levels/sasquatch2.xsb)` = `592671344fd9dd3ccb8293fd03de0b3b43b91784b0752e7563a27909a9a05311`
+
+## Sasquatch III (50 puzzles) — `sasquatch3.xsb`
+
+- **Author:** David W. Skinner
+- **Source:** <https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/s3.txt>
+- **License:** `skinner-free-distribution-with-credit`
+
+### Distribution terms
+
+> These sets may be freely distributed provided they remain properly credited.
+
+Required credit: *Sasquatch III (50 puzzles) by David W. Skinner.*
+
+Downloaded from the canonical Skinner mirror (https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/s3.txt). XSB text with no per-file credit; an attribution header is prepended on ingest.
+
+`sha256(levels/sasquatch3.xsb)` = `13472c9c740267b1496f5de27c68f99e21be1f5a89c70f424589bff399a406cc`
+
+## Sasquatch IV (50 puzzles) — `sasquatch4.xsb`
+
+- **Author:** David W. Skinner
+- **Source:** <https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/s4.txt>
+- **License:** `skinner-free-distribution-with-credit`
+
+### Distribution terms
+
+> These sets may be freely distributed provided they remain properly credited.
+
+Required credit: *Sasquatch IV (50 puzzles) by David W. Skinner.*
+
+Downloaded from the canonical Skinner mirror (https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/s4.txt). XSB text with no per-file credit; an attribution header is prepended on ingest.
+
+`sha256(levels/sasquatch4.xsb)` = `caf5c5fb68e983ccb86b9dcd657ea2a70e74af40f2eb447057ac36088beb57e8`
+
+## Sasquatch V (50 puzzles) — `sasquatch5.xsb`
+
+- **Author:** David W. Skinner
+- **Source:** <https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/s5.txt>
+- **License:** `skinner-free-distribution-with-credit`
+
+### Distribution terms
+
+> These sets may be freely distributed provided they remain properly credited.
+
+Required credit: *Sasquatch V (50 puzzles) by David W. Skinner.*
+
+Downloaded from the canonical Skinner mirror (https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/s5.txt). XSB text with no per-file credit; an attribution header is prepended on ingest.
+
+`sha256(levels/sasquatch5.xsb)` = `d5cee4539a2820e1d7a97615141f5fb4dded38c2f2b4550d8bc3d01ddd8d87a8`
+
+## Sasquatch VI (50 puzzles) — `sasquatch6.xsb`
+
+- **Author:** David W. Skinner
+- **Source:** <https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/s6.txt>
+- **License:** `skinner-free-distribution-with-credit`
+
+### Distribution terms
+
+> These sets may be freely distributed provided they remain properly credited.
+
+Required credit: *Sasquatch VI (50 puzzles) by David W. Skinner.*
+
+Downloaded from the canonical Skinner mirror (https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/s6.txt). XSB text with no per-file credit; an attribution header is prepended on ingest.
+
+`sha256(levels/sasquatch6.xsb)` = `7a966024b49090ef8dbc8e21353cc5dd420b42dea986bb1534a0356b5d464f30`
+
+## Sasquatch VII (50 puzzles) — `sasquatch7.xsb`
+
+- **Author:** David W. Skinner
+- **Source:** <https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/s7.txt>
+- **License:** `skinner-free-distribution-with-credit`
+
+### Distribution terms
+
+> These sets may be freely distributed provided they remain properly credited.
+
+Required credit: *Sasquatch VII (50 puzzles) by David W. Skinner.*
+
+Downloaded from the canonical Skinner mirror (https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/s7.txt). XSB text with no per-file credit; an attribution header is prepended on ingest.
+
+`sha256(levels/sasquatch7.xsb)` = `bc7a75bfdf626ccb9121dd95a8a1dd5350f67e359ca2582f8d896fd67819206f`
+
+## Sasquatch IX (50 puzzles) — `sasquatch9.xsb`
+
+- **Author:** David W. Skinner
+- **Source:** <https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/s9.txt>
+- **License:** `skinner-free-distribution-with-credit`
+
+### Distribution terms
+
+> These sets may be freely distributed provided they remain properly credited.
+
+Required credit: *Sasquatch IX (50 puzzles) by David W. Skinner.*
+
+Downloaded from the canonical Skinner mirror (https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/s9.txt). XSB text with no per-file credit; an attribution header is prepended on ingest.
+
+`sha256(levels/sasquatch9.xsb)` = `e21f109508409bc5986bcfc06727ba12094b50a955648c9038420999d13a1c60`
+
+## Sasquatch VIII (50 puzzles) — `sasquatch8.xsb`
+
+- **Author:** David W. Skinner
+- **Source:** <https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/s8.txt>
+- **License:** `skinner-free-distribution-with-credit`
+
+### Distribution terms
+
+> These sets may be freely distributed provided they remain properly credited.
+
+Required credit: *Sasquatch VIII (50 puzzles) by David W. Skinner.*
+
+Downloaded from the canonical Skinner mirror (https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/s8.txt). XSB text with no per-file credit; an attribution header is prepended on ingest.
+
+`sha256(levels/sasquatch8.xsb)` = `ce8359f09f2777c1f1b8763609d7e15e88fddf260a955733d04d66b98611309b`
