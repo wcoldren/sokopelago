@@ -36,10 +36,21 @@ import { fetchManifest } from "./engine/manifest";
 
 const DEFAULT_CORPUS = "microban";
 // Solo free-play: ?corpus=<name> previews any bundled corpus (e.g. ?corpus=autoban).
-const KNOWN_CORPORA = ["microban", "pullban", "autoban"];
+const KNOWN_CORPORA = [
+  "microban", "pullban", "autoban", "curated",
+  "microban2", "microban3", "xsokoban90",
+  ...Array.from({ length: 9 }, (_, i) => `sasquatch${i + 1}`),
+];
 function soloCorpus(): string {
   const want = new URLSearchParams(location.search).get("corpus");
   return want && KNOWN_CORPORA.includes(want) ? want : DEFAULT_CORPUS;
+}
+// Level labels: prefix with the corpus name only when the level name doesn't already carry its
+// source. The merged `curated` pool names already read "Sasquatch III 17", so they get no prefix.
+const CORPUS_LABEL: Record<string, string> = { microban: "Microban", pullban: "Pullban", autoban: "Autoban" };
+function corpusPrefix(): string {
+  const l = CORPUS_LABEL[loadedCorpus];
+  return l ? `${l} ` : "";
 }
 
 const $ = <T extends HTMLElement>(id: string): T => {
@@ -158,7 +169,7 @@ function levelTitle(target: Level): string {
     const w = session.worldForLevel(n);
     const pos = seedPositionInWorld(slot, n);
     if (w !== undefined && pos > 0)
-      return `World ${w} · L${pos} — Microban ${target.name}${suffix}`;
+      return `World ${w} · L${pos} — ${corpusPrefix()}${target.name}${suffix}`;
   }
   return `Level ${target.name}${suffix}`;
 }
@@ -233,7 +244,7 @@ function goalDescription(s: SlotData): string {
     case "solve_count":
       return `Goal: solve any ${s.goal_solve_count} of the ${s.level_count} levels.`;
     case "boss_level":
-      return `Goal: solve the boss level — Microban ${s.goal_boss_level}.`;
+      return `Goal: solve the boss level (#${s.goal_boss_level}).`;
     case "beat_final_region":
     default: {
       const k = levelsInWorld(s, s.final_world).length;
@@ -316,7 +327,7 @@ function makePill(lvl: Level, posInWorld: number): HTMLButtonElement {
   const n = levelNumber(lvl);
   const btn = document.createElement("button");
   btn.className = "pill";
-  btn.title = `Microban ${lvl.name}`;
+  btn.title = `${corpusPrefix()}${lvl.name}`;
   const solved = slot && session ? session.isLevelSolved(n) : solvedOffline.has(n);
   const playable = !slot || !session || session.isLevelPlayable(n);
   let mark = "";

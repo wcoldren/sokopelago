@@ -49,7 +49,7 @@ _DATA_DIR = Path(__file__).parent / "data"
 # push-only set; ``pullban`` is the expert set with pull-required levels; ``autoban`` is the
 # in-house generated push-only set (``tools/generate_corpus.py``), difficulty-calibrated to
 # Microban's scale.
-CORPUS_NAMES: tuple[str, ...] = ("microban", "pullban", "autoban")
+CORPUS_NAMES: tuple[str, ...] = ("microban", "pullban", "autoban", "curated")
 
 
 @dataclass(frozen=True)
