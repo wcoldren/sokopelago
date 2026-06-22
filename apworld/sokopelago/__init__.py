@@ -13,6 +13,7 @@ The generator never solves Sokoban: it only reads the bundled level manifest
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from BaseClasses import LocationProgressType, Region
@@ -136,6 +137,20 @@ class SokopelagoWorld(World):
         if len(self.worlds[0]) > 1:
             self.multiworld.random.shuffle(self.worlds[0])
         self.region_count = len(self.worlds)
+        # Archipelago option ranges are static and independent, so a combo like max_difficulty=easy +
+        # level_count=100 can't be rejected up front — level_count silently clamps to the eligible pool
+        # (the max_difficulty cap, then the corpus size). Surface that here so a host isn't surprised by
+        # fewer worlds than requested (see docs/KNOWN-ISSUES.md).
+        requested = self.options.level_count.value
+        if self.level_count < requested:
+            logging.warning(
+                "Sokopelago (%s): level_count=%d requested, but max_difficulty=%r on corpus %r leaves "
+                "only %d eligible level(s) -> using %d across %d world(s). Use max_difficulty=any (or a "
+                "larger pool) for the full count.",
+                self.multiworld.get_player_name(self.player),
+                requested, self.options.max_difficulty.current_key, self.corpus_data.name,
+                len(allowed), self.level_count, self.region_count,
+            )
         # Count-floor chaining steepness; clamped to the world count (a value >= the world
         # count flattens the body floors back to the classic single-key star).
         self.chain_group = clamp(self.options.chain_group.value, 1, max(1, self.region_count))

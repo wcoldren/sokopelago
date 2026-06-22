@@ -148,6 +148,13 @@ class TestMaxDifficultyClampsToPool(SokopelagoTestBase):
         assert self.world.level_count == len(chosen) <= 41
         assert all(tier_of(diff[n]) == "easy" for n in chosen)
 
+    def test_clamp_is_surfaced_as_a_warning(self) -> None:
+        # The silent clamp is logged so a host isn't surprised by fewer worlds (re-run early-gen to
+        # capture the warning emitted during generation).
+        with self.assertLogs(level="WARNING") as cm:
+            self.world.generate_early()
+        assert any("level_count=100" in line and "eligible" in line for line in cm.output)
+
 
 class TestGentleFirstWorldOn(SokopelagoTestBase):
     # With a tier-spanning seed, World 1 ("sphere 1") must hold easy-tier puzzles only.

@@ -24,6 +24,12 @@ ROADMAP.md   Source of truth for scope + phasing
 > chain behind earlier ones (see [`docs/DESIGN-boss-zone.md`](docs/DESIGN-boss-zone.md)) — so a
 > seed can no longer be beaten out of order. Still pre-1.0: expect rough edges and report what breaks.
 
+> 🧪 **Experimental puzzle pool.** Beyond the original Microban/Pullban/Autoban sets, an expanded
+> `curated` pool (and the newly-ingested Sasquatch / XSokoban / Microban II–III sets) is now
+> selectable. It is **experimental and unbalanced**: it contains very hard — even effectively
+> unsolvable-by-push — puzzles, the difficulty/"fun" ratings are a weak prior, and the **Pull ability
+> is always available** for these corpora for now. See [`docs/KNOWN-ISSUES.md`](docs/KNOWN-ISSUES.md).
+
 Phases 0–5 are shipped and CI-green: local Sokoban play, the apworld core (region-key
 logic, solve-checks, goals), the live AP protocol client, Phase 3 escape valves
 (skip/undo/hint tokens + traps), Phase 4 per-level par checks, and the Phase 5 pull
