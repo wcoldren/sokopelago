@@ -33,6 +33,7 @@ import {
   type AnimationHandle,
 } from "./engine/solution";
 import { fetchManifest } from "./engine/manifest";
+import { corpusLabel } from "./corpusLabel";
 
 const DEFAULT_CORPUS = "microban";
 // Solo free-play: ?corpus=<name> previews any bundled corpus (e.g. ?corpus=autoban).
@@ -435,7 +436,22 @@ function rebuildLevelGrid(): void {
       levelGrid.append(section);
     }
   } else {
-    // Solo free-play: the whole corpus is one flat list — a dropdown, not 155 buttons.
+    // Solo free-play: corpus tabs (switch the bundled set) over a flat puzzle dropdown.
+    const corpusTabs = document.createElement("div");
+    corpusTabs.className = "corpus-tabs";
+    for (const name of KNOWN_CORPORA) {
+      const tab = document.createElement("button");
+      tab.className = "corpus-tab";
+      tab.textContent = corpusLabel(name);
+      if (name === loadedCorpus) tab.classList.add("active");
+      tab.addEventListener("click", () => {
+        if (name !== loadedCorpus) void switchSoloCorpus(name);
+      });
+      corpusTabs.append(tab);
+    }
+    levelGrid.append(corpusTabs);
+
+    // The whole corpus is one flat list — a dropdown, not 155 buttons.
     const label = document.createElement("label");
     label.append(document.createTextNode("Level: "));
     const select = document.createElement("select");
@@ -1033,6 +1049,19 @@ function handleDisconnect(): void {
   setConnStatus("Disconnected — free play (all levels).");
   goalLineEl.textContent = "";
   void reloadDefaultCorpus();
+}
+
+/** Solo: switch to another bundled corpus (a corpus tab click) and show its first puzzle. */
+async function switchSoloCorpus(name: string): Promise<void> {
+  try {
+    await loadCorpus(name);
+  } catch {
+    notice(`Couldn't load ${corpusLabel(name)}.`);
+    return;
+  }
+  current = 0;
+  rebuildLevelGrid();
+  loadLevel(0);
 }
 
 /** Back to the default corpus for offline free play after a disconnect. */

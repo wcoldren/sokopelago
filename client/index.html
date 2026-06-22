@@ -146,6 +146,26 @@
       .world-tab.solved {
         color: #6ee787;
       }
+      /* Corpus tabs: pick which bundled set to browse (solo free-play only). */
+      .corpus-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+        margin-bottom: 0.5rem;
+      }
+      .corpus-tab {
+        padding: 0.25rem 0.55rem;
+        font-size: 0.85rem;
+        cursor: pointer;
+      }
+      .corpus-tab:hover {
+        border-color: #6e8bff;
+      }
+      .corpus-tab.active {
+        border-color: #6e8bff;
+        background: #2f3550;
+        font-weight: 600;
+      }
       .world-head {
         display: flex;
         align-items: baseline;
