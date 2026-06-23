@@ -1,9 +1,9 @@
 {
   "name": "curated",
-  "count": 545,
+  "count": 539,
   "tiers": {
-    "easy": 93,
-    "medium": 323,
+    "easy": 90,
+    "medium": 320,
     "hard": 129
   },
   "filter": {
@@ -28,6 +28,7 @@
     "max_difficulty": "any",
     "max_boxes": 0,
     "limit": 0,
-    "dedup": true
+    "dedup": true,
+    "keep_pull": false
   }
 }

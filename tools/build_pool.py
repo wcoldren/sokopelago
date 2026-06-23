@@ -77,6 +77,12 @@ def gather(args) -> list[dict]:
         for e in json.loads(open(os.path.join(DATA_DIR, f"{corpus}.json")).read()):
             if args.solved_only and not e.get("solved"):
                 continue
+            # Drop pull-required levels by default: a merged pool that ships with pull_logic off
+            # (e.g. curated) would otherwise contain levels AP's fill treats as push-solvable when
+            # they aren't, leaving the seed unwinnable on a pure-push run. --keep-pull retains them
+            # for experiments (only sound when the consuming YAML turns pull_logic on).
+            if not args.keep_pull and e.get("requires_pull"):
+                continue
             if not tiers.within_cap(float(e.get("difficulty", 1.0)), ceiling):
                 continue
             boxes = (e.get("fun_features") or {}).get("boxes", e.get("boxes"))
@@ -134,6 +140,7 @@ def build(args) -> dict:
             "max_boxes": args.max_boxes,
             "limit": args.limit,
             "dedup": args.dedup,
+            "keep_pull": args.keep_pull,
         },
     }
     open(os.path.join(_HERE, "..", "levels", f"{args.name}.pool.json"), "w").write(json.dumps(meta, indent=2) + "\n")
@@ -164,7 +171,12 @@ def main() -> None:
         help="include unsolved (no solution/par/hints) levels",
     )
     ap.add_argument("--no-dedup", dest="dedup", action="store_false", help="skip dihedral dedup")
-    ap.set_defaults(solved_only=True, dedup=True)
+    ap.add_argument(
+        "--keep-pull",
+        action="store_true",
+        help="retain pull-required levels (default: exclude; only sound with pull_logic on)",
+    )
+    ap.set_defaults(solved_only=True, dedup=True, keep_pull=False)
     args = ap.parse_args()
     args.corpora = [c for c in args.corpora.split(",") if c]
     build(args)
