@@ -34,6 +34,7 @@ import {
 } from "./engine/solution";
 import { fetchManifest } from "./engine/manifest";
 import { corpusLabel } from "./corpusLabel";
+import { pullControlVisible, loadSoloPullEnabled, saveSoloPullEnabled } from "./pull";
 
 const DEFAULT_CORPUS = "microban";
 // Solo free-play: ?corpus=<name> previews any bundled corpus (e.g. ?corpus=autoban).
@@ -77,6 +78,8 @@ const hintBtn = $<HTMLButtonElement>("hint-btn");
 const skipBtn = $<HTMLButtonElement>("skip-btn");
 const pullBtn = $<HTMLButtonElement>("pull-btn");
 const panicBtn = $<HTMLButtonElement>("panic-btn");
+const soloPullToggle = $<HTMLLabelElement>("solo-pull-toggle");
+const soloPullCheck = $<HTMLInputElement>("solo-pull-check");
 const statusEl = $<HTMLDivElement>("status");
 const statsEl = $<HTMLDivElement>("stats");
 const noticeEl = $<HTMLDivElement>("notice");
@@ -111,7 +114,8 @@ let panicAnim: AnimationHandle | null = null; // in-flight panic solution playba
 let animating = false; // input blocked during a hint animation; never persists past it
 let reversedControls = false; // set by a Reversed-Controls trap; cleared on level change
 let pullMode = false; // when on, plain direction input pulls instead of pushing
-let soloPullNoticed = false; // one-time "pull is a sandbox aid" heads-up shown in solo microban
+let soloPullNoticed = false; // one-time "pull is a sandbox aid" heads-up shown when solo pull is enabled
+let soloPullEnabled = false; // solo-only opt-in: offer Pull as a sandbox aid (persisted; default off)
 let lastUnlockedCount = 0; // # of unlocked worlds last seen — detects a newly-opened world
 let activeWorldTab: number | null = null; // AP mode: which world's tab is showing (null -> current)
 const solvedOffline = new Set<number>(); // levels solved this session in free play (no session)
@@ -759,17 +763,20 @@ function maybeUpgradeSolve(n: number): void {
   refreshStatus();
 }
 
-/** Whether Pull is part of this context at all: always in solo (god-mode for dev/testing);
- * in AP only on a pull-capable corpus or a pull-logic seed. */
+/** Whether Pull is part of this context at all: in solo only when the player opted in (sandbox
+ * aid); in AP only when the seed's pull_logic gates levels behind the Pull item. */
 function pullInSeed(): boolean {
-  if (!session) return true;
-  return loadedCorpus !== DEFAULT_CORPUS || Boolean(slot?.pull_logic);
+  return pullControlVisible({
+    connected: Boolean(session),
+    pullLogic: Boolean(slot?.pull_logic),
+    soloPullEnabled,
+  });
 }
 
-/** Whether the pull mechanic is usable right now: always in solo; in an AP seed only when
- * Pull is part of it AND not still gated behind the (unreceived) Pull ability. */
+/** Whether the pull mechanic is usable right now: in solo whenever it's opted in; in an AP seed
+ * only when Pull is part of it AND not still gated behind the (unreceived) Pull ability. */
 function canPullNow(): boolean {
-  if (!session) return true;
+  if (!session) return pullInSeed();
   return pullInSeed() && session.canPull;
 }
 
@@ -796,15 +803,6 @@ function pull(dir: Dir): void {
     return;
   }
   if (!game.pull(effectiveDir(dir, reversedControls))) return;
-  // Solo free-play on the push-only Microban corpus: Pull is a hidden keyboard aid (the button
-  // stays hidden). Flag once that these levels don't need it, so a pulled clear isn't mistaken
-  // for the intended solve. (A pull corpus loaded solo genuinely uses pull — no note there.)
-  if (!session && loadedCorpus === DEFAULT_CORPUS && !soloPullNoticed) {
-    soloPullNoticed = true;
-    notice("Pull here is a free sandbox aid — these Microban levels all solve with pushes alone.", {
-      ms: 7000,
-    });
-  }
   renderer.draw(game);
   handleWin();
 }
@@ -1006,21 +1004,44 @@ function togglePull(): void {
   updateValveButtons();
 }
 
+/** Solo opt-in: enable/disable Pull as a free sandbox aid (persisted). A one-time heads-up the
+ * first time it's switched on clarifies that the levels are intended to solve with pushes alone. */
+function onSoloPullToggle(): void {
+  soloPullEnabled = soloPullCheck.checked;
+  saveSoloPullEnabled(soloPullEnabled);
+  if (soloPullEnabled && !soloPullNoticed) {
+    soloPullNoticed = true;
+    notice(
+      "Pull is a free solo sandbox aid — most levels are intended to solve with pushes alone.",
+      {
+        ms: 7000,
+      },
+    );
+  }
+  updateValveButtons();
+}
+
 /** Sync the valve buttons' labels/counts and enabled state with the session. */
 function updateValveButtons(): void {
   const ap = Boolean(slot && session);
   hintBtn.hidden = false; // Hint is free in solo play (like Undo); token-gated when connected
   skipBtn.hidden = !ap;
 
-  // Show the Pull button only when the loaded corpus/seed actually uses pull (so it stays
-  // out of the way in plain solo Microban). The keyboard god-mode (canPullNow) is separate.
-  const pullRelevant = loadedCorpus !== DEFAULT_CORPUS || Boolean(slot?.pull_logic);
+  // The solo opt-in lives only in free play; multiworld pull is governed by the seed's pull_logic.
+  soloPullToggle.hidden = ap;
+  soloPullCheck.checked = soloPullEnabled;
+
+  // Show the Pull button only when pull is part of this context: in multiworld that's a pull_logic
+  // seed; in solo it's the opt-in sandbox aid. (Matches canPullNow's notion of "pull in seed".)
+  const pullRelevant = pullInSeed();
   pullBtn.hidden = !pullRelevant;
   if (pullRelevant) {
     const usable = canPullNow();
     if (!usable) pullMode = false;
     pullBtn.disabled = !usable || locked || animating;
     pullBtn.textContent = usable ? `Pull: ${pullMode ? "on" : "off"}` : "Pull (find it)";
+  } else {
+    pullMode = false;
   }
 
   const busy = locked || animating;
@@ -1174,6 +1195,7 @@ async function main(): Promise<void> {
     hostInput.value = prefs.host;
     slotInput.value = prefs.slot;
   }
+  soloPullEnabled = loadSoloPullEnabled();
 
   rebuildLevelGrid();
   restartBtn.addEventListener("click", restart);
@@ -1183,6 +1205,7 @@ async function main(): Promise<void> {
   skipBtn.addEventListener("click", useSkip);
   panicBtn.addEventListener("click", usePanic);
   pullBtn.addEventListener("click", togglePull);
+  soloPullCheck.addEventListener("change", onSoloPullToggle);
   connectBtn.addEventListener("click", onConnectClick);
   statsExportBtn.addEventListener("click", exportStats);
   statsImportBtn.addEventListener("click", () => statsImportFile.click());
