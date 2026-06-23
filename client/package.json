@@ -6,9 +6,9 @@
   "description": "Sokopelago — browser Sokoban client for Archipelago",
   "scripts": {
     "dev": "vite",
-    "dev:potd": "vite --open /potd.html",
+    "dev:potd": "vite --open /potd/",
     "predev:full": "npm --prefix ../server/potd-worker run db:local",
-    "dev:full": "concurrently -k -n worker,client -c blue,green \"npm --prefix ../server/potd-worker run dev\" \"cross-env VITE_POTD_API=http://localhost:8787 vite --open /potd.html --port 5173 --strictPort\"",
+    "dev:full": "concurrently -k -n worker,client -c blue,green \"npm --prefix ../server/potd-worker run dev\" \"cross-env VITE_POTD_API=http://localhost:8787 vite --open /potd/ --port 5173 --strictPort\"",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest run",

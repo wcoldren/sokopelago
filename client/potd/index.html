@@ -4,6 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sokopelago — Puzzle of the Day</title>
+    <meta
+      name="description"
+      content="One Sokoban puzzle a day, the same for everyone — drawn from Microban, Sasquatch & XSokoban. Solve it in your browser and rate it."
+    />
+    <!-- Open Graph / Twitter: absolute URLs (crawlers don't resolve the relative base="./"). -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Sokopelago — Puzzle of the Day" />
+    <meta
+      property="og:description"
+      content="One Sokoban puzzle a day, the same for everyone. Solve today's puzzle in your browser and rate it."
+    />
+    <meta property="og:url" content="https://wcoldren.github.io/sokopelago/potd/" />
+    <meta property="og:image" content="https://wcoldren.github.io/sokopelago/og-card.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Sokopelago — Puzzle of the Day" />
+    <meta
+      name="twitter:description"
+      content="One Sokoban puzzle a day, the same for everyone. Solve today's puzzle in your browser and rate it."
+    />
+    <meta name="twitter:image" content="https://wcoldren.github.io/sokopelago/og-card.png" />
     <style>
       :root {
         color-scheme: dark;
@@ -21,6 +41,14 @@
       }
       header {
         text-align: center;
+      }
+      .page-nav {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+        align-items: center;
+        margin: 0.4rem 0;
+        font-size: 0.9rem;
       }
       h1 {
         margin: 0 0 0.25rem;
@@ -199,6 +227,12 @@
         One Sokoban puzzle a day (from Microban, Sasquatch &amp; XSokoban), the same for everyone.
         Rate it when you're done.
       </div>
+      <nav class="page-nav">
+        <a href="../">← Free Play</a>
+        <button id="share-btn" type="button" title="Copy a link to today's puzzle">
+          Copy link
+        </button>
+      </nav>
       <div id="puzzle-title"></div>
     </header>
 

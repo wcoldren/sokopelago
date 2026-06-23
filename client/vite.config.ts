@@ -16,10 +16,11 @@ export default defineConfig({
   // itch.io zip. Asset URLs and import.meta.env.BASE_URL resolve against the document.
   base: "./",
   // Two static pages from one build: the main play loop (index.html) and the offline
-  // Puzzle of the Day (potd.html). Redeploys stay idempotent — POTD is just another page.
+  // Puzzle of the Day, served at the clean /potd/ URL (potd/index.html). Redeploys stay
+  // idempotent — POTD is just another page. Assets still resolve via base "./".
   build: {
     rollupOptions: {
-      input: { main: "index.html", potd: "potd.html" },
+      input: { main: "index.html", potd: "potd/index.html" },
     },
   },
   define: {

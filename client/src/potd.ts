@@ -54,6 +54,7 @@ const restartBtn = $<HTMLButtonElement>("restart-btn");
 const undoBtn = $<HTMLButtonElement>("undo-btn");
 const hintBtn = $<HTMLButtonElement>("hint-btn");
 const giveupBtn = $<HTMLButtonElement>("giveup-btn");
+const shareBtn = $<HTMLButtonElement>("share-btn");
 const handleInput = $<HTMLInputElement>("handle-input");
 const handleSaveBtn = $<HTMLButtonElement>("handle-save");
 const handleIdEl = $<HTMLSpanElement>("handle-id");
@@ -98,6 +99,18 @@ function notice(text: string, ms = 5000): void {
   noticeEl.classList.remove("fading");
   if (noticeTimer !== undefined) window.clearTimeout(noticeTimer);
   noticeTimer = window.setTimeout(() => noticeEl.classList.add("fading"), ms);
+}
+
+// The canonical Pages URL is hardcoded so a shared link always points at the live page (not
+// localhost/preview). Offline-safe: uses only the browser Clipboard API — no network dependency.
+const SHARE_URL = "https://wcoldren.github.io/sokopelago/potd/";
+async function copyShareLink(): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(SHARE_URL);
+    notice("Link copied — share today's puzzle!");
+  } catch {
+    notice(`Copy this link: ${SHARE_URL}`); // clipboard blocked (e.g. insecure context)
+  }
 }
 
 function formatMs(ms: number): string {
@@ -460,6 +473,7 @@ async function main(): Promise<void> {
   undoBtn.addEventListener("click", undo);
   hintBtn.addEventListener("click", useHint);
   giveupBtn.addEventListener("click", giveUp);
+  shareBtn.addEventListener("click", () => void copyShareLink());
   handleSaveBtn.addEventListener("click", saveHandle);
   rateSubmit.addEventListener("click", () => void submitRating());
   attachInput({ onMove: move, onRestart: restart, onUndo: undo, onHint: useHint });
