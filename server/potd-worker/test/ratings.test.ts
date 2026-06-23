@@ -78,11 +78,21 @@ describe("POST /ratings", () => {
     expect(row?.n).toBe(1);
   });
 
-  it("is append-only: a second identical POST adds another row (no dedup)", async () => {
-    await post(goodEvent);
-    await post(goodEvent);
+  it("dedups a resubmit of the same (date, level_n, visitor_id) — inserts once, 204 both times", async () => {
+    // Spam baseline: one visitor flooding one puzzle writes a single row (INSERT OR IGNORE against
+    // the UNIQUE constraint). The duplicate still gets a 204 — silently ignored, not an error.
+    expect((await post(goodEvent)).status).toBe(204);
+    expect((await post(goodEvent)).status).toBe(204);
     const row = await env.DB.prepare("SELECT COUNT(*) AS n FROM ratings").first<{ n: number }>();
-    expect(row?.n).toBe(2);
+    expect(row?.n).toBe(1);
+  });
+
+  it("keeps distinct ratings: a different level_n or visitor_id inserts a new row", async () => {
+    await post(goodEvent);
+    await post({ ...goodEvent, levelN: 13 }); // same visitor, different puzzle
+    await post({ ...goodEvent, visitorId: "v-xyz" }); // same puzzle, different visitor
+    const row = await env.DB.prepare("SELECT COUNT(*) AS n FROM ratings").first<{ n: number }>();
+    expect(row?.n).toBe(3);
   });
 
   it("rejects a malformed payload with 400", async () => {
@@ -142,8 +152,9 @@ describe("POST /visit", () => {
 
 describe("GET /results", () => {
   it("aggregates counts, averages, solve rate, moves distribution, and unique visitors", async () => {
-    await post({ ...goodEvent, solved: true, fun: 5, difficulty: 2, moves: 40 });
-    await post({ ...goodEvent, solved: false, fun: 3, difficulty: 4, moves: 0 });
+    // Distinct visitorIds so both ratings persist (the dedup constraint is per visitor per puzzle).
+    await post({ ...goodEvent, visitorId: "v-a", solved: true, fun: 5, difficulty: 2, moves: 40 });
+    await post({ ...goodEvent, visitorId: "v-b", solved: false, fun: 3, difficulty: 4, moves: 0 });
     // Three beacons, two distinct visitors → uniqueVisitors counts visitors, not ratings.
     await postVisit({ date: "2026-06-21", visitorId: "v1" });
     await postVisit({ date: "2026-06-21", visitorId: "v1" });

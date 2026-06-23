@@ -125,10 +125,12 @@ async function postRating(
   if (!validate(body)) return json({ error: "invalid rating event" }, 400, cors);
   const e = body;
 
-  // TODO(spam): no auth in v1. If abused, gate behind Cloudflare Turnstile or a shared token
-  // (a header checked here), and/or store a salted hash of CF-Connecting-IP for rate analysis.
+  // Spam baseline: one rating per (date, level_n, visitor_id). INSERT OR IGNORE drops a casual
+  // re-submit at write time (the UNIQUE constraint in schema.sql), so a single visitor can't flood
+  // one puzzle. No auth/secret, so the page stays offline-capable. A stronger gate (shared token,
+  // hashed-IP rate analysis, Turnstile) is deferred until there's evidence of real abuse.
   await env.DB.prepare(
-    `INSERT INTO ratings
+    `INSERT OR IGNORE INTO ratings
        (received_at, schema, date, corpus, level_n, handle, visitor_id, session_id,
         solved, attempts, moves, pushes, time_ms, used_hint, fun, difficulty, client_version)
      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
