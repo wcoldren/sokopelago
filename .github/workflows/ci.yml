@@ -185,7 +185,12 @@ jobs:
       - name: Attach to the release
         uses: softprops/action-gh-release@v3
         with:
-          files: sokopelago.apworld
+          # Ship the apworld + a ready-to-run example YAML so players can generate immediately.
+          files: |
+            sokopelago.apworld
+            examples/Sokopelago-Easy.yaml
+          # Hand-authored apworld blurb on top; the auto-generated commit list is appended below it.
+          body_path: docs/RELEASE-NOTES-0.8.md
           generate_release_notes: true
           prerelease: true # 0.x is alpha — see the in-app disclaimer
 
