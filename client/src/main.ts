@@ -38,8 +38,13 @@ import { corpusLabel } from "./corpusLabel";
 const DEFAULT_CORPUS = "microban";
 // Solo free-play: ?corpus=<name> previews any bundled corpus (e.g. ?corpus=autoban).
 const KNOWN_CORPORA = [
-  "microban", "pullban", "autoban", "curated",
-  "microban2", "microban3", "xsokoban90",
+  "microban",
+  "pullban",
+  "autoban",
+  "curated",
+  "microban2",
+  "microban3",
+  "xsokoban90",
   ...Array.from({ length: 9 }, (_, i) => `sasquatch${i + 1}`),
 ];
 function soloCorpus(): string {
@@ -48,7 +53,11 @@ function soloCorpus(): string {
 }
 // Level labels: prefix with the corpus name only when the level name doesn't already carry its
 // source. The merged `curated` pool names already read "Sasquatch III 17", so they get no prefix.
-const CORPUS_LABEL: Record<string, string> = { microban: "Microban", pullban: "Pullban", autoban: "Autoban" };
+const CORPUS_LABEL: Record<string, string> = {
+  microban: "Microban",
+  pullban: "Pullban",
+  autoban: "Autoban",
+};
 function corpusPrefix(): string {
   const l = CORPUS_LABEL[loadedCorpus];
   return l ? `${l} ` : "";
@@ -1172,7 +1181,7 @@ async function main(): Promise<void> {
   // Shift-click (or Shift+H) is a bigger hint: more moves animated for more tokens.
   hintBtn.addEventListener("click", (e) => runHint(e.shiftKey ? BIG_HINT_PUSHES : 1));
   skipBtn.addEventListener("click", useSkip);
-panicBtn.addEventListener("click", usePanic);
+  panicBtn.addEventListener("click", usePanic);
   pullBtn.addEventListener("click", togglePull);
   connectBtn.addEventListener("click", onConnectClick);
   statsExportBtn.addEventListener("click", exportStats);
