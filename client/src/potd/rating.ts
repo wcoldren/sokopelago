@@ -3,8 +3,10 @@
 // retry queue so a POST failure never loses a solve. It is offline/engine-only — it must never
 // import from ap/** or main.ts (see the import-boundary check).
 
-/** Schema tag carried on every event, bumped if the shape changes (analysis keys off it). */
-export const RATING_SCHEMA = "sokopelago-potd-rating/1";
+/** Schema tag carried on every event, bumped if the shape changes (analysis keys off it).
+ * /2 added `visitorId` (a persisted id, so analysis can dedup on a stable identity). MUST stay in
+ * lockstep with the Worker's RATING_SCHEMA + validate() — see server/potd-worker/src/index.ts. */
+export const RATING_SCHEMA = "sokopelago-potd-rating/2";
 
 /** One rating + solve-stats data point for the Puzzle of the Day. */
 export interface RatingEvent {
@@ -12,7 +14,8 @@ export interface RatingEvent {
   date: string; // UTC calendar day, YYYY-MM-DD (the puzzle key)
   corpus: string;
   levelN: number; // corpus level number (1-based)
-  handle: string; // self-chosen, non-PII
+  handle: string; // self-chosen, non-PII (a display label only)
+  visitorId: string; // persisted, stable identity (engine/stats.visitorId)
   sessionId: string; // page-load session id (engine/stats.sessionId)
   solved: boolean; // false on an explicit give-up / skip
   attempts: number; // board loads/restarts for this puzzle this session
@@ -55,6 +58,7 @@ export function validateRatingEvent(value: unknown): value is RatingEvent {
     isInt(e.levelN) &&
     e.levelN >= 1 &&
     isNonEmptyStr(e.handle) &&
+    isNonEmptyStr(e.visitorId) &&
     typeof e.sessionId === "string" &&
     typeof e.solved === "boolean" &&
     isInt(e.attempts) &&
@@ -159,4 +163,28 @@ export async function flushQueue(
   }
   writeQueue(remaining);
   return sent;
+}
+
+/**
+ * Fire-and-forget unique-visit beacon: tell the backend "this visitor opened today's puzzle". The
+ * server dedups on (date, visitorId), so reloads don't inflate the count. Best-effort by design —
+ * it never throws and a failure is silently ignored, so it can never block play (and it's a no-op
+ * without an API base, mirroring the rating queue's offline tolerance).
+ */
+export async function postVisit(
+  apiBase: string | undefined,
+  date: string,
+  visitorId: string,
+  fetchFn: typeof fetch = fetch,
+): Promise<void> {
+  if (!apiBase) return;
+  try {
+    await fetchFn(`${apiBase.replace(/\/$/, "")}/visit`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ date, visitorId }),
+    });
+  } catch {
+    /* best-effort — a missed beacon just under-counts a visit */
+  }
 }

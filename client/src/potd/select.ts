@@ -16,7 +16,7 @@ export function utcDayString(date: Date): string {
 }
 
 /** xmur3 string hash → a 32-bit seed generator (one good seed per call). */
-function xmur3(str: string): () => number {
+export function xmur3(str: string): () => number {
   let h = 1779033703 ^ str.length;
   for (let i = 0; i < str.length; i++) {
     h = Math.imul(h ^ str.charCodeAt(i), 3432918353);

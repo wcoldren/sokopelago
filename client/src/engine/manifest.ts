@@ -10,6 +10,10 @@ export interface ManifestEntry {
   solution?: string;
   par?: number;
   difficulty?: number;
+  /** Merged pools (curated.json) tag each entry with its origin set as "<corpus>:<n>". */
+  source?: string;
+  /** Set on levels that can only be solved with the Pull ability (pullban). */
+  requires_pull?: boolean;
 }
 
 /**

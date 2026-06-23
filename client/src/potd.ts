@@ -13,7 +13,7 @@ import { attachInput } from "./engine/input";
 import { levelFromBoard } from "./engine/xsb";
 import type { Level } from "./engine/types";
 import { fetchManifest, type ManifestEntry } from "./engine/manifest";
-import { SoloStats, sessionId, type SolveEvent } from "./engine/stats";
+import { SoloStats, sessionId, visitorId, type SolveEvent } from "./engine/stats";
 import {
   parseSolution,
   planHint,
@@ -21,10 +21,19 @@ import {
   type AnimationHandle,
   type Move,
 } from "./engine/solution";
+import { corpusLabel } from "./corpusLabel";
 import { todaysIndex, utcDayString } from "./potd/select";
-import { buildRatingEvent, postRating, flushQueue, type RatingEvent } from "./potd/rating";
+import { buildDailyPool, parseSource, handleDisplay } from "./potd/pool";
+import {
+  buildRatingEvent,
+  postRating,
+  postVisit,
+  flushQueue,
+  type RatingEvent,
+} from "./potd/rating";
 
-const CORPUS = "microban";
+// The daily puzzle is drawn from the curated cross-corpus pool (see potd/pool.ts).
+const POOL_CORPUS = "curated";
 const API_BASE = import.meta.env.VITE_POTD_API; // undefined in dev/preview → ratings queue locally
 const CLIENT_VERSION = __APP_VERSION__;
 const HANDLE_KEY = "sokopelago.potd.handle";
@@ -47,6 +56,7 @@ const hintBtn = $<HTMLButtonElement>("hint-btn");
 const giveupBtn = $<HTMLButtonElement>("giveup-btn");
 const handleInput = $<HTMLInputElement>("handle-input");
 const handleSaveBtn = $<HTMLButtonElement>("handle-save");
+const handleIdEl = $<HTMLSpanElement>("handle-id");
 const ratePanel = $<HTMLDivElement>("rate-panel");
 const funGroup = $<HTMLDivElement>("fun-group");
 const diffGroup = $<HTMLDivElement>("diff-group");
@@ -60,7 +70,8 @@ const renderer = new Renderer(canvas);
 
 const today = utcDayString(new Date());
 let level: Level | null = null;
-let levelN = 0;
+let corpus = POOL_CORPUS; // the pick's source corpus (e.g. "sasquatch7"); set in main()
+let levelN = 0; // the pick's level number within that source corpus
 let solution: Move[] | null = null;
 
 let game: Game | null = null;
@@ -125,10 +136,10 @@ function loadPuzzle(): void {
   if (!level) return;
   game = new Game(level);
   beginAttempt();
-  soloStats.recordVisit(CORPUS, levelN);
+  soloStats.recordVisit(corpus, levelN);
   hintBoxMoves = 0;
   renderer.draw(game);
-  setStatus(`Microban ${level.name} — make your moves!`);
+  setStatus(`${corpusLabel(corpus)} #${levelN} — make your moves!`);
   renderStats();
 }
 
@@ -212,7 +223,7 @@ function onSolved(): void {
     timeMs: Math.max(0, Date.now() - attemptStart),
     ts: Date.now(),
   };
-  soloStats.recordSolve(CORPUS, levelN, ev);
+  soloStats.recordSolve(corpus, levelN, ev);
   finished = true;
   setStatus(`Solved in ${game.moves} moves, ${game.pushes} pushes! 🎉`, true);
   renderStats();
@@ -283,9 +294,10 @@ async function submitRating(): Promise<void> {
   }
   const event: RatingEvent = buildRatingEvent({
     date: today,
-    corpus: CORPUS,
+    corpus,
     levelN,
     handle,
+    visitorId,
     sessionId,
     solved: solvedForRating,
     attempts,
@@ -312,6 +324,7 @@ async function submitRating(): Promise<void> {
 interface ResultsAggregate {
   date: string;
   count: number;
+  uniqueVisitors: number;
   avgFun: number | null;
   avgDifficulty: number | null;
   solveRate: number | null;
@@ -334,14 +347,18 @@ async function loadResults(): Promise<void> {
 
 function renderResults(agg: ResultsAggregate): void {
   resultsEl.replaceChildren();
+  const visitors = agg.uniqueVisitors ?? 0;
   if (!agg.count) {
-    resultsEl.textContent = "No ratings yet today — be the first!";
+    resultsEl.textContent = visitors
+      ? `${visitors} visitor${visitors === 1 ? "" : "s"} today — no ratings yet. Be the first!`
+      : "No ratings yet today — be the first!";
     return;
   }
   const row = document.createElement("div");
   row.className = "stats";
   const fmt = (n: number | null, d = 1): string => (n === null ? "—" : n.toFixed(d));
   row.append(chip("ratings", String(agg.count)));
+  row.append(chip("visitors", String(visitors)));
   row.append(chip("avg fun", fmt(agg.avgFun)));
   row.append(chip("avg difficulty", fmt(agg.avgDifficulty)));
   row.append(
@@ -378,12 +395,18 @@ function renderResults(agg: ResultsAggregate): void {
 
 // --- Handle -----------------------------------------------------------------
 
+/** Show the visitor-derived display id next to the handle, so duplicate handles stay distinct. */
+function renderHandleId(handle: string): void {
+  handleIdEl.textContent = handle ? `shown as ${handleDisplay(handle, visitorId)}` : "";
+}
+
 function refreshHandleUI(): void {
   const h = localStorage.getItem(HANDLE_KEY);
   if (h) {
     handleInput.value = h;
     handleSaveBtn.textContent = "Change";
   }
+  renderHandleId(h ?? "");
 }
 
 function saveHandle(): void {
@@ -394,7 +417,8 @@ function saveHandle(): void {
   }
   localStorage.setItem(HANDLE_KEY, h);
   handleSaveBtn.textContent = "Change";
-  notice(`Handle set to “${h}”.`);
+  renderHandleId(h);
+  notice(`Handle set to “${handleDisplay(h, visitorId)}”.`);
   refreshRateSubmit();
 }
 
@@ -404,18 +428,24 @@ async function main(): Promise<void> {
   titleEl.textContent = `Puzzle of the Day · ${today} (UTC)`;
   setStatus("Loading today's puzzle…");
 
-  let entries: ManifestEntry[];
+  let pool: ManifestEntry[];
   try {
-    entries = await fetchManifest(CORPUS);
+    pool = buildDailyPool(await fetchManifest(POOL_CORPUS));
   } catch (e) {
     setStatus(`Couldn't load the puzzle: ${e instanceof Error ? e.message : String(e)}`);
     return;
   }
-  const idx = todaysIndex(entries.length, new Date());
-  const entry = entries[idx];
-  level = levelFromBoard(entry.board, entry.n - 1, entry.name);
-  levelN = entry.n;
+  if (!pool.length) {
+    setStatus("No puzzle available today.");
+    return;
+  }
+  const entry = pool[todaysIndex(pool.length, new Date())];
+  const src = parseSource(entry.source, entry.n);
+  corpus = src.corpus;
+  levelN = src.n;
+  level = levelFromBoard(entry.board, entry.n - 1, `${corpusLabel(corpus)} #${levelN}`);
   solution = entry.solution ? parseSolution(entry.solution) : null;
+  titleEl.textContent = `Puzzle of the Day · ${today} (UTC) — ${corpusLabel(corpus)} #${levelN}`;
 
   buildScale(funGroup, (v) => {
     funValue = v;
@@ -436,6 +466,7 @@ async function main(): Promise<void> {
 
   refreshHandleUI();
   loadPuzzle();
+  void postVisit(API_BASE, today, visitorId); // fire-and-forget unique-visit beacon
   void flushQueue(API_BASE); // retry any ratings stranded by an earlier offline solve
   void loadResults();
 }

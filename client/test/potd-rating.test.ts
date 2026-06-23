@@ -12,6 +12,7 @@ const goodInput: RatingInput = {
   corpus: "microban",
   levelN: 12,
   handle: "boxpusher",
+  visitorId: "v-abc",
   sessionId: "s-abc",
   solved: true,
   attempts: 2,
@@ -21,7 +22,7 @@ const goodInput: RatingInput = {
   usedHint: false,
   fun: 4,
   difficulty: 3,
-  clientVersion: "0.7.0",
+  clientVersion: "0.8.0",
 };
 
 describe("buildRatingEvent", () => {
@@ -59,13 +60,20 @@ describe("validateRatingEvent", () => {
     }
   });
 
-  it("rejects bad levelN, negative metrics, empty handle, and non-boolean flags", () => {
+  it("rejects bad levelN, negative metrics, empty handle/visitorId, and non-boolean flags", () => {
     expect(validateRatingEvent({ ...buildRatingEvent(goodInput), levelN: 0 })).toBe(false);
     expect(validateRatingEvent({ ...buildRatingEvent(goodInput), levelN: 1.5 })).toBe(false);
     expect(validateRatingEvent({ ...buildRatingEvent(goodInput), moves: -1 })).toBe(false);
     expect(validateRatingEvent({ ...buildRatingEvent(goodInput), timeMs: Infinity })).toBe(false);
     expect(validateRatingEvent({ ...buildRatingEvent(goodInput), handle: "" })).toBe(false);
+    expect(validateRatingEvent({ ...buildRatingEvent(goodInput), visitorId: "" })).toBe(false);
     expect(validateRatingEvent({ ...buildRatingEvent(goodInput), solved: "yes" })).toBe(false);
     expect(validateRatingEvent({ ...buildRatingEvent(goodInput), usedHint: 1 })).toBe(false);
+  });
+
+  it("is tagged schema v2 and carries the visitorId", () => {
+    const ev = buildRatingEvent(goodInput);
+    expect(ev.schema).toBe("sokopelago-potd-rating/2");
+    expect(ev.visitorId).toBe("v-abc");
   });
 });

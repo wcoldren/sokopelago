@@ -51,6 +51,29 @@ function makeSessionId(): string {
   return `s-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+const VISITOR_KEY = "sokopelago.visitor.v1";
+
+/** A stable id minted once and **persisted** across page loads (unlike `sessionId`, which is
+ * per load). It anchors a unique-visitor count and a display-handle suffix without any account
+ * or PII. Generated with the same crypto/fallback as `sessionId`. */
+export const visitorId: string = loadVisitorId();
+
+function loadVisitorId(): string {
+  try {
+    const existing = localStorage.getItem(VISITOR_KEY);
+    if (existing) return existing;
+  } catch {
+    /* storage unavailable — fall through and mint an ephemeral id for this load */
+  }
+  const id = makeSessionId();
+  try {
+    localStorage.setItem(VISITOR_KEY, id);
+  } catch {
+    /* storage unavailable — the id is still usable for this page load */
+  }
+  return id;
+}
+
 export function emptyStat(): LevelStat {
   return { visits: 0, sessions: [], solves: [] };
 }

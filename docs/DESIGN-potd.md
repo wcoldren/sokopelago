@@ -1,17 +1,28 @@
 # Design: Puzzle of the Day — corpus overlap (repeated puzzles)
 
-Status: **known limitation — accepted for now, not blocking v0.7.1.** Revisit when the corpus
-grows or a reserved/owned POTD pool exists.
+Status: **known limitation — accepted for now.** Revisit when the corpus grows further or a
+reserved/owned POTD pool exists.
+
+## The pool (since 0.8.0)
+
+POTD draws its daily level from the **curated** cross-corpus pool (`data/curated.json`), restricted
+to push-solvable puzzles: the build drops the generated `autoban` set and the whole `pullban` set
+(its pull-gated levels need a Pull control the POTD page lacks), plus any explicitly pull-required
+level — see `buildDailyPool` in `client/src/potd/pool.ts`. That leaves **470** fully-solved puzzles
+spanning Microban I–III, Sasquatch I–IX, and XSokoban. Each entry keeps a `source` tag
+(`"sasquatch7:33"`), so the day is labeled by its origin set (e.g. "Sasquatch VII #33") and the
+rating event records the source corpus + number rather than the pool index.
 
 ## The issue
 
-POTD draws its daily level from the shared corpus, so a player can be served a puzzle they've
-already played. Two facets:
+POTD draws its daily level from a shared pool, so a player can be served a puzzle they've already
+played. Two facets:
 
 - **Cross-mode repeat:** the level was seen elsewhere before POTD served it (solo/demo, a prior
   AP run, or an earlier POTD day).
-- **POTD cycling:** a fixed pool served one-per-day eventually exhausts and repeats (~155 Microban
-  levels ≈ 5 months before a repeat is even *possible*).
+- **POTD cycling:** a fixed pool served one-per-day eventually exhausts and repeats (the 470-entry
+  curated pool ≈ 15 months before a repeat is even *possible* — much wider than the old
+  microban-only ~5 months).
 
 ## Root tension
 
