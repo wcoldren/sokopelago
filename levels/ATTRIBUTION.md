@@ -38,7 +38,7 @@ Required credit: *Pullban (original) by William Coldren, for Sokopelago.*
 
 An original Sokopelago expert corpus for the Phase 5 ability tier: a mix of ordinary push levels and levels that require the Pull ability. Designed by William Coldren (2026); levels 11+ are machine-authored for this project, every board solver-verified. Adopts Microban's distribution terms but is original work owing no Skinner attribution.
 
-`sha256(levels/pullban.xsb)` = `40ab04bd34bf84363fd2eb04816b554044894e47bda074d42a556d5398a79242`
+`sha256(levels/pullban.xsb)` = `fc4dedd552e0a71a49652ea864a2b581febb9618f9720569c4a9898e054109e4`
 
 ## Autoban (generated corpus, v1.0.0, seed 0) — `autoban.xsb`
 

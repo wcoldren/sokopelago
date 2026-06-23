@@ -7,7 +7,7 @@
 ;
 ; 30 levels (≈70% push hosts / ≈30% pull-required): host-heavy so Pull-Logic seeds have
 ; plenty of reachable homes for the Pull item and fill reliably. Levels 11+ were added in
-; the 0.7.1 expansion (machine-authored, every board solver-verified). Regenerate the
+; the 0.7.0 expansion (machine-authored, every board solver-verified). Regenerate the
 ; manifest with: solve_corpus.py --corpus pullban  THEN  build_corpus.py --corpus pullban.
 
 ; 1
