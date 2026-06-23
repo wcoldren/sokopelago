@@ -4,28 +4,6 @@ Current rough edges, especially around the **experimental expanded corpus pool**
 newly-ingested Microban II/III, Sasquatch I–IX, XSokoban 90). The original `microban`/`pullban`/
 `autoban` corpora are unaffected.
 
-## Pull is always available for non-Microban corpora (intentional for now)
-
-**What you see:** in both solo and multiworld, the **Pull** ability/button is usable on any corpus
-other than `microban`, even when the seed didn't grant a Pull item.
-
-**Why:** `Session.canPull` is `!pull_logic || pullReceived` (`client/src/ap/session.ts`), and the Pull
-button shows whenever `loadedCorpus !== "microban"` or `pull_logic` is on (`client/src/main.ts`,
-`updateValveButtons`). The `curated` pool leaves `pull_logic` off, so pull is freely available.
-
-**Why we're leaving it on:** it's currently **load-bearing**. The `curated` pool includes **6
-`requires_pull` levels** (from `pullban`) — with `pull_logic` off the apworld neither gates them nor
-adds a Pull item, so Archipelago's fill assumes they're push-solvable when they aren't. The free
-client-side pull is the only thing keeping such a seed winnable. It also gives an escape on the
-genuinely brutal levels (26 external-solved + 85 greedy/non-optimal in `curated`). Players who want a
-pure push experience can simply not use it.
-
-**Proper fix (coupled — don't just disable the client pull):** pick one, *then* gate the client pull
-behind `pull_logic`:
-- (a) filter `requires_pull` levels out of `curated` (`tools/build_pool.py`), or
-- (b) set `pull_logic` on for `curated` and gate those levels behind the Pull item, or
-- (c) make free-pull an explicit opt-in setting.
-
 ## The expanded pool is unbalanced / contains very hard puzzles
 
 The `curated` pool and the new sets are **experimental**. They mix easy→brutal: 26 levels were solved
@@ -44,26 +22,7 @@ some combos quietly produce fewer levels/worlds than requested:
   `level_count = min(level_count, eligible)` and worlds = `level_count / levels_per_region`.
 
 So e.g. `max_difficulty: easy` + `level_count: 100` + `levels_per_region: 10` does **not** give a
-10×10: `curated` has ~93 easy levels → ~10 worlds (last short); `microban` has ~41 easy → ~5 worlds.
+10×10: `curated` has ~90 easy levels → ~9 worlds (last short); `microban` has ~41 easy → ~5 worlds.
 A generation **warning** is logged when this clamp happens (see it in the Generate.py output), but the
 seed still generates with the smaller count. For a true 10×10, use `max_difficulty: any` (or a pool
 with ≥ `level_count` levels at the chosen cap).
-
-## Deferred / planned next — POTD ratings backend go-live
-
-The Puzzle-of-the-Day **page ships and works offline** (cross-corpus daily puzzle, ratings queued in
-`localStorage`, retried on the next load). The ratings **backend** — the Cloudflare Worker + D1 sink
-under `server/potd-worker/` — is **built and tested but not yet deployed**, so no ratings/visits are
-collected on a server yet. Until it's live the page is fully self-contained.
-
-To go live (the maintainer's steps; see `server/potd-worker/README.md`):
-
-1. `cd server/potd-worker && npm install`
-2. `npx wrangler login`
-3. `npx wrangler d1 create sokopelago-potd` → paste the printed `database_id` into `wrangler.toml`
-   (it is not a secret); confirm `ALLOWED_ORIGINS` lists the exact Pages origin.
-4. `npm run db:local && npm run db:remote` (creates `ratings` v2 + `visits`).
-5. Add repo secrets `CLOUDFLARE_API_TOKEN` (Workers + D1 edit) and `CLOUDFLARE_ACCOUNT_ID` so the
-   `deploy-worker` CI job activates (it is inert until then).
-6. After the Worker URL is known, commit `client/.env.production` with `VITE_POTD_API=<worker-url>`
-   so the production Pages build posts to it.

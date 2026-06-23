@@ -7,6 +7,43 @@ apworld `world_version`, with the client kept in lockstep. The minor digit bumps
 contract changes (datapackage / `slot_data` schema / option schema), not roadmap phase
 numbers and not on every change to generated output.
 
+## [0.8.1] — Curated soundness + Puzzle-of-the-Day goes live
+
+A contract-preserving patch: no item/location id, `slot_data`, or option-schema change. Closes a
+real generation-soundness hole in the `curated` pool and takes the POTD ratings backend live with a
+spam-dedup baseline, plus makes the two pages findable and shareable.
+
+### Fixed (apworld)
+- **`curated` free-pull soundness hole.** The `curated` pool contained 6 `requires_pull` levels but
+  ships with `pull_logic` off, so the apworld neither gated them behind a Pull item nor granted one
+  — AP's fill treated them as push-solvable, so a pure-push run could hit an unwinnable check and
+  stall the slot (and everyone behind it). `tools/build_pool.py` now excludes `requires_pull` levels
+  from merged pools by default (new `--keep-pull` escape hatch for `pull_logic`-on experiments).
+  - **Re-index note:** the builder re-indexes to contiguous `n=1..N`, so curated dropped 545 → 539
+    and its level numbering shifted — **old `curated` seeds won't reproduce identically.** The
+    committed `microban`/`pullban`/`autoban`/`microban2/3`/`sasquatch*`/`xsokoban90` sets are
+    untouched.
+
+### Changed (client)
+- **Multiworld pull is gated behind `pull_logic`.** The Pull control previously showed for any
+  non-Microban corpus; in a connected session it now appears only when the seed's `pull_logic`
+  actually gates levels (so a `curated` seed shows no pull button). The expert `pullban` +
+  `pull_logic` tier is unaffected.
+- **Solo pull is now an explicit opt-in** (default off), replacing the always-on sandbox pull, with
+  a persisted toggle and a one-time heads-up when first enabled. The Panic button remains the
+  always-available solo backstop.
+
+### Added (POTD / client + backend)
+- **POTD ratings backend is live.** The Cloudflare Worker + D1 sink is deployed and the production
+  Pages build posts to it (`client/.env.production` → `VITE_POTD_API`); the page still runs fully
+  offline and queues ratings when no backend is reachable.
+- **Server-side rating dedup (spam baseline):** `UNIQUE(date, level_n, visitor_id)` + `INSERT OR
+  IGNORE`, so one visitor can't flood one puzzle. No new UI/secret; the rating event shape is
+  unchanged (`RATING_SCHEMA` stays `/2`).
+- **POTD discoverability:** the page now serves at a clean `/potd/` URL, the two pages cross-link
+  (main ↔ POTD), both carry Open Graph / Twitter share meta with a branded card image, and POTD has
+  an offline-safe "Copy link" button.
+
 ## [0.8.0] — More corpora, bigger pools, and the Puzzle-of-the-Day page
 
 Adds two new selectable corpora and lifts the level-id cap to support them (a backward-compatible,

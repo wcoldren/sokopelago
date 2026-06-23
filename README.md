@@ -17,7 +17,7 @@ levels/      Canonical level corpus (XSB), shared by the client now and the apwo
 ROADMAP.md   Source of truth for scope + phasing
 ```
 
-## Current status: `0.8.0` — cross-corpus pools + Puzzle-of-the-Day page (alpha)
+## Current status: `0.8.1` — cross-corpus pools + Puzzle-of-the-Day page, live (alpha)
 
 > ⚠ **Alpha — please help test!** Solo play and multiworld syncs both work. `0.7` adds real
 > sphere ordering — the boss zone unlocks last (behind every other world key) and later worlds
@@ -27,8 +27,9 @@ ROADMAP.md   Source of truth for scope + phasing
 > 🧪 **Experimental puzzle pool.** Beyond the original Microban/Pullban/Autoban sets, an expanded
 > `curated` pool (and the newly-ingested Sasquatch / XSokoban / Microban II–III sets) is now
 > selectable. It is **experimental and unbalanced**: it contains very hard — even effectively
-> unsolvable-by-push — puzzles, the difficulty/"fun" ratings are a weak prior, and the **Pull ability
-> is always available** for these corpora for now. See [`docs/KNOWN-ISSUES.md`](docs/KNOWN-ISSUES.md).
+> unsolvable-by-push — puzzles and the difficulty/"fun" ratings are a weak prior. (As of `0.8.1` the
+> `curated` pool excludes pull-required levels, so multiworld pull is gated behind `pull_logic` and
+> solo pull is an opt-in sandbox aid.) See [`docs/KNOWN-ISSUES.md`](docs/KNOWN-ISSUES.md).
 
 Phases 0–5 are shipped and CI-green: local Sokoban play, the apworld core (region-key
 logic, solve-checks, goals), the live AP protocol client, Phase 3 escape valves
@@ -40,8 +41,10 @@ stats (see below); `0.7.0` adds **accurate logic** — the boss-zone all-keys ga
 world chaining (the `Chain Group` knob), so seeds play in real sphere order. `0.8.0` adds the
 **curated** cross-corpus pool and the in-house **autoban** set as selectable corpora (lifting the
 155-level id cap, backward-compatibly), varies the World 1 opener, and ships the
-Puzzle-of-the-Day page (cross-corpus daily puzzle + offline rating capture; the ratings backend is
-built but its deployment is deferred to a later release). **`beat_final_region` is the supported,
+Puzzle-of-the-Day page (cross-corpus daily puzzle + offline rating capture). `0.8.1` is a
+contract-preserving patch: it filters pull-required levels out of `curated` (gating multiworld pull
+behind `pull_logic`) and takes the POTD ratings backend live with server-side dedup.
+**`beat_final_region` is the supported,
 tested goal**; the
 `solve_count` / `boss_level` goal modes keep the simpler single-key layout and remain experimental.
 Remaining roadmap work: a larger pull corpus (`docs/DESIGN-pull-corpus.md`) and **Phase 6** (polish

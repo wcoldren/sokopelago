@@ -33,8 +33,9 @@ and **not** on every change to generated output. History to date: `0.1.0` (Phase
 → `0.2.0` (Phase 3 valves) → `0.3.0` (Phase 4 par checks) → `0.4.0` (Phase 5 expert Pull tier) →
 `0.5.0` (seed-varied selection + tiered par) → `0.6.0` (honest difficulty + easy-first options) →
 `0.7.0` (accurate logic: boss-zone gate + count-floor chaining) → `0.8.0` (new `autoban` + `curated`
-corpus options, 155-level id cap lifted). Phase 2 was a client-only
-integration milestone and rode along with no world bump.
+corpus options, 155-level id cap lifted) → `0.8.1` (contract-preserving patch: curated `requires_pull`
+filter + multiworld pull gated behind `pull_logic`, POTD backend live with rating dedup). Phase 2 was
+a client-only integration milestone and rode along with no world bump.
 
 ### While `< 1.0.0`
 

@@ -1,10 +1,26 @@
-## Sokopelago 0.8.0 — more corpora, bigger pools
+## Sokopelago 0.8.1 — curated soundness + Puzzle-of-the-Day live
 
 > **Alpha (`0.x`).** Pre-1.0: the option/id layout may still move between releases. Players in a
 > multiworld must all use the **same** apworld version. Drop `sokopelago.apworld` into your
 > Archipelago `custom_worlds/` (or `worlds/`) folder.
 
-What changed in the **apworld** this release:
+A contract-preserving patch — no item/location id, `slot_data`, or option-schema change, so it's
+drop-in compatible with `0.8.0` seeds' settings (but see the curated re-index note).
+
+- **Curated soundness fix:** the `curated` pool no longer contains pull-required levels, so a
+  pull-logic-off seed can't strand a pure-push player on an unwinnable check. The builder re-indexes,
+  so `curated` dropped 545 → 539 levels and its numbering shifted — **old `curated` seeds won't
+  reproduce identically.** Other corpora are untouched.
+- **Multiworld pull is gated behind `pull_logic`** (the expert `pullban` tier is unaffected); solo
+  pull is now an explicit opt-in sandbox aid.
+- **Puzzle-of-the-Day backend is live** with a server-side rating-dedup spam baseline; the page is
+  reachable at a clean `/potd/` URL, cross-links with the main page, and has share/link-preview meta.
+
+---
+
+## Sokopelago 0.8.0 — more corpora, bigger pools
+
+What changed in the **apworld** in 0.8.0:
 
 - **Two new selectable corpora** (the `corpus` YAML option):
   - **`curated`** — a large, solved, merged & re-indexed pool drawn from Microban I–III,
