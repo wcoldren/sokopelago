@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS ratings (
   corpus         TEXT    NOT NULL,
   level_n        INTEGER NOT NULL,
   handle         TEXT    NOT NULL,
+  visitor_id     TEXT    NOT NULL,            -- persisted, stable identity (display dedup)
   session_id     TEXT    NOT NULL,
   solved         INTEGER NOT NULL,            -- 0/1
   attempts       INTEGER NOT NULL,
@@ -23,3 +24,13 @@ CREATE TABLE IF NOT EXISTS ratings (
 
 -- The GET /results aggregate filters by day.
 CREATE INDEX IF NOT EXISTS idx_ratings_date ON ratings (date);
+
+-- Unique visits per day: one row per (date, visitorId). POST /visit inserts OR IGNORE, so a
+-- reload by the same visitor doesn't inflate the count. `uniqueVisitors` in GET /results is
+-- COUNT(*) over this table for the day.
+CREATE TABLE IF NOT EXISTS visits (
+  date       TEXT    NOT NULL,
+  visitor_id TEXT    NOT NULL,
+  first_seen INTEGER NOT NULL,               -- server epoch ms (first time we saw this visitor today)
+  PRIMARY KEY (date, visitor_id)
+);

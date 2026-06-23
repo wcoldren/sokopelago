@@ -8,11 +8,12 @@ import schemaSql from "../src/schema.sql?raw";
 const ORIGIN = "https://example.com"; // matches vitest.config.ts ALLOWED_ORIGINS
 
 const goodEvent = {
-  schema: "sokopelago-potd-rating/1",
+  schema: "sokopelago-potd-rating/2",
   date: "2026-06-21",
   corpus: "microban",
   levelN: 12,
   handle: "boxpusher",
+  visitorId: "v-abc",
   sessionId: "s1",
   solved: true,
   attempts: 2,
@@ -22,7 +23,7 @@ const goodEvent = {
   usedHint: false,
   fun: 4,
   difficulty: 3,
-  clientVersion: "0.7.0",
+  clientVersion: "0.8.0",
 };
 
 async function applySchema(): Promise<void> {
@@ -54,9 +55,19 @@ function getResults(date: string, origin: string | null = ORIGIN): Promise<Respo
   );
 }
 
+function postVisit(body: unknown, origin: string | null = ORIGIN): Promise<Response> {
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  if (origin) headers.Origin = origin;
+  return worker.fetch(
+    new Request("https://worker/visit", { method: "POST", headers, body: JSON.stringify(body) }),
+    env,
+  );
+}
+
 beforeAll(applySchema);
 beforeEach(async () => {
   await env.DB.prepare("DELETE FROM ratings").run();
+  await env.DB.prepare("DELETE FROM visits").run();
 });
 
 describe("POST /ratings", () => {
@@ -92,21 +103,64 @@ describe("POST /ratings", () => {
   });
 });
 
+describe("POST /ratings — schema v2 (visitorId)", () => {
+  it("stores visitor_id and round-trips a v2 event", async () => {
+    expect((await post(goodEvent)).status).toBe(204);
+    const row = await env.DB.prepare(
+      "SELECT visitor_id, schema FROM ratings LIMIT 1",
+    ).first<{ visitor_id: string; schema: string }>();
+    expect(row?.visitor_id).toBe("v-abc");
+    expect(row?.schema).toBe("sokopelago-potd-rating/2");
+  });
+
+  it("rejects an event with a missing/empty visitorId, and a stale /1 schema", async () => {
+    const { visitorId: _omit, ...noVisitor } = goodEvent;
+    expect((await post(noVisitor)).status).toBe(400);
+    expect((await post({ ...goodEvent, visitorId: "" })).status).toBe(400);
+    expect((await post({ ...goodEvent, schema: "sokopelago-potd-rating/1" })).status).toBe(400);
+  });
+});
+
+describe("POST /visit", () => {
+  it("records a visit and dedups on (date, visitorId), returning 204", async () => {
+    expect((await postVisit({ date: "2026-06-21", visitorId: "v1" })).status).toBe(204);
+    expect((await postVisit({ date: "2026-06-21", visitorId: "v1" })).status).toBe(204); // reload
+    expect((await postVisit({ date: "2026-06-21", visitorId: "v2" })).status).toBe(204);
+    const row = await env.DB.prepare(
+      "SELECT COUNT(*) AS n FROM visits WHERE date = ?",
+    )
+      .bind("2026-06-21")
+      .first<{ n: number }>();
+    expect(row?.n).toBe(2); // v1 deduped, v2 distinct
+  });
+
+  it("400s on a bad date or a missing visitorId", async () => {
+    expect((await postVisit({ date: "nope", visitorId: "v1" })).status).toBe(400);
+    expect((await postVisit({ date: "2026-06-21" })).status).toBe(400);
+  });
+});
+
 describe("GET /results", () => {
-  it("aggregates counts, averages, solve rate, and moves distribution", async () => {
+  it("aggregates counts, averages, solve rate, moves distribution, and unique visitors", async () => {
     await post({ ...goodEvent, solved: true, fun: 5, difficulty: 2, moves: 40 });
     await post({ ...goodEvent, solved: false, fun: 3, difficulty: 4, moves: 0 });
+    // Three beacons, two distinct visitors → uniqueVisitors counts visitors, not ratings.
+    await postVisit({ date: "2026-06-21", visitorId: "v1" });
+    await postVisit({ date: "2026-06-21", visitorId: "v1" });
+    await postVisit({ date: "2026-06-21", visitorId: "v2" });
 
     const res = await getResults("2026-06-21");
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
       count: number;
+      uniqueVisitors: number;
       avgFun: number;
       avgDifficulty: number;
       solveRate: number;
       movesDistribution: { moves: number; count: number }[];
     };
     expect(body.count).toBe(2);
+    expect(body.uniqueVisitors).toBe(2);
     expect(body.avgFun).toBeCloseTo(4); // (5 + 3) / 2
     expect(body.avgDifficulty).toBeCloseTo(3); // (2 + 4) / 2
     expect(body.solveRate).toBeCloseTo(0.5); // 1 of 2 solved

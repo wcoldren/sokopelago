@@ -4,11 +4,14 @@ A dependency-light **Cloudflare Worker + D1** that collects Puzzle-of-the-Day ra
 client and serves today's aggregates back. Append-only; no auth in v1.
 
 - `POST /ratings` — validate one rating event, insert one row, return `204`.
-- `GET /results?date=YYYY-MM-DD` — counts + average fun/difficulty + solve rate + a moves
-  distribution for that UTC day.
+- `POST /visit` — record a unique `(date, visitorId)` visit (`INSERT OR IGNORE`), return `204`.
+- `GET /results?date=YYYY-MM-DD` — counts + unique visitors + average fun/difficulty + solve rate +
+  a moves distribution for that UTC day.
 
-**No personal data is collected.** The only identifier is the player's **self-chosen handle**
-(non-PII) plus a random per-page-load session id. CORS is allow-listed to the Pages origin(s).
+**No personal data is collected.** The only identifiers are the player's **self-chosen handle**
+(non-PII, a display label only), a random per-page-load session id, and a random, persisted
+`visitorId` (non-PII) used to count unique visitors and disambiguate duplicate handles. CORS is
+allow-listed to the Pages origin(s).
 
 > These are the exact commands for **you** (the maintainer) to run. CI does not run any of the
 > `wrangler d1 create` / deploy steps for you — it only runs `wrangler deploy` once the repo
@@ -67,15 +70,22 @@ The deploy job is **scaffolded but inert** until those secrets exist.
 
 ## Client build wiring
 
-The client reads the backend origin from `VITE_POTD_API` at build time. Set it as a repo
-variable/secret consumed by the Pages build, or bake it into the deploy environment. When unset
-(local dev/preview), the POTD page still plays and **queues ratings locally**, retrying on the
-next load.
+The client reads the backend origin from `VITE_POTD_API` at build time. For the production Pages
+build this is committed in `client/.env.production` (`VITE_POTD_API=<worker-url>`); the URL is not
+a secret. When unset (local dev/preview), the POTD page still plays and **queues ratings locally**
+(retrying on the next load) and the visit beacon is a no-op — so the page is fully offline-tolerant.
+
+The rating payload is the **`sokopelago-potd-rating/2`** schema. Its validator is mirrored, field
+for field, between `src/index.ts` (`validate`) and `client/src/potd/rating.ts`
+(`validateRatingEvent`); the `RATING_SCHEMA` tag is bumped in lockstep whenever the shape changes,
+so a stale client can't post a payload the server will accept by accident.
 
 ## Notes / TODO
 
 - **Spam:** no auth in v1. If abused, gate `POST /ratings` behind Cloudflare Turnstile or a
   shared token (checked in `src/index.ts`), and/or persist a salted hash of `CF-Connecting-IP`
   for rate analysis. Marked with a `TODO(spam)` in the source.
-- **Dedup:** the server never dedups. "Already rated today" is a client-side `localStorage`
-  soft-guard only; offline analysis dedups by `session_id + date + level_n`.
+- **Dedup:** the `ratings` sink never dedups (it's append-only). "Already rated today" is a
+  client-side `localStorage` soft-guard only; offline analysis dedups by `visitor_id + date`
+  (stable across reloads/sessions). The `visits` table *does* dedup at write time on
+  `(date, visitor_id)`, so `uniqueVisitors` is an honest count.

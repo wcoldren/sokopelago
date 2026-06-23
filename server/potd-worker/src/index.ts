@@ -1,7 +1,8 @@
 // Sokopelago Puzzle-of-the-Day ratings sink — a dependency-light Cloudflare Worker over D1.
 //
-// Two endpoints, append-only:
+// Three endpoints, append-only:
 //   POST /ratings              -> validate one rating event, insert one row, 204
+//   POST /visit                -> record a unique (date, visitorId) visit, 204
 //   GET  /results?date=YYYY-MM-DD -> today's aggregates for the client's results view
 //
 // CORS is allow-listed to the Pages origin(s) in ALLOWED_ORIGINS. No auth in v1 (see the
@@ -13,7 +14,9 @@ export interface Env {
   ALLOWED_ORIGINS: string;
 }
 
-const RATING_SCHEMA = "sokopelago-potd-rating/1";
+// Bumped to /2 with the addition of `visitorId`. MUST stay in lockstep with the client's
+// RATING_SCHEMA + validateRatingEvent — see client/src/potd/rating.ts.
+const RATING_SCHEMA = "sokopelago-potd-rating/2";
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 // --- CORS -------------------------------------------------------------------
@@ -67,6 +70,7 @@ interface RatingEvent {
   corpus: string;
   levelN: number;
   handle: string;
+  visitorId: string;
   sessionId: string;
   solved: boolean;
   attempts: number;
@@ -90,6 +94,7 @@ function validate(value: unknown): value is RatingEvent {
     isInt(e.levelN) &&
     e.levelN >= 1 &&
     isNonEmptyStr(e.handle) &&
+    isNonEmptyStr(e.visitorId) &&
     typeof e.sessionId === "string" &&
     typeof e.solved === "boolean" &&
     isInt(e.attempts) &&
@@ -124,9 +129,9 @@ async function postRating(
   // (a header checked here), and/or store a salted hash of CF-Connecting-IP for rate analysis.
   await env.DB.prepare(
     `INSERT INTO ratings
-       (received_at, schema, date, corpus, level_n, handle, session_id,
+       (received_at, schema, date, corpus, level_n, handle, visitor_id, session_id,
         solved, attempts, moves, pushes, time_ms, used_hint, fun, difficulty, client_version)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
   )
     .bind(
       Date.now(), // received_at is server-set — never trusted from the client
@@ -135,6 +140,7 @@ async function postRating(
       e.corpus,
       e.levelN,
       e.handle,
+      e.visitorId,
       e.sessionId,
       e.solved ? 1 : 0,
       e.attempts,
@@ -148,6 +154,30 @@ async function postRating(
     )
     .run();
 
+  return new Response(null, { status: 204, headers: cors ?? {} });
+}
+
+async function postVisit(
+  req: Request,
+  env: Env,
+  cors: Record<string, string> | null,
+): Promise<Response> {
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return json({ error: "invalid JSON" }, 400, cors);
+  }
+  const b = (body ?? {}) as Record<string, unknown>;
+  if (typeof b.date !== "string" || !DATE_RE.test(b.date) || !isNonEmptyStr(b.visitorId)) {
+    return json({ error: "invalid visit" }, 400, cors);
+  }
+  // INSERT OR IGNORE against the (date, visitor_id) primary key, so reloads dedup at write time.
+  await env.DB.prepare(
+    `INSERT OR IGNORE INTO visits (date, visitor_id, first_seen) VALUES (?,?,?)`,
+  )
+    .bind(b.date, b.visitorId, Date.now())
+    .run();
   return new Response(null, { status: 204, headers: cors ?? {} });
 }
 
@@ -181,10 +211,15 @@ async function getResults(
     .bind(date)
     .all<{ moves: number; count: number }>();
 
+  const visits = await env.DB.prepare(`SELECT COUNT(*) AS n FROM visits WHERE date = ?`)
+    .bind(date)
+    .first<{ n: number }>();
+
   return json(
     {
       date,
       count: agg?.n ?? 0,
+      uniqueVisitors: visits?.n ?? 0,
       avgFun: agg?.avg_fun ?? null,
       avgDifficulty: agg?.avg_diff ?? null,
       solveRate: agg?.solve_rate ?? null,
@@ -210,6 +245,7 @@ export default {
 
     const url = new URL(req.url);
     if (req.method === "POST" && url.pathname === "/ratings") return postRating(req, env, cors);
+    if (req.method === "POST" && url.pathname === "/visit") return postVisit(req, env, cors);
     if (req.method === "GET" && url.pathname === "/results") return getResults(url, env, cors);
     return json({ error: "not found" }, 404, cors);
   },
