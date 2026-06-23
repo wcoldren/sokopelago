@@ -33,8 +33,9 @@ def solve(xsb_path: str) -> str:
     """Run SokoBoy on ``xsb_path`` and return whatever it wrote (incl. the LURD line), or ""."""
     binary = os.environ.get("SOKOBOY_BIN")
     if not binary or not Path(binary).exists():
-        sys.stderr.write("sokoboy_solve: set SOKOBOY_BIN to the locally-built SokoBoy binary "
-                         "(see docs/EXTERNAL-SOLVER.md)\n")
+        sys.stderr.write(
+            "sokoboy_solve: set SOKOBOY_BIN to the locally-built SokoBoy binary (see docs/EXTERNAL-SOLVER.md)\n"
+        )
         raise SystemExit(2)
 
     level = Path(xsb_path).resolve()
@@ -49,8 +50,9 @@ def solve(xsb_path: str) -> str:
     except ValueError:
         timeout = 300.0
     try:
-        subprocess.run([os.path.abspath(binary)], cwd=workdir, capture_output=True,
-                       text=True, timeout=timeout, check=False)
+        subprocess.run(
+            [os.path.abspath(binary)], cwd=workdir, capture_output=True, text=True, timeout=timeout, check=False
+        )
     except (OSError, subprocess.TimeoutExpired):
         return ""
 

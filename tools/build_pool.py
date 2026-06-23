@@ -30,20 +30,44 @@ import canonical
 import tiers
 
 DATA_DIR = os.path.join(_HERE, "..", "apworld", "sokopelago", "data")
-ALL_CORPORA = (["microban", "pullban", "autoban", "microban2", "microban3"]
-               + [f"sasquatch{i}" for i in range(1, 10)] + ["xsokoban90"])
+ALL_CORPORA = (
+    ["microban", "pullban", "autoban", "microban2", "microban3"]
+    + [f"sasquatch{i}" for i in range(1, 10)]
+    + ["xsokoban90"]
+)
 _ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"]
 # Carried through to the merged manifest so consumers keep working unchanged.
-_KEEP = ("board", "par", "moves", "solution", "boxes", "search_nodes", "difficulty", "optimal",
-         "solved", "solver", "requires_pull", "box_change_difficulty", "fun_features", "structural",
-         "quality_score", "canonical_hash")
+_KEEP = (
+    "board",
+    "par",
+    "moves",
+    "solution",
+    "boxes",
+    "search_nodes",
+    "difficulty",
+    "optimal",
+    "solved",
+    "solver",
+    "requires_pull",
+    "box_change_difficulty",
+    "fun_features",
+    "structural",
+    "quality_score",
+    "canonical_hash",
+)
 
 
 def _label(corpus: str) -> str:
     if corpus.startswith("sasquatch"):
-        return f"Sasquatch {_ROMAN[int(corpus[len('sasquatch'):])]}"
-    return {"microban": "Microban", "microban2": "Microban II", "microban3": "Microban III",
-            "pullban": "Pullban", "autoban": "Autoban", "xsokoban90": "XSokoban"}.get(corpus, corpus)
+        return f"Sasquatch {_ROMAN[int(corpus[len('sasquatch') :])]}"
+    return {
+        "microban": "Microban",
+        "microban2": "Microban II",
+        "microban3": "Microban III",
+        "pullban": "Pullban",
+        "autoban": "Autoban",
+        "xsokoban90": "XSokoban",
+    }.get(corpus, corpus)
 
 
 def gather(args) -> list[dict]:
@@ -90,8 +114,7 @@ def build(args) -> dict:
 
     entries = []
     for i, r in enumerate(rows, start=1):
-        entry = {"n": i, "name": f"{_label(r['_corpus'])} {r['_origname']}",
-                 "source": f"{r['_corpus']}:{r['_orig_n']}"}
+        entry = {"n": i, "name": f"{_label(r['_corpus'])} {r['_origname']}", "source": f"{r['_corpus']}:{r['_orig_n']}"}
         for k in _KEEP:
             if k in r:
                 entry[k] = r[k]
@@ -100,15 +123,30 @@ def build(args) -> dict:
     out = os.path.join(DATA_DIR, f"{args.name}.json")
     open(out, "w").write(json.dumps(entries, ensure_ascii=False, indent=2) + "\n")
     t = {k: sum(1 for e in entries if tiers.tier_of(e["difficulty"]) == k) for k in ("easy", "medium", "hard")}
-    meta = {"name": args.name, "count": len(entries), "tiers": t, "filter": {
-        "corpora": args.corpora, "solved_only": args.solved_only, "max_difficulty": args.max_difficulty,
-        "max_boxes": args.max_boxes, "limit": args.limit, "dedup": args.dedup}}
-    open(os.path.join(_HERE, "..", "levels", f"{args.name}.pool.json"), "w").write(
-        json.dumps(meta, indent=2) + "\n")
+    meta = {
+        "name": args.name,
+        "count": len(entries),
+        "tiers": t,
+        "filter": {
+            "corpora": args.corpora,
+            "solved_only": args.solved_only,
+            "max_difficulty": args.max_difficulty,
+            "max_boxes": args.max_boxes,
+            "limit": args.limit,
+            "dedup": args.dedup,
+        },
+    }
+    open(os.path.join(_HERE, "..", "levels", f"{args.name}.pool.json"), "w").write(json.dumps(meta, indent=2) + "\n")
     print(f"wrote {len(entries)} levels -> apworld/sokopelago/data/{args.name}.json")
     print(f"  tiers: easy {t['easy']} / medium {t['medium']} / hard {t['hard']}")
-    print(f"  sources: " + ", ".join(f"{c}×{sum(1 for e in entries if e['source'].startswith(c+':'))}"
-                                     for c in args.corpora if any(e["source"].startswith(c + ":") for e in entries)))
+    print(
+        "  sources: "
+        + ", ".join(
+            f"{c}×{sum(1 for e in entries if e['source'].startswith(c + ':'))}"
+            for c in args.corpora
+            if any(e["source"].startswith(c + ":") for e in entries)
+        )
+    )
     return meta
 
 
@@ -119,8 +157,12 @@ def main() -> None:
     ap.add_argument("--max-difficulty", default="any", choices=["any", "easy", "easy_medium"])
     ap.add_argument("--max-boxes", type=int, default=0, help="drop levels with more boxes (0 = no cap)")
     ap.add_argument("--limit", type=int, default=0, help="cap to N levels, sampled across difficulty (0 = all)")
-    ap.add_argument("--include-unsolved", dest="solved_only", action="store_false",
-                    help="include unsolved (no solution/par/hints) levels")
+    ap.add_argument(
+        "--include-unsolved",
+        dest="solved_only",
+        action="store_false",
+        help="include unsolved (no solution/par/hints) levels",
+    )
     ap.add_argument("--no-dedup", dest="dedup", action="store_false", help="skip dihedral dedup")
     ap.set_defaults(solved_only=True, dedup=True)
     args = ap.parse_args()

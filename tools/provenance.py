@@ -59,10 +59,9 @@ def provenance_for(name: str, provs: dict[str, Provenance] | None = None) -> Pro
 
 def validate(prov: Provenance) -> list[str]:
     """Problems that make an entry unfit to ship, as human-readable strings (empty == OK)."""
-    problems: list[str] = []
-    for field in _REQUIRED_TEXT_FIELDS:
-        if not str(prov.get(field) or "").strip():
-            problems.append(f"missing/empty '{field}'")
+    problems: list[str] = [
+        f"missing/empty '{field}'" for field in _REQUIRED_TEXT_FIELDS if not str(prov.get(field) or "").strip()
+    ]
     if prov.get("redistributable") is not True:
         problems.append("not marked redistributable (redistributable != true)")
     if not prov.get("original_by_construction") and not str(prov.get("attribution_required") or "").strip():
@@ -88,8 +87,7 @@ def assert_complete(names, provs: dict[str, Provenance] | None = None) -> None:
 def require(name: str, provs: dict[str, Provenance] | None = None) -> Provenance:
     """Return ``name``'s entry or raise — the per-corpus gate the manifest builders call first."""
     assert_complete([name], provs)
-    prov = (provs if provs is not None else load_provenance())[name]
-    return prov
+    return (provs if provs is not None else load_provenance())[name]
 
 
 def sha256_of(path: Path) -> str:
@@ -111,8 +109,9 @@ def _render_entry(prov: Provenance) -> str:
     lines.append(f"- **Author:** {prov['author']}")
     if prov.get("source_url"):
         lines.append(f"- **Source:** <{prov['source_url']}>")
-    lines.append(f"- **License:** `{prov['license_id']}`"
-                 + (f" (<{prov['license_url']}>)" if prov.get("license_url") else ""))
+    lines.append(
+        f"- **License:** `{prov['license_id']}`" + (f" (<{prov['license_url']}>)" if prov.get("license_url") else "")
+    )
     if prov.get("original_by_construction"):
         lines.append("- **Original by construction** — no third-party puzzles; no external attribution required.")
     lines += ["", "### Distribution terms", "", f"> {prov['distribution_terms']}", ""]

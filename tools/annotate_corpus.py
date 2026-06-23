@@ -63,12 +63,23 @@ def _annotate_one(rows, existing: dict, ref_bounds) -> dict:
         result = entry
         base = {k: entry[k] for k in _BASE_KEYS if k in entry}
     features = scoring.compute_features(level, result)
-    by = ("reused" if not base
-          else "external" if result.get("solver") == "external"
-          else "internal" if result.get("solved") else "unsolved")
+    by = (
+        "reused"
+        if not base
+        else "external"
+        if result.get("solver") == "external"
+        else "internal"
+        if result.get("solved")
+        else "unsolved"
+    )
     # the re-parse uses a synthetic "; 1" title, so prefer the real number from the prior entry
-    return {"base": base, "features": features, "solved": bool(result.get("solved")),
-            "n": existing.get("n", level.n), "by": by}
+    return {
+        "base": base,
+        "features": features,
+        "solved": bool(result.get("solved")),
+        "n": existing.get("n", level.n),
+        "by": by,
+    }
 
 
 # Time-bounded ladder with a greedy fallback (optimal A* -> weighted -> greedy best-first). Unlike
@@ -86,7 +97,7 @@ def _configure_solver(node_budget: int, greedy: bool) -> None:
         _apply_scoring_caps(node_budget)  # generator's deterministic single optimal phase
 
 
-def _worker(rows, existing, node_budget, ref_bounds, greedy, out: "mp.Queue") -> None:
+def _worker(rows, existing, node_budget, ref_bounds, greedy, out: mp.Queue) -> None:
     try:
         _configure_solver(node_budget, greedy)
         out.put(_annotate_one(rows, existing, ref_bounds))
@@ -106,13 +117,14 @@ def _progress(done: int, total: int, tally: dict, t0: float, last: str) -> None:
     sys.stderr.write(
         f"[{done:>3}/{total}] last:{last:<14} "
         f"internal={tally['internal']} external={tally['external']} unsolved={tally['unsolved']} "
-        f"reused={tally['reused']} | {rate*60:4.1f} solved/min  {elapsed/60:4.1f}m elapsed  eta~{eta/60:4.1f}m\n"
+        f"reused={tally['reused']} | {rate * 60:4.1f} solved/min  {elapsed / 60:4.1f}m elapsed  eta~{eta / 60:4.1f}m\n"
     )
     sys.stderr.flush()
 
 
-def parallel_annotate(items, workers: int, node_budget: int, wall_cap: float, ref_bounds,
-                      progress: bool = False, greedy: bool = False):
+def parallel_annotate(
+    items, workers: int, node_budget: int, wall_cap: float, ref_bounds, progress: bool = False, greedy: bool = False
+):
     """Annotate ``items`` (``(rows, existing)`` pairs) concurrently, results in input order.
     The node budget bounds each (capped) solve; ``wall_cap`` is a per-level kill backstop.
     ``workers<=1`` runs in-process (deterministic; used by tests and the Microban smoke test).
@@ -173,9 +185,16 @@ def parallel_annotate(items, workers: int, node_budget: int, wall_cap: float, re
     return results
 
 
-def annotate(name: str, *, node_budget: int = 2_000_000, wall_cap: float = 120.0,
-             workers: int = 1, write: bool = True, progress: bool = False,
-             greedy: bool = False) -> tuple[list[dict], dict]:
+def annotate(
+    name: str,
+    *,
+    node_budget: int = 2_000_000,
+    wall_cap: float = 120.0,
+    workers: int = 1,
+    write: bool = True,
+    progress: bool = False,
+    greedy: bool = False,
+) -> tuple[list[dict], dict]:
     """Annotate corpus ``name`` and (optionally) write its manifest. Returns (entries, stats)."""
     prov = provenance.require(name)  # gate: no annotation without a recorded, redistributable source
     levels = load_corpus(corpus_xsb(name))
@@ -188,15 +207,17 @@ def annotate(name: str, *, node_budget: int = 2_000_000, wall_cap: float = 120.0
     # carry the real level number in the per-item dict so the progress label is correct even for a
     # fresh corpus (the worker re-parses rows under a synthetic "; 1" title, losing the number)
     items = [(list(lvl.rows), {"n": lvl.n, **existing.get(lvl.n, {})}) for lvl in levels]
-    annotated = parallel_annotate(items, workers, node_budget, wall_cap, ref_bounds,
-                                  progress=progress, greedy=greedy)
+    annotated = parallel_annotate(items, workers, node_budget, wall_cap, ref_bounds, progress=progress, greedy=greedy)
 
     entries: list[dict] = []
     solved_fresh = unsolved = reused = 0
-    for lvl, ann in zip(levels, annotated):
+    for lvl, maybe_ann in zip(levels, annotated, strict=False):
+        ann = maybe_ann
         if ann is None:  # worker crashed/timed out -> mark unsolved, still emit a complete entry
-            ann = {"base": {"solved": False, "boxes": len(lvl.boxes), "difficulty": 1.0},
-                   "features": scoring.compute_features(lvl, {"solved": False, "boxes": len(lvl.boxes)})}
+            ann = {
+                "base": {"solved": False, "boxes": len(lvl.boxes), "difficulty": 1.0},
+                "features": scoring.compute_features(lvl, {"solved": False, "boxes": len(lvl.boxes)}),
+            }
         merged = dict(existing.get(lvl.n, {}))
         merged.update(ann["base"])  # fresh base fields (empty when an authoritative one was reused)
         merged["n"], merged["name"], merged["board"] = lvl.n, lvl.name, list(lvl.rows)
@@ -211,8 +232,13 @@ def annotate(name: str, *, node_budget: int = 2_000_000, wall_cap: float = 120.0
         else:
             unsolved += 1
 
-    stats = {"levels": len(entries), "reused": reused, "solved_fresh": solved_fresh,
-             "unsolved": unsolved, "node_budget": node_budget}
+    stats = {
+        "levels": len(entries),
+        "reused": reused,
+        "solved_fresh": solved_fresh,
+        "unsolved": unsolved,
+        "node_budget": node_budget,
+    }
     if write:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -229,12 +255,22 @@ def main() -> None:
     ap.add_argument("--wall-cap", type=float, default=120.0, help="per-level kill-on-timeout (s)")
     ap.add_argument("--dry-run", action="store_true", help="compute but do not write the manifest")
     ap.add_argument("--quiet", action="store_true", help="suppress the per-level progress lines")
-    ap.add_argument("--greedy", action="store_true",
-                    help="time-bounded greedy search ladder (valid sub-optimal solutions on hard "
-                         "levels) instead of the single node-capped optimal phase — best coverage")
+    ap.add_argument(
+        "--greedy",
+        action="store_true",
+        help="time-bounded greedy search ladder (valid sub-optimal solutions on hard "
+        "levels) instead of the single node-capped optimal phase — best coverage",
+    )
     args = ap.parse_args()
-    annotate(args.corpus, node_budget=args.node_budget, wall_cap=args.wall_cap,
-             workers=args.workers, write=not args.dry_run, progress=not args.quiet, greedy=args.greedy)
+    annotate(
+        args.corpus,
+        node_budget=args.node_budget,
+        wall_cap=args.wall_cap,
+        workers=args.workers,
+        write=not args.dry_run,
+        progress=not args.quiet,
+        greedy=args.greedy,
+    )
 
 
 if __name__ == "__main__":

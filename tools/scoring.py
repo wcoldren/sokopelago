@@ -300,9 +300,7 @@ def compute_features(level: Level, result: dict, *, solver: Solver | None = None
         matter_method = "off-goal-start"
         dproxy = 0.0
 
-    challenge = clamp01(
-        WEIGHTS["challenge_difficulty"] * difficulty + WEIGHTS["challenge_box_change"] * bc
-    )
+    challenge = clamp01(WEIGHTS["challenge_difficulty"] * difficulty + WEIGHTS["challenge_box_change"] * bc)
     like = likeability(challenge)
     connected = goal_room_connected(solver)
     dead_ratio = sum(solver.dead) / max(1, area)

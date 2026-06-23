@@ -30,7 +30,6 @@ sys.path.insert(0, os.path.join(_HERE, "..", "apworld", "sokopelago"))  # pure m
 
 import layout
 import tiers
-from corpus import load_corpus_data
 
 DATA_DIR = os.path.join(_HERE, "..", "apworld", "sokopelago", "data")
 NEW_SETS = ["microban2", "microban3", *[f"sasquatch{i}" for i in range(1, 10)], "xsokoban90"]
@@ -43,7 +42,7 @@ VALVE_NAMES = {"skip": "Skip Token", "undo": "Undo Charge", "hint": "Hint Token"
 class Lvl:
     """One level in the combined virtual corpus (global id -> source metadata)."""
 
-    __slots__ = ("gid", "corpus", "n", "name", "difficulty", "solved", "boxes", "fun")
+    __slots__ = ("boxes", "corpus", "difficulty", "fun", "gid", "n", "name", "solved")
 
     def __init__(self, gid, corpus, e):
         self.gid = gid
@@ -107,13 +106,13 @@ def simulate(args):
 
     # --- item / location pool (create_items: keys = region_count-1; budget = locs - keys) --
     sizes = [len(w) for w in worlds]
-    floors = layout.effective_floor_schedule(sizes, layout.clamp(args.chain_group, 1, max(1, region_count)),
-                                             layout.DEFAULT_CHAIN_MAX_DEPTH, chained=True)
+    floors = layout.effective_floor_schedule(
+        sizes, layout.clamp(args.chain_group, 1, max(1, region_count)), layout.DEFAULT_CHAIN_MAX_DEPTH, chained=True
+    )
     keys = region_count - 1
     total_locations = level_count  # par/eff checks off
     budget = total_locations - keys
-    valves = layout.escape_valve_counts(budget, {"skip": args.skip, "hint": args.hint,
-                                                 "undo": args.undo, "trap": 0})
+    valves = layout.escape_valve_counts(budget, {"skip": args.skip, "hint": args.hint, "undo": args.undo, "trap": 0})
     filler = budget - sum(valves.values())
 
     # ---------------------------------- render --------------------------------------------
@@ -122,45 +121,62 @@ def simulate(args):
     out.append("SOKOPELAGO SEED PREVIEW (simulation — reuses the real apworld layout logic)")
     out.append("=" * 78)
     out.append(f"pool         : combined new corpora {args.corpora}")
-    out.append(f"               {len(pool)} levels "
-               f"({'solved+unsolved' if args.include_unsolved else 'solved only'})")
-    out.append(f"config       : level_count={level_count}  levels_per_region={levels_per_region}  "
-               f"-> {region_count} worlds")
-    out.append(f"               max_difficulty={args.max_difficulty}  selection={args.selection}  "
-               f"seed={args.seed}  goal=beat_final_region")
-    out.append(f"               difficulty_ordering=on  gentle_first_world={'on' if args.gentle else 'off'}"
-               + ("" if args.gentle else "  (shipped default is ON -> a small easy World 1 + 10 => 11 worlds)"))
+    out.append(f"               {len(pool)} levels ({'solved+unsolved' if args.include_unsolved else 'solved only'})")
+    out.append(
+        f"config       : level_count={level_count}  levels_per_region={levels_per_region}  -> {region_count} worlds"
+    )
+    out.append(
+        f"               max_difficulty={args.max_difficulty}  selection={args.selection}  "
+        f"seed={args.seed}  goal=beat_final_region"
+    )
+    out.append(
+        f"               difficulty_ordering=on  gentle_first_world={'on' if args.gentle else 'off'}"
+        + ("" if args.gentle else "  (shipped default is ON -> a small easy World 1 + 10 => 11 worlds)")
+    )
     poolt = {k: sum(1 for lv in pool if tiers.tier_of(lv.difficulty) == k) for k in ("easy", "medium", "hard")}
-    out.append(f"pool spread  : easy {poolt['easy']} / medium {poolt['medium']} / hard {poolt['hard']}  "
-               f"| eligible under cap: {len(allowed)}")
+    out.append(
+        f"pool spread  : easy {poolt['easy']} / medium {poolt['medium']} / hard {poolt['hard']}  "
+        f"| eligible under cap: {len(allowed)}"
+    )
     if level_count < args.levels:
-        out.append(f"  NOTE: requested {args.levels} but only {level_count} eligible under the cap "
-                   f"-> {region_count} worlds.")
+        out.append(
+            f"  NOTE: requested {args.levels} but only {level_count} eligible under the cap -> {region_count} worlds."
+        )
     out.append("")
 
     # worlds
     sel = [by_gid[g] for g in levels]
     st_tier = {k: sum(1 for lv in sel if tiers.tier_of(lv.difficulty) == k) for k in ("easy", "medium", "hard")}
-    out.append(f"SELECTED {len(sel)} PUZZLES — tiers easy {st_tier['easy']} / medium {st_tier['medium']} "
-               f"/ hard {st_tier['hard']}; sources: " +
-               ", ".join(f"{c}×{sum(1 for lv in sel if lv.corpus==c)}"
-                         for c in args.corpora if any(lv.corpus == c for lv in sel)))
+    out.append(
+        f"SELECTED {len(sel)} PUZZLES — tiers easy {st_tier['easy']} / medium {st_tier['medium']} "
+        f"/ hard {st_tier['hard']}; sources: "
+        + ", ".join(
+            f"{c}×{sum(1 for lv in sel if lv.corpus == c)}" for c in args.corpora if any(lv.corpus == c for lv in sel)
+        )
+    )
     out.append("")
     for i, world in enumerate(worlds, start=1):
         lvs = [by_gid[g] for g in world]
         ds = [lv.difficulty for lv in lvs]
-        gate = ("free (sphere 1)" if i == 1
-                else "boss — needs ALL keys" if i == region_count
-                else f"needs World {i} Key + {floors[i-1]} earlier key(s)")
-        tmix = "/".join(str(sum(1 for lv in lvs if tiers.tier_of(lv.difficulty) == k))
-                        for k in ("easy", "medium", "hard"))
+        gate = (
+            "free (sphere 1)"
+            if i == 1
+            else "boss — needs ALL keys"
+            if i == region_count
+            else f"needs World {i} Key + {floors[i - 1]} earlier key(s)"
+        )
+        tmix = "/".join(
+            str(sum(1 for lv in lvs if tiers.tier_of(lv.difficulty) == k)) for k in ("easy", "medium", "hard")
+        )
         out.append(f"World {i:>2}  ({len(lvs)} puzzles)  diff {_s(ds)}  E/M/H {tmix}  —  {gate}")
         for lv in lvs:
             flag = "" if lv.solved else "  [UNSOLVED: no hint/par]"
             funv = f"{lv.fun:.2f}" if lv.fun is not None else "—"
-            out.append(f"        {lv.label():>14}  {lv.name[:22]:<22}  "
-                       f"diff {lv.difficulty:.2f} ({tiers.tier_of(lv.difficulty)[:3]})  "
-                       f"boxes {str(lv.boxes):>3}  fun {funv}{flag}")
+            out.append(
+                f"        {lv.label():>14}  {lv.name[:22]:<22}  "
+                f"diff {lv.difficulty:.2f} ({tiers.tier_of(lv.difficulty)[:3]})  "
+                f"boxes {lv.boxes!s:>3}  fun {funv}{flag}"
+            )
         out.append("")
 
     # item / location pool
@@ -168,11 +184,14 @@ def simulate(args):
     out.append("AP ITEM POOL  (one item per location; pool size == location count)")
     out.append(f"  locations : {total_locations}  ('Solve <name>' — one per puzzle; par/eff checks off)")
     out.append(f"  progression: {keys} World Keys (World 2 Key … World {region_count} Key)")
-    out.append(f"  escape valves: {valves['skip']}× Skip Token · {valves['hint']}× Hint Token · "
-               f"{valves['undo']}× Undo Charge")
+    out.append(
+        f"  escape valves: {valves['skip']}× Skip Token · {valves['hint']}× Hint Token · {valves['undo']}× Undo Charge"
+    )
     out.append(f"  filler    : {filler}× {FILLER_NAME}")
-    out.append(f"  CHECK     : {keys} keys + {sum(valves.values())} valves + {filler} filler "
-               f"= {keys + sum(valves.values()) + filler}  (== {total_locations} locations ✓)")
+    out.append(
+        f"  CHECK     : {keys} keys + {sum(valves.values())} valves + {filler} filler "
+        f"= {keys + sum(valves.values()) + filler}  (== {total_locations} locations ✓)"
+    )
     out.append("")
     out.append("REGION MAP / GATING")
     out.append("  Menu")
@@ -182,8 +201,8 @@ def simulate(args):
         elif i == region_count:
             g = f"[BOSS: hold all {keys} keys]"
         else:
-            g = f"[World {i} Key + {floors[i-1]}-key floor]"
-        out.append(f"   -> World {i} ({sizes[i-1]} puzzles) {g}")
+            g = f"[World {i} Key + {floors[i - 1]}-key floor]"
+        out.append(f"   -> World {i} ({sizes[i - 1]} puzzles) {g}")
     out.append(f"  GOAL: beat_final_region — hold all {keys} World Keys to reach World {region_count}.")
     print("\n".join(out))
 
@@ -201,12 +220,18 @@ def main():
     ap.add_argument("--skip", type=int, default=5)
     ap.add_argument("--hint", type=int, default=10)
     ap.add_argument("--undo", type=int, default=10)
-    ap.add_argument("--gentle", action="store_true",
-                    help="gentle_first_world (shipped default ON): easy-only World 1 -> 11 worlds. "
-                         "Off (this tool's default) gives a clean 10x10 of difficulty-balanced worlds.")
-    ap.add_argument("--include-unsolved", action="store_true",
-                    help="include unsolved (difficulty=1.0, hint-less) levels — what a real "
-                         "max_difficulty=any run on the raw corpora would do")
+    ap.add_argument(
+        "--gentle",
+        action="store_true",
+        help="gentle_first_world (shipped default ON): easy-only World 1 -> 11 worlds. "
+        "Off (this tool's default) gives a clean 10x10 of difficulty-balanced worlds.",
+    )
+    ap.add_argument(
+        "--include-unsolved",
+        action="store_true",
+        help="include unsolved (difficulty=1.0, hint-less) levels — what a real "
+        "max_difficulty=any run on the raw corpora would do",
+    )
     args = ap.parse_args()
     args.corpora = [c for c in args.corpora.split(",") if c]
     simulate(args)

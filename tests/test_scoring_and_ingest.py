@@ -9,7 +9,6 @@ import json
 import annotate_corpus
 import canonical
 import ingest_corpus as ing
-import scoring
 import solve_corpus
 import tiers
 from xsb_levels import corpus_xsb, load_corpus, parse_levels
@@ -57,7 +56,7 @@ class TestIngestParseFailClosed:
     def test_parses_clean_xsb(self):
         text = "; 1\n\n#####\n#@$.#\n#####\n\n; 2\n\n######\n#@ $.#\n######\n"
         levels = ing.parse_source(text)
-        assert len(levels) == 2 and all(l.boxes for l in levels)
+        assert len(levels) == 2 and all(lv.boxes for lv in levels)
 
 
 class TestAnnotateBoundedSolve:
@@ -67,8 +66,7 @@ class TestAnnotateBoundedSolve:
         saved = (solve_corpus.NODE_BUDGET, solve_corpus.SEARCH_PHASES)
         try:
             ref = annotate_corpus.microban_reference_bounds()
-            res = annotate_corpus.parallel_annotate([(rows, {})], workers=1, node_budget=1,
-                                                    wall_cap=30, ref_bounds=ref)
+            res = annotate_corpus.parallel_annotate([(rows, {})], workers=1, node_budget=1, wall_cap=30, ref_bounds=ref)
         finally:
             solve_corpus.NODE_BUDGET, solve_corpus.SEARCH_PHASES = saved
         assert res[0] is not None and res[0]["solved"] is False
@@ -77,12 +75,23 @@ class TestAnnotateBoundedSolve:
 
 class TestAnnotatedSchema:
     def test_microban_annotation_is_additive_and_valid(self):
-        before = {e["n"]: e for e in json.loads((corpus_xsb("microban").parent.parent
-                  / "apworld/sokopelago/data/microban.json").read_text())}
+        before = {
+            e["n"]: e
+            for e in json.loads(
+                (corpus_xsb("microban").parent.parent / "apworld/sokopelago/data/microban.json").read_text()
+            )
+        }
         entries, stats = annotate_corpus.annotate("microban", workers=1, write=False)
         assert stats["reused"] == 155 and stats["unsolved"] == 0  # authoritative fields reused
-        new_keys = ("box_change_difficulty", "fun_features", "structural", "quality_score",
-                    "canonical_hash", "provenance", "license")
+        new_keys = (
+            "box_change_difficulty",
+            "fun_features",
+            "structural",
+            "quality_score",
+            "canonical_hash",
+            "provenance",
+            "license",
+        )
         base_keys = ("n", "name", "board", "par", "difficulty", "solution", "solved", "optimal")
         diffs = []
         for e in entries:

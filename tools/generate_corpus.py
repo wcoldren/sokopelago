@@ -57,8 +57,8 @@ from time import monotonic
 
 import solve_corpus
 from canonical import canonical
-from canonical import pad as _pad
-from canonical import rotate90 as _rotate90
+from canonical import pad as _pad  # noqa: F401  (re-exported for tests as generate_corpus._pad)
+from canonical import rotate90 as _rotate90  # noqa: F401  (re-exported as generate_corpus._rotate90)
 from solve_corpus import Solver
 from xsb_levels import REPO_ROOT, corpus_xsb, load_corpus, manifest_json, parse_levels
 
@@ -293,7 +293,7 @@ def seen_from_corpora(names: tuple[str, ...]) -> set[str]:
 # (the same component the corpus annotator uses; a POTD-trained model drops in behind it).
 # Used here only to rank within a tier when more candidates survive than the quota.
 # --------------------------------------------------------------------------------------
-from scoring import score_quality  # noqa: E402  (re-exported as generate_corpus.score_quality)
+from scoring import score_quality
 
 
 def _features(result: dict[str, object]) -> dict[str, float]:

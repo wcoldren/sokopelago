@@ -20,9 +20,8 @@ Run:  python tools/ingest_corpus.py --list
 from __future__ import annotations
 
 import argparse
-import json
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import provenance
@@ -54,15 +53,21 @@ def _skinner(corpus: str, filename: str, source_name: str) -> dict:
         "attribution_required": f"{source_name} by David W. Skinner.",
         "original_by_construction": False,
         "notes": f"Downloaded from the canonical Skinner mirror ({_SKINNER_BASE}{filename}). "
-                 "XSB text with no per-file credit; an attribution header is prepended on ingest.",
+        "XSB text with no per-file credit; an attribution header is prepended on ingest.",
     }
 
 
 # Sasquatch set display names as the mirror lists them.
 _SASQUATCH_NAMES = {
-    1: "Sasquatch (50 puzzles)", 2: "Mas Sasquatch (50 puzzles)", 3: "Sasquatch III (50 puzzles)",
-    4: "Sasquatch IV (50 puzzles)", 5: "Sasquatch V (50 puzzles)", 6: "Sasquatch VI (50 puzzles)",
-    7: "Sasquatch VII (50 puzzles)", 8: "Sasquatch VIII (50 puzzles)", 9: "Sasquatch IX (50 puzzles)",
+    1: "Sasquatch (50 puzzles)",
+    2: "Mas Sasquatch (50 puzzles)",
+    3: "Sasquatch III (50 puzzles)",
+    4: "Sasquatch IV (50 puzzles)",
+    5: "Sasquatch V (50 puzzles)",
+    6: "Sasquatch VI (50 puzzles)",
+    7: "Sasquatch VII (50 puzzles)",
+    8: "Sasquatch VIII (50 puzzles)",
+    9: "Sasquatch IX (50 puzzles)",
 }
 
 APPROVED_SOURCES: dict[str, dict] = {
@@ -87,7 +92,7 @@ APPROVED_SOURCES["xsokoban90"] = {
     "attribution_required": "XSokoban (public domain).",
     "original_by_construction": False,
     "notes": f"Concatenated from screens/screen.1..90 in {_XSOKOBAN_REPO} (public domain). "
-             "Each screen is one board; a '; N' title is added per level on ingest.",
+    "Each screen is one board; a '; N' title is added per level on ingest.",
 }
 
 
@@ -96,7 +101,7 @@ APPROVED_SOURCES["xsokoban90"] = {
 # --------------------------------------------------------------------------------------
 def _http_get(url: str) -> str:
     req = urllib.request.Request(url, headers={"User-Agent": "sokopelago-ingest/1.0"})
-    with urllib.request.urlopen(req, timeout=60) as resp:  # noqa: S310 (allowlisted https URLs)
+    with urllib.request.urlopen(req, timeout=60) as resp:
         raw = resp.read()
     try:
         return raw.decode("utf-8")
@@ -219,7 +224,7 @@ def register_corpus(corpus: str, xsb_path: Path, source: dict) -> None:
         "redistributable": True,
         "original_by_construction": source.get("original_by_construction", False),
         "notes": source.get("notes"),
-        "retrieved_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "retrieved_utc": datetime.now(UTC).isoformat(timespec="seconds"),
         "sha256_xsb": provenance.sha256_of(xsb_path),
     }
     provenance.upsert(corpus, prov)
@@ -227,8 +232,9 @@ def register_corpus(corpus: str, xsb_path: Path, source: dict) -> None:
     provenance.write_attribution_md()
 
 
-def ingest(corpus: str, *, against: tuple[str, ...], cache_dir: Path = CACHE_DIR,
-           force: bool = False, write: bool = True) -> dict:
+def ingest(
+    corpus: str, *, against: tuple[str, ...], cache_dir: Path = CACHE_DIR, force: bool = False, write: bool = True
+) -> dict:
     """Fetch -> parse -> dedup -> (optionally) write+register one approved source. Returns a summary."""
     source = APPROVED_SOURCES.get(corpus)
     if source is None:
@@ -236,8 +242,7 @@ def ingest(corpus: str, *, against: tuple[str, ...], cache_dir: Path = CACHE_DIR
     text = fetch_source(source, cache_dir=cache_dir, force=force)
     levels = parse_source(text, source.get("fmt", "auto"))
     kept, dropped = dedup_levels(levels, against)
-    summary = {"corpus": corpus, "parsed": len(levels), "kept": len(kept),
-               "dropped": len(dropped), "drops": dropped}
+    summary = {"corpus": corpus, "parsed": len(levels), "kept": len(kept), "dropped": len(dropped), "drops": dropped}
     if write:
         xsb_path = write_xsb(corpus, kept, source)
         register_corpus(corpus, xsb_path, source)
@@ -253,8 +258,11 @@ def ingest(corpus: str, *, against: tuple[str, ...], cache_dir: Path = CACHE_DIR
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--corpus", help="approved source name (see --list)")
-    ap.add_argument("--against", default="microban,pullban,autoban",
-                    help="comma list of corpora to dedup against (default: the built-ins)")
+    ap.add_argument(
+        "--against",
+        default="microban,pullban,autoban",
+        help="comma list of corpora to dedup against (default: the built-ins)",
+    )
     ap.add_argument("--cache-dir", type=Path, default=CACHE_DIR)
     ap.add_argument("--force", action="store_true", help="re-download even if cached")
     ap.add_argument("--dry-run", action="store_true", help="fetch+parse+dedup, don't write/register")
@@ -265,8 +273,13 @@ def main() -> None:
         for name, s in APPROVED_SOURCES.items():
             print(f"  {name:12} {s['license_id']:36} {s['author']}  <{s.get('url') or s.get('url_template')}>")
         return
-    ingest(args.corpus, against=tuple(a for a in args.against.split(",") if a),
-           cache_dir=args.cache_dir, force=args.force, write=not args.dry_run)
+    ingest(
+        args.corpus,
+        against=tuple(a for a in args.against.split(",") if a),
+        cache_dir=args.cache_dir,
+        force=args.force,
+        write=not args.dry_run,
+    )
 
 
 if __name__ == "__main__":

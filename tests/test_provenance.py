@@ -35,8 +35,16 @@ class TestGuardFailsClosed:
         raise AssertionError("missing provenance entry was not caught")
 
     def test_incomplete_entry_raises(self):
-        bad = {"x": {"corpus": "x", "source_name": "X", "author": "", "license_id": "y",
-                     "distribution_terms": "t", "redistributable": False}}
+        bad = {
+            "x": {
+                "corpus": "x",
+                "source_name": "X",
+                "author": "",
+                "license_id": "y",
+                "distribution_terms": "t",
+                "redistributable": False,
+            }
+        }
         problems = provenance.validate(bad["x"])
         assert any("author" in p for p in problems)
         assert any("redistributable" in p for p in problems)

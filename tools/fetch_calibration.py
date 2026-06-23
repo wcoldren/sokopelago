@@ -27,8 +27,7 @@ from xsb_levels import REPO_ROOT
 
 DEST_DIR = REPO_ROOT / "data" / "calibration"
 DATASET_URL = (
-    "https://raw.githubusercontent.com/cogtoolslab/fun-puzzles_cogsci25/master/"
-    "data/study1/full_sokobanonline_df.csv"
+    "https://raw.githubusercontent.com/cogtoolslab/fun-puzzles_cogsci25/master/data/study1/full_sokobanonline_df.csv"
 )
 DATASET_FILE = DEST_DIR / "full_sokobanonline_df.csv"
 
@@ -60,7 +59,7 @@ def fetch(force: bool = False) -> Path:
         print(f"already present: {DATASET_FILE.relative_to(REPO_ROOT)} (use --force to refresh)")
         return DATASET_FILE
     req = urllib.request.Request(DATASET_URL, headers={"User-Agent": "sokopelago-calibration/1.0"})
-    with urllib.request.urlopen(req, timeout=120) as resp:  # noqa: S310 (fixed CC-BY dataset URL)
+    with urllib.request.urlopen(req, timeout=120) as resp:
         DATASET_FILE.write_bytes(resp.read())
     print(f"fetched {DATASET_FILE.relative_to(REPO_ROOT)} ({DATASET_FILE.stat().st_size} bytes)")
     print("  next: python tools/calibrate_scoring.py")

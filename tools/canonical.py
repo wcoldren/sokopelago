@@ -121,7 +121,7 @@ def _region_canonical_rendering(rows: Rows) -> str:
     return best
 
 
-def canonical_player_normalized(level: "Level") -> str:
+def canonical_player_normalized(level: Level) -> str:
     """Dihedral-invariant **and** player-region-invariant canonical key for dedup: the
     orbit-minimum over the 8 transforms, each rendered with the player at the region-canonical
     cell for that orientation."""
@@ -134,6 +134,6 @@ def canonical_player_normalized(level: "Level") -> str:
     return min(forms)
 
 
-def canonical_player_normalized_hash(level: "Level") -> str:
+def canonical_player_normalized_hash(level: Level) -> str:
     """Short stable digest of :func:`canonical_player_normalized` — the stamped dedup identity."""
     return hashlib.sha1(canonical_player_normalized(level).encode("utf-8")).hexdigest()[:16]

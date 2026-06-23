@@ -36,7 +36,8 @@ class LevelEntry(TypedDict, total=False):
     # corpora carry these; the shipped microban/pullban/autoban manifests need not.
     box_change_difficulty: float
     fun_features: dict  # {playable_area, openness, boxes, steps_per_box, search_difficulty, likeability}
-    structural: dict  # {goal_room_connected, matter_fraction, matter_method, dead_floor_ratio, box_density, deadlock_proximity}
+    # structural: goal_room_connected, matter_fraction, matter_method, dead_floor_ratio, box_density, deadlock_proximity
+    structural: dict
     quality_score: float
     canonical_hash: str  # symmetry+player-region invariant identity (tools/canonical.py)
     provenance: str  # corpus key into levels/provenance.json

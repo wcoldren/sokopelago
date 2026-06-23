@@ -100,12 +100,14 @@ def load_dataset(path: Path = DATASET_FILE) -> list[dict]:
             continue
         if not layout or "@" not in layout:
             continue
-        rows.append({
-            "id": r.get("id"),
-            "rows": layout.split("\n"),
-            "like_rate": like_rate,
-            "completion_rate": completion,
-        })
+        rows.append(
+            {
+                "id": r.get("id"),
+                "rows": layout.split("\n"),
+                "like_rate": like_rate,
+                "completion_rate": completion,
+            }
+        )
     return rows
 
 
@@ -120,7 +122,7 @@ def _challenge(difficulty: float, box_change: float) -> float:
 def _tune_mu_sigma(challenge: list[float], human: list[float]) -> dict:
     """5-fold CV grid search over the inverted-U mu/sigma (the only tuned params); report mean
     held-out Spearman of the resulting likeability vs human like_rate."""
-    mus = [0.30 + 0.05 * i for i in range(11)]      # 0.30 .. 0.80
+    mus = [0.30 + 0.05 * i for i in range(11)]  # 0.30 .. 0.80
     sigmas = [0.10 + 0.025 * i for i in range(11)]  # 0.10 .. 0.35
     n = len(challenge)
     idx = list(range(n))
@@ -153,11 +155,17 @@ def calibrate(workers: int = 1, node_budget: int = 1_000_000, wall_cap: float = 
     items = [(d["rows"], {}) for d in data]
     annotated = annotate_corpus.parallel_annotate(items, workers, node_budget, wall_cap, ref_bounds)
 
-    cols = {"quality_score": [], "likeability": [], "difficulty": [], "box_change_difficulty": [],
-            "search_difficulty": [], "num_boxes": []}
+    cols = {
+        "quality_score": [],
+        "likeability": [],
+        "difficulty": [],
+        "box_change_difficulty": [],
+        "search_difficulty": [],
+        "num_boxes": [],
+    }
     human, challenge = [], []
     solved = 0
-    for d, ann in zip(data, annotated):
+    for d, ann in zip(data, annotated, strict=False):
         if ann is None:
             continue
         feat, base = ann["features"], ann["base"]
@@ -182,7 +190,7 @@ def calibrate(workers: int = 1, node_budget: int = 1_000_000, wall_cap: float = 
         "ours": correlations["num_boxes"]["rho"],
         "paper_reported": -0.33,
     }
-    report = {
+    return {
         "dataset": "Chu et al. (2025) fun-puzzles (CC BY 4.0)",
         "n_used": len(human),
         "n_solved_by_our_solver": solved,
@@ -206,26 +214,38 @@ def calibrate(workers: int = 1, node_budget: int = 1_000_000, wall_cap: float = 
             "Dataset is dev-only calibration input (CC BY, attributed), never shipped as game content.",
         ],
     }
-    return report
 
 
 def _render_md(report: dict) -> str:
-    lines = ["# Scorer calibration report (dev-only)", "",
-             f"Dataset: {report['dataset']}", f"Puzzles used: {report['n_used']} "
-             f"(solved by our capped solver: {report['n_solved_by_our_solver']})",
-             f"Target: {report['target']}", "",
-             "## Spearman rho vs human like_rate (with bootstrap 95% CI)", "",
-             "| predictor | rho | 95% CI | n |", "|---|---|---|---|"]
+    lines = [
+        "# Scorer calibration report (dev-only)",
+        "",
+        f"Dataset: {report['dataset']}",
+        f"Puzzles used: {report['n_used']} (solved by our capped solver: {report['n_solved_by_our_solver']})",
+        f"Target: {report['target']}",
+        "",
+        "## Spearman rho vs human like_rate (with bootstrap 95% CI)",
+        "",
+        "| predictor | rho | 95% CI | n |",
+        "|---|---|---|---|",
+    ]
     for k, v in report["correlations_vs_like_rate"].items():
         lines.append(f"| {k} | {v['rho']} | [{v['ci95'][0]}, {v['ci95'][1]}] | {v['n']} |")
     t = report["inverted_u_cv_tune"]
     rep = report["replication_check"]
-    lines += ["", "## Inverted-U shape (only tuned params)",
-              f"5-fold CV best: mu={t['mu']}, sigma={t['sigma']} (held-out mean rho={t['cv_rho']})", "",
-              "## Faithfulness check",
-              f"{rep['metric']}: ours={rep['ours']} vs paper-reported={rep['paper_reported']}", "",
-              "## Interpretation", report["interpretation"], "",
-              "## Caveats"]
+    lines += [
+        "",
+        "## Inverted-U shape (only tuned params)",
+        f"5-fold CV best: mu={t['mu']}, sigma={t['sigma']} (held-out mean rho={t['cv_rho']})",
+        "",
+        "## Faithfulness check",
+        f"{rep['metric']}: ours={rep['ours']} vs paper-reported={rep['paper_reported']}",
+        "",
+        "## Interpretation",
+        report["interpretation"],
+        "",
+        "## Caveats",
+    ]
     lines += [f"- {c}" for c in report["caveats"]]
     return "\n".join(lines) + "\n"
 

@@ -26,8 +26,13 @@ ignore = [
 # Tests inject sys.path before importing the modules under test (E402), and the
 # pure-helper imports are intentionally not at the package top.
 "tests/*.py" = ["E402"]
-# build_corpus is a CLI data-prep script — printing its result is intended.
-"tools/*.py" = ["T201"]
+# tools/* are CLI data-prep scripts: printing their result is intended (T201); several insert
+# sys.path before importing local modules (E402, like the tests above); and a few print physical
+# dimensions with the intentional "×" multiplication sign (RUF001/002/003 ambiguous-unicode).
+"tools/*.py" = ["T201", "E402", "RUF001", "RUF002", "RUF003"]
+# corpus_stats builds wide Markdown tables/report rows; those f-string lines are intentionally
+# long (wrapping them would only obscure the table being printed).
+"tools/corpus_stats.py" = ["E501"]
 # WorldTestBase subclasses set `options = {...}` (the AP world-test idiom); RUF012's
 # ClassVar requirement doesn't apply to this convention.
 "apworld/sokopelago/test/*.py" = ["RUF012"]

@@ -13,8 +13,12 @@ class TestLocationIdRegistry(unittest.TestCase):
         # The original 155 Microban levels must keep their exact ids in every band.
         for n in range(1, 156):
             self.assertEqual(Locations.location_name_to_id[Locations.solve_location_name(n)], Locations.LOC_ID_BASE + n)
-            self.assertEqual(Locations.location_name_to_id[Locations.par_location_name(n)], Locations.PAR_LOC_ID_BASE + n)
-            self.assertEqual(Locations.location_name_to_id[Locations.eff_location_name(n)], Locations.EFF_LOC_ID_BASE + n)
+            self.assertEqual(
+                Locations.location_name_to_id[Locations.par_location_name(n)], Locations.PAR_LOC_ID_BASE + n
+            )
+            self.assertEqual(
+                Locations.location_name_to_id[Locations.eff_location_name(n)], Locations.EFF_LOC_ID_BASE + n
+            )
 
     def test_registry_covers_the_lifted_range(self) -> None:
         self.assertGreater(corpus.LOCATION_MAX, 155)

@@ -148,8 +148,12 @@ class SokopelagoWorld(World):
                 "only %d eligible level(s) -> using %d across %d world(s). Use max_difficulty=any (or a "
                 "larger pool) for the full count.",
                 self.multiworld.get_player_name(self.player),
-                requested, self.options.max_difficulty.current_key, self.corpus_data.name,
-                len(allowed), self.level_count, self.region_count,
+                requested,
+                self.options.max_difficulty.current_key,
+                self.corpus_data.name,
+                len(allowed),
+                self.level_count,
+                self.region_count,
             )
         # Count-floor chaining steepness; clamped to the world count (a value >= the world
         # count flattens the body floors back to the classic single-key star).

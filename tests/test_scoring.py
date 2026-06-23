@@ -78,14 +78,18 @@ class TestScoreQuality:
         assert 0.0 <= s.score_quality({"par": 12.0, "boxes": 3.0, "moves": 40.0}) <= 1.0
 
     def test_rich_features_use_components(self):
-        low = s.score_quality({"difficulty": 0.1, "box_change_difficulty": 0.1, "likeability": 0.1, "structural_elegance": 0.1})
-        high = s.score_quality({"difficulty": 0.6, "box_change_difficulty": 0.6, "likeability": 0.9, "structural_elegance": 0.9})
+        low = s.score_quality(
+            {"difficulty": 0.1, "box_change_difficulty": 0.1, "likeability": 0.1, "structural_elegance": 0.1}
+        )
+        high = s.score_quality(
+            {"difficulty": 0.6, "box_change_difficulty": 0.6, "likeability": 0.9, "structural_elegance": 0.9}
+        )
         assert 0.0 <= low < high <= 1.0
 
 
 class TestComputeFeaturesShape:
     def _microban(self):
-        levels = {l.n: l for l in load_corpus(corpus_xsb("microban"))}
+        levels = {lv.n: lv for lv in load_corpus(corpus_xsb("microban"))}
         data = {e["n"]: e for e in json.loads(manifest_json("microban").read_text())}
         return levels, data
 
@@ -97,10 +101,24 @@ class TestComputeFeaturesShape:
             assert 0.0 <= f["box_change_difficulty"] <= 1.0
             assert 0.0 <= f["quality_score"] <= 1.0
             ff = f["fun_features"]
-            assert set(ff) == {"playable_area", "openness", "boxes", "steps_per_box", "search_difficulty", "likeability"}
+            assert set(ff) == {
+                "playable_area",
+                "openness",
+                "boxes",
+                "steps_per_box",
+                "search_difficulty",
+                "likeability",
+            }
             assert 0.0 <= ff["openness"] <= 1.0 and 0.0 <= ff["likeability"] <= 1.0
             st = f["structural"]
-            assert set(st) == {"goal_room_connected", "matter_fraction", "matter_method", "dead_floor_ratio", "box_density", "deadlock_proximity"}
+            assert set(st) == {
+                "goal_room_connected",
+                "matter_fraction",
+                "matter_method",
+                "dead_floor_ratio",
+                "box_density",
+                "deadlock_proximity",
+            }
             assert 0.0 <= st["matter_fraction"] <= 1.0 and 0.0 <= st["deadlock_proximity"] <= 1.0
             assert len(f["canonical_hash"]) == 16
 
