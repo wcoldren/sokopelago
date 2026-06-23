@@ -11,14 +11,14 @@ or talks to production.
 | Results view | shows "appears once the backend is configured" | shows live counts/averages/histogram |
 | Use it for | eyeballing layout + play feel | end-to-end solve → rate → results |
 
-URLs (both modes open `/potd.html` automatically): Vite at **http://localhost:5173**, and in Mode B
+URLs (both modes open `/potd/` automatically): Vite at **http://localhost:5173**, and in Mode B
 the Worker at **http://localhost:8787**.
 
 ## Mode A — static layout preview (no backend)
 
 ```sh
 cd client
-npm run dev:potd        # vite --open /potd.html, no VITE_POTD_API
+npm run dev:potd        # vite --open /potd/, no VITE_POTD_API
 ```
 
 Play and rate as normal. Because no API base is configured, each submitted rating drops straight

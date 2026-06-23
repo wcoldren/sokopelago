@@ -58,7 +58,7 @@ and re-indexed by `tools/build_pool.py`. Each is credited per its own terms:
 Per-set distribution terms, required credits, and file hashes are in
 [`levels/ATTRIBUTION.md`](levels/ATTRIBUTION.md) (the human-readable render of the machine-readable
 [`levels/provenance.json`](levels/provenance.json)). The in-app credit is surfaced in the client
-footer (`client/index.html`, `client/potd.html`).
+footer (`client/index.html`, `client/potd/index.html`).
 
 ## Solutions / par data
 
