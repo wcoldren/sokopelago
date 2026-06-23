@@ -35,3 +35,8 @@ data/calibration/
 
 # Local build of the external SokoBoy solver (never vendored; see docs/EXTERNAL-SOLVER.md).
 .sokoboy/
+
+# AP world test scaffold: the throwaway Archipelago clone + its 3.13 venv (see the pre-flight
+# in the README / RUNBOOK). Never committed — recreated on demand.
+_ap/
+.venv-ap/
