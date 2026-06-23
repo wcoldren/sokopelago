@@ -7,6 +7,46 @@ apworld `world_version`, with the client kept in lockstep. The minor digit bumps
 contract changes (datapackage / `slot_data` schema / option schema), not roadmap phase
 numbers and not on every change to generated output.
 
+## [0.8.0] — More corpora, bigger pools, and live Puzzle-of-the-Day
+
+Adds two new selectable corpora and lifts the level-id cap to support them (a backward-compatible,
+additive contract change — hence the minor bump), takes the Puzzle-of-the-Day ratings backend live,
+and broadens POTD to a cross-corpus daily pool. No existing item/location id or `slot_data` field
+changed.
+
+### Added (apworld)
+- **`curated` corpus** — a large, solved, merged & re-indexed pool drawn from Microban I–III,
+  Sasquatch I–IX, XSokoban and more, selectable via `corpus: curated` (built by `tools/build_pool.py`).
+- **`autoban` corpus** — an in-house, push-only generated set with a calibrated easy/medium/hard
+  spread (`tools/generate_corpus.py`), selectable via `corpus: autoban`.
+- **155-level id cap lifted**: `MAX_WORLDS` 155 → 198 and "Solve …" locations registered up to the
+  pool maximum, so big merged pools work at higher `levels_per_region`. Every existing id (1..155)
+  is unchanged — additive only.
+- A warning when a seed's `level_count` is clamped to the available pool size.
+
+### Added (POTD / client + backend)
+- **POTD is live**: the Cloudflare Worker + D1 ratings sink is wired for production (`VITE_POTD_API`
+  in `client/.env.production`); the page degrades gracefully (queues ratings locally) when unset.
+- **Cross-corpus daily pool**: the Puzzle of the Day now picks from the curated pool restricted to
+  push-solvable puzzles (470 levels across Microban I–III, Sasquatch, XSokoban; `autoban` and the
+  `pullban` pull-set excluded), labeled by source (e.g. "Sasquatch VII #33").
+- **Unique visitors**: a fire-and-forget `POST /visit` beacon + a `visits` table dedup’d on
+  `(date, visitorId)`; `GET /results` now reports `uniqueVisitors`.
+- **Duplicate-handle disambiguation**: a persisted, non-PII `visitorId` anchors identity; the
+  handle is a display label shown with a short stable suffix (e.g. `bob·a3f1`). The rating event
+  carries `visitorId` — schema bumped `sokopelago-potd-rating/1` → `/2` in lockstep across the
+  client and Worker validators.
+- Corpus **annotate/ingest/scoring/provenance** pipeline (Microban II–III, Sasquatch, XSokoban
+  datasets + the `build_pool` merger and an interpretable scoring module).
+
+### Changed
+- **World 1 opener variation**: `generate_early` shuffles World 1's internal order, so a seed no
+  longer always starts on the same level (generated-output change only — no contract impact).
+- CI/CORS hardening: real CORS allow-list on the Worker, path-gated Pages/Worker delivery, an
+  import-boundary check keeping the POTD page offline, Node 24 runners, and a pre-push gate.
+- Solo free-play: hint/undo/pull client features, a panic button (free solve + unlock), and
+  corpus browsing tabs over all bundled sets.
+
 ## [0.7.0] — Accurate logic: boss-zone gate + count-floor chaining
 
 Turns the flat region-key spine into real multiworld logic, so a seed can no longer be beaten

@@ -16,7 +16,7 @@ game: Sokopelago
 requires:
   version: 0.6.7 # Archipelago version required for this yaml.
   game:
-    Sokopelago: 0.7.0 # World version required (accurate logic: boss-zone gate + count-floor chaining).
+    Sokopelago: 0.8.0 # World version required (cross-corpus pools; accurate logic: boss-zone gate + count-floor chaining).
 
 Sokopelago:
   corpus: microban
