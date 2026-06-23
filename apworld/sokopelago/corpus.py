@@ -35,9 +35,9 @@ class LevelEntry(TypedDict, total=False):
     # the apworld and client ignore them, so they are purely additive). Curated third-party
     # corpora carry these; the shipped microban/pullban/autoban manifests need not.
     box_change_difficulty: float
-    fun_features: dict  # {playable_area, openness, boxes, steps_per_box, search_difficulty, likeability}
+    fun_features: dict[str, float]  # {playable_area, openness, boxes, steps_per_box, search_difficulty, likeability}
     # structural: goal_room_connected, matter_fraction, matter_method, dead_floor_ratio, box_density, deadlock_proximity
-    structural: dict
+    structural: dict[str, object]
     quality_score: float
     canonical_hash: str  # symmetry+player-region invariant identity (tools/canonical.py)
     provenance: str  # corpus key into levels/provenance.json

@@ -28,7 +28,7 @@ class TestWorld1OpenerVaries(SokopelagoTestBase):
 
     def _opener_for_seed(self, seed: int) -> int:
         self.world_setup(seed)
-        return self.world.fill_slot_data()["levels"][0]
+        return int(self.world.fill_slot_data()["levels"][0])
 
     def test_opener_varies_across_seeds(self) -> None:
         openers = {self._opener_for_seed(seed) for seed in self.SEEDS}

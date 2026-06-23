@@ -82,7 +82,7 @@ class TestGentleFirstWorld(unittest.TestCase):
     # Levels 1..5 easy (<0.33), 6..15 harder.
     _DIFF = {n: (0.1 if n <= 5 else 0.5) for n in range(1, 16)}
 
-    def _chunk(self, lvls):
+    def _chunk(self, lvls: list[int]) -> list[list[int]]:
         return chunk_list(lvls, 3)
 
     def test_world_1_is_easy_only(self) -> None:

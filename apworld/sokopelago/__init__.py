@@ -216,7 +216,9 @@ class SokopelagoWorld(World):
                 menu.connect(
                     region,
                     f"Menu -> World {i}",
-                    rule=lambda state, keys=all_keys: state.has_all(keys, self.player),
+                    # mypy --strict can't infer AP rule lambdas that bind loop vars via default
+                    # args (the idiom that avoids late-binding capture); ignore the 4 below.
+                    rule=lambda state, keys=all_keys: state.has_all(keys, self.player),  # type: ignore[misc]
                 )
             else:
                 # Body world (and the boss world when chaining is off): own key, plus a
@@ -229,7 +231,7 @@ class SokopelagoWorld(World):
                     menu.connect(
                         region,
                         f"Menu -> World {i}",
-                        rule=lambda state, k=key, keys=all_keys, f=floor_i: (
+                        rule=lambda state, k=key, keys=all_keys, f=floor_i: (  # type: ignore[misc]
                             state.has(k, self.player) and state.has_from_list(keys, self.player, f)
                         ),
                     )
@@ -237,7 +239,7 @@ class SokopelagoWorld(World):
                     menu.connect(
                         region,
                         f"Menu -> World {i}",
-                        rule=lambda state, k=key: state.has(k, self.player),
+                        rule=lambda state, k=key: state.has(k, self.player),  # type: ignore[misc]
                     )
 
     def _effective_floors(self) -> list[int]:
@@ -251,7 +253,7 @@ class SokopelagoWorld(World):
     def _apply_pull_gate(self, loc: SokopelagoLocation, n: int) -> None:
         """Gate a pull-required level's location behind the Pull item (expert logic)."""
         if n in self.pull_levels:
-            loc.access_rule = lambda state, p=self.player: state.has(PULL_NAME, p)
+            loc.access_rule = lambda state, p=self.player: state.has(PULL_NAME, p)  # type: ignore[misc]
 
     def _add_excluded_check(self, region: Region, name: str, table: dict[str, int], n: int) -> None:
         """Attach a filler-only (EXCLUDED) skill check (par/efficiency) for level ``n``,

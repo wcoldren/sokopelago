@@ -55,7 +55,11 @@ class TestBossGate(SokopelagoTestBase):
         distribute_items_restrictive(self.multiworld)
         boss = self.world.region_count
         key_names = {world_key_name(n) for n in range(2, boss + 1)}
-        boss_locs = [loc for loc in self.multiworld.get_locations(1) if loc.parent_region.name == f"World {boss}"]
+        boss_locs = [
+            loc
+            for loc in self.multiworld.get_locations(1)
+            if loc.parent_region is not None and loc.parent_region.name == f"World {boss}"
+        ]
         self.assertTrue(boss_locs, "boss world should have locations")
         for loc in boss_locs:
             self.assertFalse(

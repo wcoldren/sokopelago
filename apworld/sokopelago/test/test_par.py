@@ -6,7 +6,7 @@ progression item. Each subclass also runs the inherited WorldTestBase
 reachability/fill/beatability checks under its option set.
 """
 
-from BaseClasses import LocationProgressType
+from BaseClasses import Location, LocationProgressType
 
 from .bases import SokopelagoTestBase
 
@@ -14,11 +14,11 @@ _PAR_SUFFIX = "in <= par pushes"
 _EFF_SUFFIX = "efficiently"
 
 
-def _par_locations(world_test):
+def _par_locations(world_test: SokopelagoTestBase) -> list[Location]:
     return [loc for loc in world_test.multiworld.get_locations(world_test.player) if loc.name.endswith(_PAR_SUFFIX)]
 
 
-def _eff_locations(world_test):
+def _eff_locations(world_test: SokopelagoTestBase) -> list[Location]:
     return [loc for loc in world_test.multiworld.get_locations(world_test.player) if loc.name.endswith(_EFF_SUFFIX)]
 
 
