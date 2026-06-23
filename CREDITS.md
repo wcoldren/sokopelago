@@ -43,6 +43,23 @@ reproducible — the generator version, RNG seed, and parameters are recorded in
 `levels/autoban.meta.json`. Solutions/par/difficulty are computed offline by the project's
 own solver (`tools/solve_corpus.py --corpus autoban`), exactly as for the other corpora.
 
+## Levels — Curated pool (additional sets)
+
+The `curated` corpus (and the solo corpus browser) draws from several more bundled sets, merged
+and re-indexed by `tools/build_pool.py`. Each is credited per its own terms:
+
+- **Microban II** (135), **Microban III** (64), and **Sasquatch I–IX** (50 each) — by
+  **David W. Skinner**, used per his free-distribution-with-credit terms (the same as Microban):
+  *"These sets may be freely distributed provided they remain properly credited."*
+  Source: <https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/>
+- **XSokoban** (90) — by the **XSokoban project** (Joseph L. Traub, Andrew Myers, et al.),
+  **public domain**. Source: <https://github.com/andrewcmyers/xsokoban>
+
+Per-set distribution terms, required credits, and file hashes are in
+[`levels/ATTRIBUTION.md`](levels/ATTRIBUTION.md) (the human-readable render of the machine-readable
+[`levels/provenance.json`](levels/provenance.json)). The in-app credit is surfaced in the client
+footer (`client/index.html`, `client/potd.html`).
+
 ## Solutions / par data
 
 Per-level solutions and push-par values in `apworld/sokopelago/data/microban.json` are
