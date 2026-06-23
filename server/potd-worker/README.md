@@ -70,10 +70,12 @@ The deploy job is **scaffolded but inert** until those secrets exist.
 
 ## Client build wiring
 
-The client reads the backend origin from `VITE_POTD_API` at build time. For the production Pages
-build this is committed in `client/.env.production` (`VITE_POTD_API=<worker-url>`); the URL is not
-a secret. When unset (local dev/preview), the POTD page still plays and **queues ratings locally**
-(retrying on the next load) and the visit beacon is a no-op — so the page is fully offline-tolerant.
+The client reads the backend origin from `VITE_POTD_API` at build time. **Deployment is currently
+deferred** — there is no `client/.env.production`, so the published page runs fully offline: it
+**queues ratings locally** (retrying on the next load) and the visit beacon is a no-op. When the
+Worker is deployed, commit `client/.env.production` with `VITE_POTD_API=<worker-url>` (the URL is
+not a secret) to wire the production Pages build to it — see the go-live checklist in
+`docs/KNOWN-ISSUES.md`.
 
 The rating payload is the **`sokopelago-potd-rating/2`** schema. Its validator is mirrored, field
 for field, between `src/index.ts` (`validate`) and `client/src/potd/rating.ts`

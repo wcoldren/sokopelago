@@ -7,12 +7,13 @@ apworld `world_version`, with the client kept in lockstep. The minor digit bumps
 contract changes (datapackage / `slot_data` schema / option schema), not roadmap phase
 numbers and not on every change to generated output.
 
-## [0.8.0] — More corpora, bigger pools, and live Puzzle-of-the-Day
+## [0.8.0] — More corpora, bigger pools, and the Puzzle-of-the-Day page
 
 Adds two new selectable corpora and lifts the level-id cap to support them (a backward-compatible,
-additive contract change — hence the minor bump), takes the Puzzle-of-the-Day ratings backend live,
-and broadens POTD to a cross-corpus daily pool. No existing item/location id or `slot_data` field
-changed.
+additive contract change — hence the minor bump), ships the Puzzle-of-the-Day page with a
+cross-corpus daily pool and offline rating capture, and varies the World 1 opener. No existing
+item/location id or `slot_data` field changed. (The POTD ratings backend is built but its
+deployment is deferred — see `docs/KNOWN-ISSUES.md`.)
 
 ### Added (apworld)
 - **`curated` corpus** — a large, solved, merged & re-indexed pool drawn from Microban I–III,
@@ -25,8 +26,9 @@ changed.
 - A warning when a seed's `level_count` is clamped to the available pool size.
 
 ### Added (POTD / client + backend)
-- **POTD is live**: the Cloudflare Worker + D1 ratings sink is wired for production (`VITE_POTD_API`
-  in `client/.env.production`); the page degrades gracefully (queues ratings locally) when unset.
+- **POTD page ships**: the Cloudflare Worker + D1 ratings sink is built and the client reads
+  `VITE_POTD_API`, but **backend deployment is deferred** (no `client/.env.production` yet) — so the
+  page runs fully offline, queuing ratings locally and retrying when a backend is configured.
 - **Cross-corpus daily pool**: the Puzzle of the Day now picks from the curated pool restricted to
   push-solvable puzzles (470 levels across Microban I–III, Sasquatch, XSokoban; `autoban` and the
   `pullban` pull-set excluded), labeled by source (e.g. "Sasquatch VII #33").

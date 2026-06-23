@@ -17,7 +17,7 @@ levels/      Canonical level corpus (XSB), shared by the client now and the apwo
 ROADMAP.md   Source of truth for scope + phasing
 ```
 
-## Current status: `0.8.0` — cross-corpus pools + live POTD (alpha)
+## Current status: `0.8.0` — cross-corpus pools + Puzzle-of-the-Day page (alpha)
 
 > ⚠ **Alpha — please help test!** Solo play and multiworld syncs both work. `0.7` adds real
 > sphere ordering — the boss zone unlocks last (behind every other world key) and later worlds
@@ -39,8 +39,10 @@ absolute difficulty, the `max_difficulty` easy-first default, gentle first world
 stats (see below); `0.7.0` adds **accurate logic** — the boss-zone all-keys gate and count-floor
 world chaining (the `Chain Group` knob), so seeds play in real sphere order. `0.8.0` adds the
 **curated** cross-corpus pool and the in-house **autoban** set as selectable corpora (lifting the
-155-level id cap, backward-compatibly), varies the World 1 opener, and takes the
-Puzzle-of-the-Day ratings backend live. **`beat_final_region` is the supported, tested goal**; the
+155-level id cap, backward-compatibly), varies the World 1 opener, and ships the
+Puzzle-of-the-Day page (cross-corpus daily puzzle + offline rating capture; the ratings backend is
+built but its deployment is deferred to a later release). **`beat_final_region` is the supported,
+tested goal**; the
 `solve_count` / `boss_level` goal modes keep the simpler single-key layout and remain experimental.
 Remaining roadmap work: a larger pull corpus (`docs/DESIGN-pull-corpus.md`) and **Phase 6** (polish
 — PopTracker, more abilities/corpora, hosting/UX).

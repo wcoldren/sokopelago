@@ -48,3 +48,22 @@ So e.g. `max_difficulty: easy` + `level_count: 100` + `levels_per_region: 10` do
 A generation **warning** is logged when this clamp happens (see it in the Generate.py output), but the
 seed still generates with the smaller count. For a true 10×10, use `max_difficulty: any` (or a pool
 with ≥ `level_count` levels at the chosen cap).
+
+## Deferred / planned next — POTD ratings backend go-live
+
+The Puzzle-of-the-Day **page ships and works offline** (cross-corpus daily puzzle, ratings queued in
+`localStorage`, retried on the next load). The ratings **backend** — the Cloudflare Worker + D1 sink
+under `server/potd-worker/` — is **built and tested but not yet deployed**, so no ratings/visits are
+collected on a server yet. Until it's live the page is fully self-contained.
+
+To go live (the maintainer's steps; see `server/potd-worker/README.md`):
+
+1. `cd server/potd-worker && npm install`
+2. `npx wrangler login`
+3. `npx wrangler d1 create sokopelago-potd` → paste the printed `database_id` into `wrangler.toml`
+   (it is not a secret); confirm `ALLOWED_ORIGINS` lists the exact Pages origin.
+4. `npm run db:local && npm run db:remote` (creates `ratings` v2 + `visits`).
+5. Add repo secrets `CLOUDFLARE_API_TOKEN` (Workers + D1 edit) and `CLOUDFLARE_ACCOUNT_ID` so the
+   `deploy-worker` CI job activates (it is inert until then).
+6. After the Worker URL is known, commit `client/.env.production` with `VITE_POTD_API=<worker-url>`
+   so the production Pages build posts to it.
