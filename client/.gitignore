@@ -3,3 +3,7 @@
 .env
 .env.*
 !.env.example
+# .env.production is the ONE intentional exception: it holds VITE_POTD_API (the public Worker URL,
+# baked into the client bundle anyway — not a secret), so the production Pages build posts to the
+# live ratings backend. Committed on purpose.
+!.env.production

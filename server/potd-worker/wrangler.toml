@@ -2,6 +2,12 @@
 name = "sokopelago-potd"
 main = "src/index.ts"
 compatibility_date = "2025-01-01"
+# Publish to the account's workers.dev subdomain (the live ratings endpoint). Explicit so the
+# non-interactive deploy (local `!` shell + CI) doesn't stop to ask. Not a secret.
+workers_dev = true
+# Don't mint per-version preview URLs — the stable workers.dev URL is the only endpoint we want
+# pointed at the prod D1. (Takes effect on the next deploy.)
+preview_urls = false
 
 # D1 (SQLite) binding. Create the database with `wrangler d1 create sokopelago-potd` and paste
 # the printed database_id below (it is not a secret). Apply src/schema.sql with `wrangler d1
