@@ -9,7 +9,7 @@ compatibility_date = "2025-01-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "sokopelago-potd"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "f496463c-2fd4-4849-912c-389503235050"
 
 # Browser CORS allow-list: the exact origins allowed to call this Worker, comma-separated and
 # never wildcard. The production Pages origin plus the local Vite dev origins (Mode B local loop,
