@@ -19,10 +19,16 @@ jobs:
       contents: read
       pull-requests: read
     outputs:
-      pages: ${{ steps.filter.outputs.pages }}
-      worker: ${{ steps.filter.outputs.worker }}
+      # A manual run (workflow_dispatch) force-deploys both, so a maintainer can always redeploy
+      # (e.g. when a fast-forward merge's tip commit didn't itself touch the gated paths).
+      pages: ${{ steps.filter.outputs.pages == 'true' || github.event_name == 'workflow_dispatch' }}
+      worker: ${{ steps.filter.outputs.worker == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
+      # Full history so paths-filter can diff the real push range (before..after); a shallow
+      # checkout makes it fall back to the tip commit only, which mis-detects ff-merges.
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: dorny/paths-filter@v4
         id: filter
         with:
