@@ -3,9 +3,19 @@
 inherited WorldTestBase reachability/fill/beatability checks under its option set.
 """
 
+import unittest
+
 from ..layout import chunk_levels
+from ..Options import LevelSelection
 from ..tiers import tier_of
 from .bases import SokopelagoTestBase
+
+
+class TestSelectionDefault(unittest.TestCase):
+    def test_default_is_shuffled_buckets(self) -> None:
+        # 0.8.1 flipped the production default to shuffled_buckets (per-seed variety). The legacy
+        # test battery pins native in bases.py; this guards the shipped default itself.
+        self.assertEqual(LevelSelection.default, LevelSelection.option_shuffled_buckets)
 
 
 class TestSingleRegion(SokopelagoTestBase):

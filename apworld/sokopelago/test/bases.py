@@ -14,8 +14,14 @@ from test.bases import WorldTestBase
 # existing Test* subclasses predate them and assume the whole corpus is eligible in its native
 # layout, so default them to the legacy behavior unless a subclass opts in. (An unknown key is
 # ignored by world_setup, so listing gentle_first_world here is safe even before/after
-# the option exists.)
-_LEGACY_OPTION_DEFAULTS = {"max_difficulty": "any", "gentle_first_world": 0}
+# the option exists.) level_selection is pinned to native here too: the production default became
+# shuffled_buckets in 0.8.1, but the legacy battery asserts native order — subclasses needing the
+# shuffled path (e.g. TestShuffledBucketsSelection, TestCuratedTenByTen) set it explicitly.
+_LEGACY_OPTION_DEFAULTS = {
+    "max_difficulty": "any",
+    "gentle_first_world": 0,
+    "level_selection": "native",
+}
 
 
 class SokopelagoTestBase(WorldTestBase):

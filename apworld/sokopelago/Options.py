@@ -39,18 +39,18 @@ class LevelCount(Range):
 
 class LevelSelection(Choice):
     """How the seed's levels are drawn from the corpus.
-    native: the first Level Count levels in corpus order (deterministic — every seed
-    with the same options gets the same puzzles).
-    shuffled_buckets: vary the selection per seed. Levels are grouped into Difficulty
-    Buckets tiers and a size-proportional, randomly-shuffled subset of each tier is
-    drawn, so different seeds play different puzzles while the easy→hard ramp is kept.
-    With this on, Goal Boss Level may name a level that isn't drawn — the nearest selected
-    level is used instead."""
+    shuffled_buckets (default): vary the selection per seed. Levels are grouped into
+    Difficulty Buckets tiers and a size-proportional, randomly-shuffled subset of each tier
+    is drawn, so different seeds play different puzzles while the easy→hard ramp is kept.
+    With this, Goal Boss Level may name a level that isn't drawn — the nearest selected level
+    is used instead.
+    native: the first Level Count levels in corpus order (deterministic — every seed with
+    the same options gets the same puzzles); choose this when you want reproducible seeds."""
 
     display_name = "Level Selection"
     option_native = 0
     option_shuffled_buckets = 1
-    default = 0
+    default = 1
 
 
 class DifficultyBuckets(Range):
