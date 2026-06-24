@@ -76,11 +76,13 @@ export function seedPositionInWorld(slot: SlotData, n: number): number {
 }
 
 /**
- * The next level to auto-advance to after solving `afterN`, in world-first order: the rest of
- * the current world, then forward (higher-index) worlds, then wrapping back to earlier worlds
- * (and finally earlier levels of the current world). The first candidate that is playable and
- * unsolved wins; `null` when nothing remains. Pure — the caller passes `isSolved`/`isPlayable`
- * predicates (so it stays unit-testable without a live Session).
+ * The next level to auto-advance to after solving `afterN`, in world-first order: the current
+ * world is fully exhausted first (the levels after `afterN`, then the ones before it), then
+ * forward (higher-index) worlds, then wrapping back to earlier worlds. The first candidate that is
+ * playable and unsolved wins; `null` when nothing remains. Keeping both directions of the current
+ * world ahead of other worlds stops a cross-world jump while the current world still has a
+ * playable, unsolved level (e.g. after solving its levels out of order). Pure — the caller passes
+ * `isSolved`/`isPlayable` predicates (so it stays unit-testable without a live Session).
  */
 export function nextLevelInWorldOrder(
   slot: SlotData,
@@ -105,10 +107,10 @@ export function nextLevelInWorldOrder(
   }
   const cur = levelsInWorld(slot, w0);
   const ordered: number[] = [
-    ...cur.slice(p0 + 1), // rest of the current world
+    ...cur.slice(p0 + 1), // rest of the current world (after the just-solved level)
+    ...cur.slice(0, p0), // then earlier positions of the current world (afterN at p0 is skipped)
     ...worlds.filter((w) => w > w0).flatMap((w) => levelsInWorld(slot, w)), // forward worlds
-    ...worlds.filter((w) => w < w0).flatMap((w) => levelsInWorld(slot, w)), // wrap to earlier worlds
-    ...cur.slice(0, p0 + 1), // wrap within the current world (afterN itself is skipped: it's solved)
+    ...worlds.filter((w) => w < w0).flatMap((w) => levelsInWorld(slot, w)), // then earlier worlds
   ];
   return ordered.find((n) => isPlayable(n) && !isSolved(n)) ?? null;
 }

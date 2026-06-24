@@ -353,6 +353,13 @@ describe("ap/slotData — nextLevelInWorldOrder", () => {
     expect(nextLevelInWorldOrder(s, 4, solved, all)).toBe(5); // -> world 3
   });
 
+  it("exhausts the current world before leaving it, even when solved out of order", () => {
+    // Solve world 2's LAST level (4) first, with its earlier level (3) still unsolved+playable.
+    // Must stay in world 2 (-> 3), not jump to another world. (Regression: it used to return 5.)
+    const solved = (n: number): boolean => n === 4;
+    expect(nextLevelInWorldOrder(s, 4, solved, all)).toBe(3);
+  });
+
   it("skips unplayable (locked) worlds", () => {
     const onlyW1 = (n: number): boolean => n <= 2; // only world 1 playable
     expect(nextLevelInWorldOrder(s, 1, none, onlyW1)).toBe(2); // stay in world 1
