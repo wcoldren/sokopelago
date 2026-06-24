@@ -19,19 +19,25 @@ jobs:
       contents: read
       pull-requests: read
     outputs:
-      # A manual run (workflow_dispatch) force-deploys both, so a maintainer can always redeploy
-      # (e.g. when a fast-forward merge's tip commit didn't itself touch the gated paths).
+      # A manual run (workflow_dispatch) force-deploys both, so a maintainer can always redeploy.
       pages: ${{ steps.filter.outputs.pages == 'true' || github.event_name == 'workflow_dispatch' }}
       worker: ${{ steps.filter.outputs.worker == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
-      # Full history so paths-filter can diff the real push range (before..after); a shallow
-      # checkout makes it fall back to the tip commit only, which mis-detects ff-merges.
+      # Full history so paths-filter can diff the real push range.
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - uses: dorny/paths-filter@v4
         id: filter
         with:
+          # On a push, diff the actual push range (before..after). Without this, paths-filter
+          # compares the pushed branch against the repo's DEFAULT branch (dev) — and after a
+          # dev->main fast-forward release main == dev, so the diff is empty and the deploy
+          # wrongly skips (this is why every release had to be redeployed by hand). For
+          # pull_request / workflow_dispatch `github.event.before` is empty, so paths-filter
+          # falls back to its normal base (PR base / default branch); dispatch force-deploys
+          # via the outputs above regardless.
+          base: ${{ github.event.before }}
           filters: |
             pages:
               - 'client/**'
