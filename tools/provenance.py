@@ -139,7 +139,21 @@ def render_attribution_md(provs: dict[str, Provenance]) -> str:
         "",
     ]
     body = "\n\n".join(_render_entry(p).rstrip() for p in provs.values())
-    return "\n".join(head) + "\n" + body + "\n"
+    # Derived pools aren't first-party sources (no .xsb, no single author), so they get no registry
+    # entry — but the player-selectable `curated` pool is built from the sets above, so name it here
+    # and point its credit back at them.
+    tail = "\n".join(
+        [
+            "## Derived pools",
+            "",
+            "**`curated`** is not a separate source set — it is a re-indexed merge of solved levels",
+            "drawn from the sets above, built by `tools/build_pool.py` and selectable via",
+            "`corpus: curated`. Each curated level keeps a `source` tag (e.g. `sasquatch7:33`)",
+            "pointing back to its origin set, so it is credited under that set's terms above.",
+            "Pull-required levels are excluded from `curated`.",
+        ]
+    )
+    return "\n".join(head) + "\n" + body + "\n\n" + tail + "\n"
 
 
 def write_attribution_md(path: Path = ATTRIBUTION_PATH) -> None:

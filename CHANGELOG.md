@@ -43,6 +43,9 @@ spam-dedup baseline, plus makes the two pages findable and shareable.
 - **POTD discoverability:** the page now serves at a clean `/potd/` URL, the two pages cross-link
   (main ↔ POTD), both carry Open Graph / Twitter share meta with a branded card image, and POTD has
   an offline-safe "Copy link" button.
+- **Favicon** on both pages (matching the share card), and the generated `levels/ATTRIBUTION.md`
+  now names the derived `curated` pool (with the in-app footers crediting Sasquatch I–IX + the
+  curated merge).
 
 ## [0.8.0] — More corpora, bigger pools, and the Puzzle-of-the-Day page
 

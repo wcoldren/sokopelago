@@ -247,3 +247,11 @@ Required credit: *Sasquatch VIII (50 puzzles) by David W. Skinner.*
 Downloaded from the canonical Skinner mirror (https://www.onlinespiele-sammlung.de/sokoban/sokobangames/skinner/s8.txt). XSB text with no per-file credit; an attribution header is prepended on ingest.
 
 `sha256(levels/sasquatch8.xsb)` = `ce8359f09f2777c1f1b8763609d7e15e88fddf260a955733d04d66b98611309b`
+
+## Derived pools
+
+**`curated`** is not a separate source set — it is a re-indexed merge of solved levels
+drawn from the sets above, built by `tools/build_pool.py` and selectable via
+`corpus: curated`. Each curated level keeps a `source` tag (e.g. `sasquatch7:33`)
+pointing back to its origin set, so it is credited under that set's terms above.
+Pull-required levels are excluded from `curated`.
