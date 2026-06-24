@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Sokopelago">
+  <!-- Box-on-goal motif, matching the og-card: dark tile, blue goal marker, amber box. -->
+  <rect width="32" height="32" rx="6" fill="#1a1a1f"/>
+  <rect x="6" y="6" width="20" height="20" rx="3" fill="none" stroke="#33333f" stroke-width="1.5"/>
+  <!-- goal marker -->
+  <rect x="12.5" y="12.5" width="7" height="7" fill="none" stroke="#6e8bff" stroke-width="2"/>
+  <!-- box (offset so both read at small sizes) -->
+  <rect x="13" y="13" width="11" height="11" rx="2" fill="#b48c5a"/>
+  <rect x="13" y="13" width="11" height="11" rx="2" fill="none" stroke="#d8b078" stroke-width="1"/>
+</svg>

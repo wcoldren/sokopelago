@@ -28,6 +28,13 @@ describe("two-page build inputs", () => {
     expect(existsSync(`${clientDir}/public/og-card.png`)).toBe(true);
   });
 
+  it("the favicon is present and linked from both pages (root vs ../ under base)", () => {
+    expect(existsSync(`${clientDir}/public/favicon.svg`)).toBe(true);
+    // index sits at the dist root; /potd/ is one level down, so it reaches the root favicon via ../.
+    expect(read("index.html")).toContain('href="favicon.svg"');
+    expect(read("potd/index.html")).toContain('href="../favicon.svg"');
+  });
+
   it("both pages reference the share image by an absolute URL (crawlers don't resolve base)", () => {
     for (const page of ["index.html", "potd/index.html"]) {
       expect(read(page)).toContain('content="https://wcoldren.github.io/sokopelago/og-card.png"');
