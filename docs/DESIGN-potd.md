@@ -20,9 +20,10 @@ played. Two facets:
 
 - **Cross-mode repeat:** the level was seen elsewhere before POTD served it (solo/demo, a prior
   AP run, or an earlier POTD day).
-- **POTD cycling:** a fixed pool served one-per-day eventually exhausts and repeats (the 470-entry
-  curated pool ≈ 15 months before a repeat is even *possible* — much wider than the old
-  microban-only ~5 months).
+- **POTD cycling:** a fixed pool served one-per-day eventually exhausts and repeats. As of 0.8.1
+  selection walks a fixed permutation of the pool (see the *Non-repeating date schedule* mitigation
+  below), so there is **no repeat until the whole pool is exhausted** — the 470-entry curated pool ≈
+  15 months before any repeat (vs the old microban-only ~5 months).
 
 ## Root tension
 
@@ -35,9 +36,11 @@ property. The mitigations are therefore all pool-level, not per-player.
 - **Grow the corpus** (curation / generation) → longer cycle before any repeat.
 - **Reserve a POTD-only pool** (held-out, or owned-generated, never used in solo) → kills
   cross-mode repeats cleanly. Ties to the owned-generation path.
-- **Non-repeating date schedule** — permute the whole pool so there's no repeat until the pool is
-  exhausted. (The current selection hashes the date string, so a repeat is *possible* before
-  exhaustion; a permutation removes that — see `client/src/potd/select.ts`.)
+- **Non-repeating date schedule** — *implemented in 0.8.1.* Selection walks a fixed deterministic
+  permutation of the pool indexed by day number (`client/src/potd/select.ts`), so any window of
+  `poolSize` consecutive days shows each puzzle exactly once — no repeat until the pool is exhausted
+  (then the same order repeats). Earlier builds hashed the date string, which allowed repeats before
+  exhaustion.
 - **Acknowledge, don't avoid** — a gentle "you've played this before" badge derived from the
   existing per-level stats (`client/src/engine/stats.ts`), without changing the shared puzzle.
 

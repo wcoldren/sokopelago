@@ -45,6 +45,28 @@ describe("pickDailyIndex", () => {
     expect(new Set(idx).size).toBeGreaterThan(1);
   });
 
+  it("no repeat until the pool is exhausted: any poolSize-day window is a full permutation", () => {
+    // Walk poolSize consecutive UTC days; a fixed permutation indexed by day-number means each
+    // window of poolSize days shows every index exactly once (no early repeat).
+    const pool = 7;
+    const start = Date.parse("2026-03-01T00:00:00Z");
+    const window = Array.from({ length: pool }, (_, k) =>
+      pickDailyIndex(utcDayString(new Date(start + k * 86_400_000)), pool),
+    );
+    expect(new Set(window).size).toBe(pool); // all distinct
+    expect([...window].sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5, 6]); // covers 0..pool-1
+  });
+
+  it("stays distinct across a cycle boundary (unaligned window)", () => {
+    // Start at an arbitrary offset so the window straddles the wrap point; still a full permutation.
+    const pool = 7;
+    const start = Date.parse("2026-03-04T00:00:00Z");
+    const window = Array.from({ length: pool }, (_, k) =>
+      pickDailyIndex(utcDayString(new Date(start + k * 86_400_000)), pool),
+    );
+    expect(new Set(window).size).toBe(pool);
+  });
+
   it("guards an empty pool", () => {
     expect(pickDailyIndex("2026-06-21", 0)).toBe(0);
   });

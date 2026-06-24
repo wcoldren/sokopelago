@@ -1,10 +1,11 @@
-// Puzzle-of-the-Day selection: a pure function of the UTC calendar day, so every client
-// worldwide gets the same puzzle and it rolls over at 00:00 UTC. We seed a small deterministic
-// PRNG with the UTC date string and index the pool with it — deliberately NOT `dayIndex % len`,
-// which would march predictably up the list. No backend is involved in selection.
+// Puzzle-of-the-Day selection: a pure function of the UTC calendar day, so every client worldwide
+// gets the same puzzle and it rolls over at 00:00 UTC. We walk a fixed deterministic PERMUTATION of
+// the pool by day number — so there is no repeat until the whole pool is exhausted (any window of
+// `poolSize` consecutive days shows each puzzle exactly once), and never a predictable `day % len`
+// march. After a full cycle the same order repeats. No backend is involved in selection.
 //
-// Known limitation (corpus overlap / eventual repeats from this hash-based pick): accepted for
-// now — see docs/DESIGN-potd.md for the tension and the pool-level mitigations.
+// If the pool size changes (the corpus grows), the schedule simply re-derives — there's no
+// persisted day↔puzzle contract.
 
 /** The UTC calendar day of `date` as `YYYY-MM-DD`. Uses UTC accessors, so the result is
  *  timezone-independent — the same instant yields the same string in every locale. */
@@ -13,6 +14,12 @@ export function utcDayString(date: Date): string {
   const m = String(date.getUTCMonth() + 1).padStart(2, "0");
   const d = String(date.getUTCDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
+}
+
+/** Whole UTC days since the Unix epoch for a `YYYY-MM-DD` string (timezone-independent). */
+export function dayNumber(dateStr: string): number {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return Math.floor(Date.UTC(y, m - 1, d) / 86_400_000);
 }
 
 /** xmur3 string hash → a 32-bit seed generator (one good seed per call). */
@@ -41,15 +48,32 @@ function mulberry32(seed: number): () => number {
   };
 }
 
+// A fixed, deterministic permutation of [0, poolSize) — the daily schedule. Constant seed so every
+// client derives the same order; memoized per pool size (the only thing that changes it).
+const PERMUTATION_SEED = "sokopelago-potd/1";
+const permCache = new Map<number, number[]>();
+function permutation(poolSize: number): number[] {
+  const cached = permCache.get(poolSize);
+  if (cached) return cached;
+  const perm = Array.from({ length: poolSize }, (_, i) => i);
+  const rng = mulberry32(xmur3(PERMUTATION_SEED)());
+  for (let i = poolSize - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1)); // Fisher–Yates
+    [perm[i], perm[j]] = [perm[j], perm[i]];
+  }
+  permCache.set(poolSize, perm);
+  return perm;
+}
+
 /**
- * The pool index (0-based) for a given UTC day string, deterministic across clients and
- * timezone-independent (the day string is already UTC). Returns 0 for an empty pool.
+ * The pool index (0-based) for a given UTC day string: `permutation[dayNumber mod poolSize]`.
+ * Deterministic across clients and timezone-independent. No repeat until the pool is exhausted.
+ * Returns 0 for an empty pool.
  */
 export function pickDailyIndex(dateStr: string, poolSize: number): number {
   if (poolSize <= 0) return 0;
-  const seed = xmur3(dateStr)();
-  const rand = mulberry32(seed)();
-  return Math.floor(rand * poolSize);
+  const pos = ((dayNumber(dateStr) % poolSize) + poolSize) % poolSize; // non-negative
+  return permutation(poolSize)[pos];
 }
 
 /** Convenience: today's pool index for the given pool size (UTC day of `now`). */
