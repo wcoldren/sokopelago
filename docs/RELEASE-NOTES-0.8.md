@@ -1,3 +1,17 @@
+## Sokopelago 0.8.2 — fix Puzzle-of-the-Day data load
+
+> **Alpha (`0.x`).** Pre-1.0: the option/id layout may still move between releases. Players in a
+> multiworld must all use the **same** apworld version.
+
+A client-only, contract-preserving patch — no item/location id, `slot_data`, or option-schema change.
+
+- **Puzzle-of-the-Day now loads.** The `/potd/` page 404'd on its corpus data (`./data/curated.json`)
+  because the manifest URL was route-relative and the page is served one level deep. The fetch now
+  anchors to the app root, so it works from any route (dev / GitHub Pages / itch). The main game was
+  unaffected.
+
+---
+
 ## Sokopelago 0.8.1 — curated soundness + Puzzle-of-the-Day live
 
 > **Alpha (`0.x`).** Pre-1.0: the option/id layout may still move between releases. Players in a

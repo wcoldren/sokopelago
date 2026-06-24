@@ -17,7 +17,7 @@ levels/      Canonical level corpus (XSB), shared by the client now and the apwo
 ROADMAP.md   Source of truth for scope + phasing
 ```
 
-## Current status: `0.8.1` — cross-corpus pools + Puzzle-of-the-Day page, live (alpha)
+## Current status: `0.8.2` — cross-corpus pools + Puzzle-of-the-Day page, live (alpha)
 
 > ⚠ **Alpha — please help test!** Solo play and multiworld syncs both work. `0.7` adds real
 > sphere ordering — the boss zone unlocks last (behind every other world key) and later worlds
@@ -43,7 +43,8 @@ world chaining (the `Chain Group` knob), so seeds play in real sphere order. `0.
 155-level id cap, backward-compatibly), varies the World 1 opener, and ships the
 Puzzle-of-the-Day page (cross-corpus daily puzzle + offline rating capture). `0.8.1` is a
 contract-preserving patch: it filters pull-required levels out of `curated` (gating multiworld pull
-behind `pull_logic`) and takes the POTD ratings backend live with server-side dedup.
+behind `pull_logic`) and takes the POTD ratings backend live with server-side dedup. `0.8.2` fixes
+the Puzzle-of-the-Day page's corpus-data load (it 404'd on the `/potd/` sub-route).
 **`beat_final_region` is the supported,
 tested goal**; the
 `solve_count` / `boss_level` goal modes keep the simpler single-key layout and remain experimental.

@@ -7,6 +7,18 @@ apworld `world_version`, with the client kept in lockstep. The minor digit bumps
 contract changes (datapackage / `slot_data` schema / option schema), not roadmap phase
 numbers and not on every change to generated output.
 
+## [0.8.2] — Fix Puzzle-of-the-Day data load
+
+A contract-preserving patch: client-only, no item/location id, `slot_data`, or option-schema change.
+
+### Fixed (client)
+- **Puzzle-of-the-Day failed to load (`./data/curated.json` 404).** The `/potd/` page is served one
+  level deep, but the corpus-manifest fetch built a route-relative URL (`import.meta.env.BASE_URL` is
+  the relative `"./"` in the portable build), so it resolved to `/potd/data/curated.json` and 404'd.
+  The manifest URL now anchors to the JS bundle's own location (under `assets/`), so corpus data
+  resolves at the app root from any page route — dev, GitHub Pages, and itch.io alike. The main game
+  (served at the root) was unaffected. Regression test in `client/test/manifest-url.test.ts`.
+
 ## [0.8.1] — Curated soundness + Puzzle-of-the-Day goes live
 
 A contract-preserving patch: no item/location id, `slot_data`, or option-schema change. Closes a
