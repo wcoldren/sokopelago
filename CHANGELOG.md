@@ -11,7 +11,9 @@ numbers and not on every change to generated output.
 
 A contract-preserving patch: no item/location id, `slot_data`, or option-schema change. Closes a
 real generation-soundness hole in the `curated` pool and takes the POTD ratings backend live with a
-spam-dedup baseline, plus makes the two pages findable and shareable.
+spam-dedup baseline, plus makes the two pages findable and shareable. Two option **defaults** change
+generated output (curated re-index + `level_selection`); seeds are still reproducible with explicit
+options.
 
 ### Fixed (apworld)
 - **`curated` free-pull soundness hole.** The `curated` pool contained 6 `requires_pull` levels but
@@ -23,6 +25,18 @@ spam-dedup baseline, plus makes the two pages findable and shareable.
     and its level numbering shifted — **old `curated` seeds won't reproduce identically.** The
     committed `microban`/`pullban`/`autoban`/`microban2/3`/`sasquatch*`/`xsokoban90` sets are
     untouched.
+
+### Fixed (client)
+- **Auto-advance no longer jumps worlds early.** When a world's levels were solved out of order
+  (e.g. its last level first), the client could advance to another world while the current world
+  still had playable, unsolved levels. It now exhausts the current world (both directions) before
+  moving on.
+
+### Changed (apworld)
+- **Default `level_selection` is now `shuffled_buckets`** (was `native`): default seeds draw a
+  varied, per-seed subset while keeping the easy→hard ramp, instead of always the first N in corpus
+  order. This **changes default generated output**; set `level_selection: native` for reproducible
+  seeds.
 
 ### Changed (client)
 - **Multiworld pull is gated behind `pull_logic`.** The Pull control previously showed for any
@@ -43,6 +57,9 @@ spam-dedup baseline, plus makes the two pages findable and shareable.
 - **POTD discoverability:** the page now serves at a clean `/potd/` URL, the two pages cross-link
   (main ↔ POTD), both carry Open Graph / Twitter share meta with a branded card image, and POTD has
   an offline-safe "Copy link" button.
+- **POTD daily schedule is non-repeating:** selection walks a fixed pool permutation, so no puzzle
+  repeats until the whole pool is exhausted (~15 months on the 470-level pool) — replacing the
+  date-hash pick that could repeat earlier.
 - **Favicon** on both pages (matching the share card), and the generated `levels/ATTRIBUTION.md`
   now names the derived `curated` pool (with the in-app footers crediting Sasquatch I–IX + the
   curated merge).

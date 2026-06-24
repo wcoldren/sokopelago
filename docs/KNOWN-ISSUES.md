@@ -26,3 +26,14 @@ So e.g. `max_difficulty: easy` + `level_count: 100` + `levels_per_region: 10` do
 A generation **warning** is logged when this clamp happens (see it in the Generate.py output), but the
 seed still generates with the smaller count. For a true 10×10, use `max_difficulty: any` (or a pool
 with ≥ `level_count` levels at the chosen cap).
+
+## Pullban includes non-pull-required levels (intentional)
+
+In the `pullban` corpus only **9 of 30** levels actually require the Pull ability (levels 5–10 and
+28–30); the other **21 are push-solvable "host" levels**. So even with `pull_logic` on, most pullban
+levels don't use pull — and a small `level_count` may draw few or no pull-required levels.
+
+This is **by design**: the hosts give the shuffled-in **Pull** item and the **World n Key** items
+reachable, push-solvable homes (and filler budget), so an expert seed fills robustly instead of
+forcing every gated level behind a single hard chokepoint. See
+[`docs/DESIGN-pull-corpus.md`](DESIGN-pull-corpus.md). A denser, mostly-pull corpus is future work.
