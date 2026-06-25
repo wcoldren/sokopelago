@@ -81,14 +81,15 @@ function availableBoardBox(): { w: number; h: number } {
   const w = Math.min(720, Math.max(120, cell.clientWidth - padX));
   let h = window.innerHeight || 540;
   if (window.matchMedia("(orientation: landscape) and (max-height: 560px)").matches) {
-    const top = cell.getBoundingClientRect().top;
+    // Layout-based (scroll-independent) space below the board, minus its own readouts — so resizing
+    // the board can't shift the measurement and oscillate.
     let reserved = 0;
     for (const el of Array.from(cell.children)) {
-      if (el !== canvas) reserved += (el as HTMLElement).getBoundingClientRect().height;
+      if (el !== canvas) reserved += (el as HTMLElement).offsetHeight;
     }
-    h = h - top - reserved - 8;
+    h = h - cell.offsetTop - reserved - 8;
   }
-  return { w, h: Math.min(540, Math.max(120, h)) };
+  return { w: Math.floor(w), h: Math.floor(Math.min(540, Math.max(120, h))) };
 }
 
 /**
@@ -102,9 +103,13 @@ function setupDrawers(): void {
   }
 }
 
-/** Re-fit the board to the current viewport and redraw. */
+/** Re-fit the board to the current viewport and redraw — but only when the box actually changed, so
+ * the stream of mobile resize events (URL-bar show/hide, scroll) doesn't churn the board. */
+let lastFitBox = { w: -1, h: -1 };
 function fitBoard(): void {
   const { w, h } = availableBoardBox();
+  if (w === lastFitBox.w && h === lastFitBox.h) return;
+  lastFitBox = { w, h };
   renderer.resize(w, h);
   if (game) renderer.draw(game);
 }
