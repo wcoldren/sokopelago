@@ -27,6 +27,15 @@ export class Renderer {
     this.ctx = ctx;
   }
 
+  /**
+   * Set the on-screen budget (CSS px) the board is fit into. Pages feed this the live viewport so
+   * the board scales to the device; non-positive values are ignored so it never collapses.
+   */
+  resize(maxW: number, maxH: number): void {
+    if (maxW > 0) this.maxWidth = maxW;
+    if (maxH > 0) this.maxHeight = maxH;
+  }
+
   private cellSize(game: Game): number {
     const cell = Math.floor(
       Math.min(this.maxWidth / game.level.width, this.maxHeight / game.level.height),
@@ -36,13 +45,26 @@ export class Renderer {
 
   draw(game: Game): void {
     const { level } = game;
-    const cell = this.cellSize(game);
-    this.canvas.width = level.width * cell;
-    this.canvas.height = level.height * cell;
+    const cell = this.cellSize(game); // CSS px per cell
+    const cssW = level.width * cell;
+    const cssH = level.height * cell;
+
+    // High-DPI: back the canvas with device pixels but keep its CSS size in layout px, then scale
+    // the context so all drawing coords below stay in CSS px. (devicePixelRatio is absent in the
+    // node test env, so default to 1.)
+    const dpr = globalThis.devicePixelRatio ?? 1;
+    this.canvas.width = cssW * dpr;
+    this.canvas.height = cssH * dpr;
+    this.canvas.style.width = `${cssW}px`;
+    this.canvas.style.height = `${cssH}px`;
 
     const ctx = this.ctx;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // assigning canvas.width reset the transform
+
+    const W = cssW;
+    const H = cssH;
     ctx.fillStyle = COLORS.bg;
-    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    ctx.fillRect(0, 0, W, H);
 
     // Static layer.
     for (let y = 0; y < level.height; y++) {
