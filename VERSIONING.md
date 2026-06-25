@@ -36,7 +36,9 @@ and **not** on every change to generated output. History to date: `0.1.0` (Phase
 corpus options, 155-level id cap lifted) → `0.8.1` (contract-preserving patch: curated `requires_pull`
 filter + multiworld pull gated behind `pull_logic`, POTD backend live with rating dedup) → `0.8.2`
 (contract-preserving patch: fix the Puzzle-of-the-Day page's corpus-data load on the `/potd/`
-sub-route). Phase 2 was a client-only integration milestone and rode along with no world bump.
+sub-route) → `0.8.3` (contract-preserving patch: mobile-friendly client — swipe-to-move, viewport-fit
+board with high-DPI crispness, touch-target/layout polish; client-only, additive to keyboard). Phase
+2 was a client-only integration milestone and rode along with no world bump.
 
 ### While `< 1.0.0`
 

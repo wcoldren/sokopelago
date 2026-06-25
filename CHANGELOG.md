@@ -7,6 +7,32 @@ apworld `world_version`, with the client kept in lockstep. The minor digit bumps
 contract changes (datapackage / `slot_data` schema / option schema), not roadmap phase
 numbers and not on every change to generated output.
 
+## [0.8.3] — Mobile-friendly client
+
+A contract-preserving patch: client-only, no item/location id, `slot_data`, or option-schema change.
+The committed corpora are byte-identical. Touch is purely additive — desktop keyboard play is
+unchanged. Completes the 0.8.1 shareability win, since shared POTD links are opened on phones.
+
+### Added (client)
+- **Swipe to move.** A new `engine/touch.ts` translates pointer swipes on the board into the same
+  `InputHandlers` calls as the keyboard (`onMove(dir)`), so the engine, solver, and play loop never
+  learn that touch exists. Listeners are scoped to the board element (never `window`), and the board
+  gets `touch-action: none` so a swipe drives the game instead of scrolling the page. A tap (travel
+  below threshold) emits nothing. Wired on both the main play page and the offline POTD page.
+- **Pull on touch.** Reuses the existing sticky Pull-mode toggle (the `Pull` button): arm it, then a
+  swipe pulls — no separate gesture, consistent with the keyboard's `Shift`-free sticky mode.
+- **Viewport-fit board with high-DPI crispness.** `Renderer.resize()` lets the page feed the live
+  viewport box, so the board scales to the device (still capped at the desktop 720×540). The canvas
+  is now backed at `devicePixelRatio` (CSS size in layout px, backing store in device px) so tiles
+  stay crisp on retina/mobile. The board re-fits on `resize` / `orientationchange`.
+
+### Changed (client)
+- **Touch-target & layout polish (both pages).** ≥44px tap targets on touch devices (coarse-pointer
+  media query, desktop density untouched), `env(safe-area-inset-*)` padding for notches,
+  `overscroll-behavior: contain` so an off-board swipe can't bounce-scroll or pull-to-refresh, and an
+  always-visible cue (dashed pill + mirrored `aria-label`) replacing the hover-only "needs the Pull
+  ability" tooltip so touch / screen-reader users get it too.
+
 ## [0.8.2] — Fix Puzzle-of-the-Day data load
 
 A contract-preserving patch: client-only, no item/location id, `slot_data`, or option-schema change.
