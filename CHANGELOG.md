@@ -25,6 +25,14 @@ unchanged. Completes the 0.8.1 shareability win, since shared POTD links are ope
   viewport box, so the board scales to the device (still capped at the desktop 720×540). The canvas
   is now backed at `devicePixelRatio` (CSS size in layout px, backing store in device px) so tiles
   stay crisp on retina/mobile. The board re-fits on `resize` / `orientationchange`.
+- **Dedicated mobile layout (both pages).** A real phone layout, driven entirely by media-query CSS
+  (+ a tiny `setupDrawers` helper) — desktop layout and keyboard play are unchanged. The play area
+  (board + readouts + control bar) is grouped into a `.play` wrapper so it can re-shape per
+  orientation. In **portrait** the board fills the width at the top, the control bar sticks to the
+  bottom within thumb reach, and the connect/level chrome collapses into tap-to-open `<details>`
+  drawers (open on desktop) so it no longer buries the board. In **landscape** it's two-pane — the
+  board fills the viewport height with the control bar as a column beside it, pickers scrolling
+  below. `availableBoardBox` now measures the board's own cell so both layouts size correctly.
 
 ### Changed (client)
 - **Touch-target & layout polish (both pages).** ≥44px tap targets on touch devices (coarse-pointer
