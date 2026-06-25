@@ -69,17 +69,37 @@ const resultsEl = $<HTMLDivElement>("results");
 const renderer = new Renderer(canvas);
 
 /**
- * The on-screen box (CSS px) the board fits into: the page's content width and the viewport height,
- * each capped at the renderer's desktop defaults so large screens are unchanged. We deliberately do
- * NOT subtract the surrounding chrome — the page scrolls, so on a phone the board should fill the
- * width rather than collapse into the leftover height.
+ * The on-screen box (CSS px) the board fits into, capped at the renderer's desktop defaults so large
+ * screens are unchanged. Width comes from the board's own cell (so the two-pane landscape gets the
+ * right width); height is the full viewport EXCEPT in phone-landscape two-pane, where the board is
+ * fit into the height left below it so it doesn't overflow.
  */
 function availableBoardBox(): { w: number; h: number } {
-  const cs = getComputedStyle(document.body);
+  const cell = canvas.parentElement ?? document.body;
+  const cs = getComputedStyle(cell);
   const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
-  const w = Math.min(720, Math.max(120, (document.documentElement.clientWidth || 720) - padX));
-  const h = Math.min(540, Math.max(120, window.innerHeight || 540));
-  return { w, h };
+  const w = Math.min(720, Math.max(120, cell.clientWidth - padX));
+  let h = window.innerHeight || 540;
+  if (window.matchMedia("(orientation: landscape) and (max-height: 560px)").matches) {
+    const top = cell.getBoundingClientRect().top;
+    let reserved = 0;
+    for (const el of Array.from(cell.children)) {
+      if (el !== canvas) reserved += (el as HTMLElement).getBoundingClientRect().height;
+    }
+    h = h - top - reserved - 8;
+  }
+  return { w, h: Math.min(540, Math.max(120, h)) };
+}
+
+/**
+ * Chrome drawers (handle, results) start open on desktop but collapsed on phones, so the board
+ * isn't buried. The `open` attribute isn't CSS-controllable, so set it once from a media query.
+ */
+function setupDrawers(): void {
+  const collapsed = window.matchMedia("(max-width: 560px)").matches;
+  for (const d of document.querySelectorAll<HTMLDetailsElement>("details.drawer")) {
+    d.open = !collapsed;
+  }
 }
 
 /** Re-fit the board to the current viewport and redraw. */
@@ -519,6 +539,7 @@ async function main(): Promise<void> {
   attachTouchInput(canvas, handlers); // swipe on the board (mobile)
 
   refreshHandleUI();
+  setupDrawers(); // collapse chrome drawers on phones (open on desktop)
   fitBoard(); // size the board to the viewport before the first draw
   loadPuzzle();
   void postVisit(API_BASE, today, visitorId); // fire-and-forget unique-visit beacon

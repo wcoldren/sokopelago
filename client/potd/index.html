@@ -105,6 +105,30 @@
         /* Swipes on the board drive the game; the browser must not scroll/zoom them away. */
         touch-action: none;
         max-width: 100%;
+        max-height: 100%;
+      }
+      /* Play area = control bar + board cell. Desktop: centered column (controls above the board). */
+      .play {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+        width: 100%;
+      }
+      .board-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+      }
+      /* Drawers: open + summary-hidden on desktop (page reads as before); tap-to-open on mobile. */
+      .drawer {
+        width: fit-content;
+        max-width: 100%;
+        margin-inline: auto;
+      }
+      .drawer > summary {
+        display: none;
       }
       /* Touch devices: give every control a >=44px tap target (desktop density is untouched). */
       @media (pointer: coarse) {
@@ -118,12 +142,32 @@
           padding: 0.5rem 0.25rem;
         }
       }
-      /* Narrow screens: reclaim width and stop controls from cramming into crowded rows. */
+      /* Phones (portrait): board on top, chrome in tap-to-open drawers, controls in a sticky bar. */
       @media (max-width: 560px) {
         body {
           padding: calc(0.75rem + env(safe-area-inset-top))
             calc(0.75rem + env(safe-area-inset-right)) calc(0.75rem + env(safe-area-inset-bottom))
             calc(0.75rem + env(safe-area-inset-left));
+          gap: 0.5rem;
+        }
+        .kbd-legend {
+          display: none;
+        }
+        .disclaimer {
+          font-size: 0.8rem;
+        }
+        .drawer {
+          width: 100%;
+        }
+        .drawer > summary {
+          display: list-item;
+          cursor: pointer;
+          min-height: 44px;
+          padding: 0.6rem 0.4rem;
+          font-weight: 600;
+          background: #20202a;
+          border: 1px solid #33333f;
+          border-radius: 8px;
         }
         .panel {
           flex-direction: column;
@@ -133,6 +177,42 @@
         .panel > button {
           width: 100%;
           box-sizing: border-box;
+        }
+        .play > .board-cell {
+          order: 0;
+        }
+        .play > .play-controls {
+          order: 1;
+          position: sticky;
+          bottom: 0;
+          z-index: 2;
+          background: #1a1a1f;
+          border-top: 1px solid #33333f;
+          padding: 0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom));
+        }
+      }
+      /* Phones (landscape): two-pane — board fills height, controls in a column beside it. */
+      @media (orientation: landscape) and (max-height: 560px) {
+        .play {
+          flex-direction: row;
+          align-items: stretch;
+          gap: 0.5rem;
+        }
+        .play > .board-cell {
+          flex: 1;
+          order: 0;
+          min-width: 0;
+        }
+        .play > .play-controls {
+          order: 1;
+          flex-direction: column;
+          flex-wrap: nowrap;
+          align-items: stretch;
+          justify-content: flex-start;
+          overflow-y: auto;
+        }
+        .kbd-legend {
+          display: none;
         }
       }
       #puzzle-title {
@@ -273,25 +353,36 @@
       <div id="puzzle-title"></div>
     </header>
 
-    <div class="panel">
-      <label for="handle-input" class="hint">Handle</label>
-      <input id="handle-input" type="text" maxlength="32" placeholder="a name (no personal info)" />
-      <button id="handle-save">Save</button>
-      <span id="handle-id" class="hint"></span>
-      <span class="hint">Used to label your rating — self-chosen, no accounts.</span>
-    </div>
+    <!-- Open + summary-hidden on desktop (looks unchanged); tap-to-open on mobile. -->
+    <details class="drawer" id="handle-drawer" open>
+      <summary>Set your handle</summary>
+      <div class="panel">
+        <label for="handle-input" class="hint">Handle</label>
+        <input
+          id="handle-input"
+          type="text"
+          maxlength="32"
+          placeholder="a name (no personal info)"
+        />
+        <button id="handle-save">Save</button>
+        <span id="handle-id" class="hint"></span>
+        <span class="hint">Used to label your rating — self-chosen, no accounts.</span>
+      </div>
+    </details>
 
-    <canvas id="board" width="640" height="480"></canvas>
-
-    <div id="status"></div>
-    <div id="stats" class="stats"></div>
-    <div id="notice"></div>
-
-    <div class="toolbar">
-      <button id="restart-btn" title="Restart (R)">Restart</button>
-      <button id="undo-btn" title="Undo (U)">Undo</button>
-      <button id="hint-btn" title="Hint (H)">Hint</button>
-      <button id="giveup-btn" title="Give up and rate">Give up</button>
+    <div class="play">
+      <div class="toolbar play-controls">
+        <button id="restart-btn" title="Restart (R)">Restart</button>
+        <button id="undo-btn" title="Undo (U)">Undo</button>
+        <button id="hint-btn" title="Hint (H)">Hint</button>
+        <button id="giveup-btn" title="Give up and rate">Give up</button>
+      </div>
+      <div class="board-cell">
+        <canvas id="board" width="640" height="480"></canvas>
+        <div id="status"></div>
+        <div id="stats" class="stats"></div>
+        <div id="notice"></div>
+      </div>
     </div>
 
     <div id="rate-panel" class="panel" hidden>
@@ -307,14 +398,17 @@
       <div id="rate-status"></div>
     </div>
 
-    <div class="panel">
-      <div style="width: 100%">
-        <div class="scale-label" style="margin-bottom: 0.4rem">Today's results</div>
-        <div id="results" class="hint">Loading…</div>
+    <details class="drawer" id="results-drawer" open>
+      <summary>Today's results</summary>
+      <div class="panel">
+        <div style="width: 100%">
+          <div class="scale-label" style="margin-bottom: 0.4rem">Today's results</div>
+          <div id="results" class="hint">Loading…</div>
+        </div>
       </div>
-    </div>
+    </details>
 
-    <div class="hint">
+    <div class="hint kbd-legend">
       Move: arrow keys or WASD &nbsp;·&nbsp; Restart: R &nbsp;·&nbsp; Undo: U &nbsp;·&nbsp; Hint: H
     </div>
 

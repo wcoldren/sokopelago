@@ -106,6 +106,32 @@
         /* Swipes on the board drive the game; the browser must not scroll/zoom them away. */
         touch-action: none;
         max-width: 100%;
+        max-height: 100%;
+      }
+      /* Play area = control bar + board cell. On desktop it's a centered column (controls above the
+         board, as before); mobile media queries below re-shape it. */
+      .play {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+        width: 100%;
+      }
+      .board-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+      }
+      /* Drawers wrap the connect panel and level grid. Open + summary-hidden on desktop, so the
+         page reads exactly as before; the summary becomes a tap target on mobile. */
+      .drawer {
+        width: fit-content;
+        max-width: 100%;
+        margin-inline: auto;
+      }
+      .drawer > summary {
+        display: none;
       }
       /* Touch devices: give every control a >=44px tap target (desktop density is untouched). */
       @media (pointer: coarse) {
@@ -120,12 +146,35 @@
           padding: 0.5rem 0.25rem;
         }
       }
-      /* Narrow screens: reclaim width and stop controls from cramming into crowded rows. */
+      /* Phones (portrait): board on top, chrome in tap-to-open drawers, controls in a sticky bar. */
       @media (max-width: 560px) {
         body {
           padding: calc(0.75rem + env(safe-area-inset-top))
             calc(0.75rem + env(safe-area-inset-right)) calc(0.75rem + env(safe-area-inset-bottom))
             calc(0.75rem + env(safe-area-inset-left));
+          gap: 0.5rem;
+        }
+        /* Compact header: the subtitle and keyboard legend are dead weight without a keyboard. */
+        .subtitle,
+        .kbd-legend {
+          display: none;
+        }
+        .disclaimer {
+          font-size: 0.8rem;
+        }
+        /* Drawers become full-width, tap-to-open sections. */
+        .drawer {
+          width: 100%;
+        }
+        .drawer > summary {
+          display: list-item;
+          cursor: pointer;
+          min-height: 44px;
+          padding: 0.6rem 0.4rem;
+          font-weight: 600;
+          background: #20202a;
+          border: 1px solid #33333f;
+          border-radius: 8px;
         }
         /* Stack the connect inputs full-width instead of squeezing them onto one line. */
         .panel {
@@ -141,6 +190,45 @@
         #solo-pull-toggle {
           flex-basis: 100%;
           justify-content: center;
+        }
+        /* Board first; the control bar sticks to the bottom within thumb reach. */
+        .play > .board-cell {
+          order: 0;
+        }
+        .play > .play-controls {
+          order: 1;
+          position: sticky;
+          bottom: 0;
+          z-index: 2;
+          background: #1a1a1f;
+          border-top: 1px solid #33333f;
+          padding: 0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom));
+        }
+      }
+      /* Phones (landscape): two-pane — board fills height, controls in a column beside it. */
+      @media (orientation: landscape) and (max-height: 560px) {
+        .play {
+          flex-direction: row;
+          align-items: stretch;
+          gap: 0.5rem;
+        }
+        .play > .board-cell {
+          flex: 1;
+          order: 0;
+          min-width: 0;
+        }
+        .play > .play-controls {
+          order: 1;
+          flex-direction: column;
+          flex-wrap: nowrap;
+          align-items: stretch;
+          justify-content: flex-start;
+          overflow-y: auto;
+        }
+        /* Keep the keyboard legend out of the way; drawers still scroll below the play area. */
+        .subtitle,
+        .kbd-legend {
+          display: none;
         }
       }
       #status {
@@ -358,7 +446,9 @@
   <body>
     <header>
       <h1>Sokopelago</h1>
-      <div class="hint">Sokoban for Archipelago — play locally, or connect to a multiworld</div>
+      <div class="hint subtitle">
+        Sokoban for Archipelago — play locally, or connect to a multiworld
+      </div>
       <nav class="page-nav"><a href="potd/">Puzzle of the Day →</a></nav>
       <div class="disclaimer">
         ⚠ <strong>Alpha — please help test!</strong> Solo play and multiworld syncs both work — the
@@ -367,56 +457,69 @@
       </div>
     </header>
 
-    <div class="panel">
-      <input id="ap-host" type="text" placeholder="host:port (e.g. localhost:38281)" />
-      <input id="ap-slot" class="slot" type="text" placeholder="slot name" />
-      <input id="ap-pass" class="pass" type="password" placeholder="password" />
-      <button id="ap-connect">Connect</button>
-    </div>
+    <!-- Drawers: open + summary-hidden on desktop (looks unchanged); tap-to-open on mobile. -->
+    <details class="drawer" id="connect-drawer" open>
+      <summary>Connect to a multiworld</summary>
+      <div class="panel">
+        <input id="ap-host" type="text" placeholder="host:port (e.g. localhost:38281)" />
+        <input id="ap-slot" class="slot" type="text" placeholder="slot name" />
+        <input id="ap-pass" class="pass" type="password" placeholder="password" />
+        <button id="ap-connect">Connect</button>
+      </div>
+    </details>
     <div id="conn-status">Not connected — free play (all levels).</div>
     <div id="goal-line" class="hint"></div>
 
-    <div class="toolbar stats-toolbar">
-      <button
-        id="stats-export"
-        title="Download your play stats (visits, moves, pushes, time) as JSON"
-      >
-        Export stats
-      </button>
-      <button id="stats-import" title="Merge a stats JSON file into your local stats">
-        Import stats…
-      </button>
-      <input id="stats-import-file" type="file" accept="application/json,.json" hidden />
-      <span id="stats-status" class="hint"></span>
+    <details class="drawer" id="levels-drawer" open>
+      <summary>Levels</summary>
+      <div class="toolbar stats-toolbar">
+        <button
+          id="stats-export"
+          title="Download your play stats (visits, moves, pushes, time) as JSON"
+        >
+          Export stats
+        </button>
+        <button id="stats-import" title="Merge a stats JSON file into your local stats">
+          Import stats…
+        </button>
+        <input id="stats-import-file" type="file" accept="application/json,.json" hidden />
+        <span id="stats-status" class="hint"></span>
+      </div>
+      <div id="level-grid" class="level-grid"></div>
+    </details>
+
+    <!-- Play area: control bar + board cell. Grouped so landscape can lay them side by side and
+         portrait can pin the bar to the bottom. -->
+    <div class="play">
+      <div class="toolbar play-controls">
+        <button id="restart-btn" title="Restart (R)">Restart</button>
+        <button id="undo-btn" title="Undo (U)">Undo</button>
+        <button id="hint-btn" title="Hint (H) — Shift for a bigger hint" hidden>Hint</button>
+        <button id="skip-btn" title="Skip (K)" hidden>Skip</button>
+        <button id="pull-btn" title="Pull mode — or hold Shift + direction" hidden>
+          Pull: off
+        </button>
+        <button id="panic-btn" title="Panic — solve &amp; unlock this puzzle (no par credit)">
+          Panic
+        </button>
+        <label
+          id="solo-pull-toggle"
+          class="hint"
+          title="Solo only — enable Pull as a sandbox aid (most levels solve with pushes alone)"
+          hidden
+        >
+          <input id="solo-pull-check" type="checkbox" /> Enable Pull (sandbox aid)
+        </label>
+      </div>
+      <div class="board-cell">
+        <canvas id="board" width="640" height="480"></canvas>
+        <div id="status"></div>
+        <div id="stats" class="stats"></div>
+        <div id="notice"></div>
+      </div>
     </div>
 
-    <div id="level-grid" class="level-grid"></div>
-
-    <div class="toolbar">
-      <button id="restart-btn" title="Restart (R)">Restart</button>
-      <button id="undo-btn" title="Undo (U)">Undo</button>
-      <button id="hint-btn" title="Hint (H) — Shift for a bigger hint" hidden>Hint</button>
-      <button id="skip-btn" title="Skip (K)" hidden>Skip</button>
-      <button id="pull-btn" title="Pull mode — or hold Shift + direction" hidden>Pull: off</button>
-      <button id="panic-btn" title="Panic — solve &amp; unlock this puzzle (no par credit)">
-        Panic
-      </button>
-      <label
-        id="solo-pull-toggle"
-        class="hint"
-        title="Solo only — enable Pull as a sandbox aid (most levels solve with pushes alone)"
-        hidden
-      >
-        <input id="solo-pull-check" type="checkbox" /> Enable Pull (sandbox aid)
-      </label>
-    </div>
-
-    <canvas id="board" width="640" height="480"></canvas>
-
-    <div id="status"></div>
-    <div id="stats" class="stats"></div>
-    <div id="notice"></div>
-    <div class="hint">
+    <div class="hint kbd-legend">
       Move: arrow keys or WASD &nbsp;·&nbsp; Pull: Shift + direction &nbsp;·&nbsp; Restart: R
       &nbsp;·&nbsp; Undo: U &nbsp;·&nbsp; Hint: H (Shift = bigger) &nbsp;·&nbsp; Skip: K
     </div>
