@@ -38,7 +38,11 @@
         flex-direction: column;
         align-items: center;
         gap: 1rem;
-        padding: 1.5rem;
+        /* Safe-area insets keep content clear of notches / rounded corners. */
+        padding: calc(1.5rem + env(safe-area-inset-top)) calc(1.5rem + env(safe-area-inset-right))
+          calc(1.5rem + env(safe-area-inset-bottom)) calc(1.5rem + env(safe-area-inset-left));
+        /* A swipe that escapes the board shouldn't bounce-scroll or pull-to-refresh. */
+        overscroll-behavior: contain;
       }
       header {
         text-align: center;
@@ -99,6 +103,22 @@
         background: #111;
         border-radius: 8px;
         image-rendering: pixelated;
+        /* Swipes on the board drive the game; the browser must not scroll/zoom them away. */
+        touch-action: none;
+        max-width: 100%;
+      }
+      /* Touch devices: give every control a >=44px tap target (desktop density is untouched). */
+      @media (pointer: coarse) {
+        button,
+        select,
+        input {
+          min-height: 44px;
+        }
+        .page-nav a {
+          display: inline-block;
+          min-height: 44px;
+          padding: 0.5rem 0.25rem;
+        }
       }
       #status {
         min-height: 1.4rem;
@@ -240,6 +260,11 @@
       .pill:disabled {
         opacity: 0.45;
         cursor: default;
+      }
+      /* Pull-gated pill: an always-visible cue (no hover on touch) that this lock wants Pull. */
+      .pill.needs-pull {
+        border-style: dashed;
+        border-color: #c98a3c;
       }
       #conn-status {
         font-size: 0.85rem;
