@@ -9,7 +9,8 @@
 
 import { Game } from "./engine/board";
 import { Renderer } from "./engine/render";
-import { attachInput } from "./engine/input";
+import { attachInput, type InputHandlers } from "./engine/input";
+import { attachTouchInput } from "./engine/touch";
 import { levelFromBoard } from "./engine/xsb";
 import type { Level } from "./engine/types";
 import { fetchManifest, type ManifestEntry } from "./engine/manifest";
@@ -66,6 +67,43 @@ const rateStatus = $<HTMLDivElement>("rate-status");
 const resultsEl = $<HTMLDivElement>("results");
 
 const renderer = new Renderer(canvas);
+
+/**
+ * The on-screen box (CSS px) the board may occupy: the page's content width, and the viewport
+ * height minus the other chrome stacked above/below the board. Lets the board fit any device while
+ * still capping at the renderer's desktop defaults.
+ */
+function availableBoardBox(): { w: number; h: number } {
+  const body = document.body;
+  const cs = getComputedStyle(body);
+  const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+  const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+  const gap = parseFloat(cs.rowGap || cs.gap || "0") || 0;
+  const kids = Array.from(body.children) as HTMLElement[];
+  let reserved = gap * Math.max(0, kids.length - 1);
+  for (const el of kids) if (el !== canvas) reserved += el.getBoundingClientRect().height;
+  const w = Math.max(120, (document.documentElement.clientWidth || 720) - padX);
+  const h = Math.max(120, (window.innerHeight || 540) - padY - reserved);
+  return { w, h };
+}
+
+/** Re-fit the board to the current viewport and redraw. */
+function fitBoard(): void {
+  const { w, h } = availableBoardBox();
+  renderer.resize(w, h);
+  if (game) renderer.draw(game);
+}
+
+let fitRaf = 0;
+function onViewportChange(): void {
+  if (fitRaf) cancelAnimationFrame(fitRaf);
+  fitRaf = requestAnimationFrame(() => {
+    fitRaf = 0;
+    fitBoard();
+  });
+}
+window.addEventListener("resize", onViewportChange);
+window.addEventListener("orientationchange", onViewportChange);
 
 // --- Today's puzzle ---------------------------------------------------------
 
@@ -476,9 +514,17 @@ async function main(): Promise<void> {
   shareBtn.addEventListener("click", () => void copyShareLink());
   handleSaveBtn.addEventListener("click", saveHandle);
   rateSubmit.addEventListener("click", () => void submitRating());
-  attachInput({ onMove: move, onRestart: restart, onUndo: undo, onHint: useHint });
+  const handlers: InputHandlers = {
+    onMove: move,
+    onRestart: restart,
+    onUndo: undo,
+    onHint: useHint,
+  };
+  attachInput(handlers); // keyboard
+  attachTouchInput(canvas, handlers); // swipe on the board (mobile)
 
   refreshHandleUI();
+  fitBoard(); // size the board to the viewport before the first draw
   loadPuzzle();
   void postVisit(API_BASE, today, visitorId); // fire-and-forget unique-visit beacon
   void flushQueue(API_BASE); // retry any ratings stranded by an earlier offline solve

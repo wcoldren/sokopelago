@@ -8,7 +8,8 @@
 import { levelFromBoard } from "./engine/xsb";
 import { Game } from "./engine/board";
 import { Renderer } from "./engine/render";
-import { attachInput } from "./engine/input";
+import { attachInput, type InputHandlers } from "./engine/input";
+import { attachTouchInput } from "./engine/touch";
 import { effectiveDir, type Dir, type Level } from "./engine/types";
 import { Session, loadPrefs, type SessionCallbacks } from "./ap/session";
 import {
@@ -95,6 +96,44 @@ const statsImportFile = $<HTMLInputElement>("stats-import-file");
 const statsStatusEl = $<HTMLSpanElement>("stats-status");
 
 const renderer = new Renderer(canvas);
+
+/**
+ * The on-screen box (CSS px) the board may occupy: the page's content width, and the viewport
+ * height minus the other chrome stacked above/below the board. Lets the board fit any device while
+ * still capping at the renderer's desktop defaults.
+ */
+function availableBoardBox(): { w: number; h: number } {
+  const body = document.body;
+  const cs = getComputedStyle(body);
+  const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+  const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+  const gap = parseFloat(cs.rowGap || cs.gap || "0") || 0;
+  const kids = Array.from(body.children) as HTMLElement[];
+  // Height taken by everything that isn't the board (hidden blocks measure as 0).
+  let reserved = gap * Math.max(0, kids.length - 1);
+  for (const el of kids) if (el !== canvas) reserved += el.getBoundingClientRect().height;
+  const w = Math.max(120, (document.documentElement.clientWidth || 720) - padX);
+  const h = Math.max(120, (window.innerHeight || 540) - padY - reserved);
+  return { w, h };
+}
+
+/** Re-fit the board to the current viewport and redraw. */
+function fitBoard(): void {
+  const { w, h } = availableBoardBox();
+  renderer.resize(w, h);
+  if (game) renderer.draw(game);
+}
+
+let fitRaf = 0;
+function onViewportChange(): void {
+  if (fitRaf) cancelAnimationFrame(fitRaf);
+  fitRaf = requestAnimationFrame(() => {
+    fitRaf = 0;
+    fitBoard();
+  });
+}
+window.addEventListener("resize", onViewportChange);
+window.addEventListener("orientationchange", onViewportChange);
 
 let levels: Level[] = [];
 let solutions = new Map<number, string>(); // Microban number -> LURD solution string
@@ -354,11 +393,16 @@ function makePill(lvl: Level, posInWorld: number): HTMLButtonElement {
     mark = "🔒";
     btn.classList.add("locked");
     btn.disabled = true;
-    if (session.needsPull(n) && !session.canPull) btn.title += " — needs the Pull ability";
+    if (session.needsPull(n) && !session.canPull) {
+      btn.title += " — needs the Pull ability";
+      btn.classList.add("needs-pull"); // always-visible cue (the title is hover-only on touch)
+    }
   }
   const label = posInWorld > 0 ? String(posInWorld) : String(n);
   btn.textContent = mark ? `${mark} ${label}` : label;
   if (lvl.index === current) btn.classList.add("current");
+  // Mirror the hover tooltip into the accessible name so touch / screen-reader users get it too.
+  btn.setAttribute("aria-label", btn.title);
   btn.addEventListener("click", () => loadLevel(lvl.index));
   return btn;
 }
@@ -1214,7 +1258,7 @@ async function main(): Promise<void> {
     if (file) void importStats(file);
     statsImportFile.value = ""; // allow re-importing the same file
   });
-  attachInput({
+  const handlers: InputHandlers = {
     onMove: move,
     onRestart: restart,
     onUndo: undo,
@@ -1222,8 +1266,11 @@ async function main(): Promise<void> {
     onBigHint: useBigHint,
     onSkip: useSkip,
     onPull: pull,
-  });
+  };
+  attachInput(handlers); // keyboard
+  attachTouchInput(canvas, handlers); // swipe on the board (mobile)
 
+  fitBoard(); // size the board to the viewport before the first draw
   loadLevel(0);
 }
 
