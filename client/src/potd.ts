@@ -69,21 +69,16 @@ const resultsEl = $<HTMLDivElement>("results");
 const renderer = new Renderer(canvas);
 
 /**
- * The on-screen box (CSS px) the board may occupy: the page's content width, and the viewport
- * height minus the other chrome stacked above/below the board. Lets the board fit any device while
- * still capping at the renderer's desktop defaults.
+ * The on-screen box (CSS px) the board fits into: the page's content width and the viewport height,
+ * each capped at the renderer's desktop defaults so large screens are unchanged. We deliberately do
+ * NOT subtract the surrounding chrome — the page scrolls, so on a phone the board should fill the
+ * width rather than collapse into the leftover height.
  */
 function availableBoardBox(): { w: number; h: number } {
-  const body = document.body;
-  const cs = getComputedStyle(body);
+  const cs = getComputedStyle(document.body);
   const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
-  const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
-  const gap = parseFloat(cs.rowGap || cs.gap || "0") || 0;
-  const kids = Array.from(body.children) as HTMLElement[];
-  let reserved = gap * Math.max(0, kids.length - 1);
-  for (const el of kids) if (el !== canvas) reserved += el.getBoundingClientRect().height;
-  const w = Math.max(120, (document.documentElement.clientWidth || 720) - padX);
-  const h = Math.max(120, (window.innerHeight || 540) - padY - reserved);
+  const w = Math.min(720, Math.max(120, (document.documentElement.clientWidth || 720) - padX));
+  const h = Math.min(540, Math.max(120, window.innerHeight || 540));
   return { w, h };
 }
 

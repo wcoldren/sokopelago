@@ -120,6 +120,29 @@
           padding: 0.5rem 0.25rem;
         }
       }
+      /* Narrow screens: reclaim width and stop controls from cramming into crowded rows. */
+      @media (max-width: 560px) {
+        body {
+          padding: calc(0.75rem + env(safe-area-inset-top))
+            calc(0.75rem + env(safe-area-inset-right)) calc(0.75rem + env(safe-area-inset-bottom))
+            calc(0.75rem + env(safe-area-inset-left));
+        }
+        /* Stack the connect inputs full-width instead of squeezing them onto one line. */
+        .panel {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .panel > input,
+        .panel > button {
+          width: 100%;
+          box-sizing: border-box;
+        }
+        /* Let the solo-Pull opt-in own its row so the label doesn't wrap mid-phrase. */
+        #solo-pull-toggle {
+          flex-basis: 100%;
+          justify-content: center;
+        }
+      }
       #status {
         min-height: 1.4rem;
         font-weight: 600;

@@ -118,6 +118,23 @@
           padding: 0.5rem 0.25rem;
         }
       }
+      /* Narrow screens: reclaim width and stop controls from cramming into crowded rows. */
+      @media (max-width: 560px) {
+        body {
+          padding: calc(0.75rem + env(safe-area-inset-top))
+            calc(0.75rem + env(safe-area-inset-right)) calc(0.75rem + env(safe-area-inset-bottom))
+            calc(0.75rem + env(safe-area-inset-left));
+        }
+        .panel {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .panel > input,
+        .panel > button {
+          width: 100%;
+          box-sizing: border-box;
+        }
+      }
       #puzzle-title {
         font-weight: 600;
         opacity: 0.9;
