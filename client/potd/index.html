@@ -193,7 +193,10 @@
       }
       /* Phones (landscape): two-pane — board fills height, controls in a column beside it. */
       @media (orientation: landscape) and (max-height: 560px) {
+        /* Float the play area to the top so the board gets the full viewport height; the header and
+           drawers scroll below it. */
         .play {
+          order: -1;
           flex-direction: row;
           align-items: stretch;
           gap: 0.5rem;
